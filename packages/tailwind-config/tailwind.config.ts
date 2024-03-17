@@ -11,5 +11,6 @@ const config: Omit<Config, "content"> = {
         },
     },
     plugins: [],
+    darkMode: "selector",
 };
 export default config;

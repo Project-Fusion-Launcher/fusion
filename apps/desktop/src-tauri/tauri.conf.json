@@ -1,18 +1,20 @@
 {
-  "productName": "tauri-app",
+  "productName": "fusion",
   "version": "0.0.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.fusion.dev",
   "build": {
     "beforeDevCommand": "vite",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
   },
-  "app": {"windows": [
+  "app": {
+    "windows": [
       {
-        "title": "tauri-app",
+        "title": "Fusion",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "decorations": false
       }
     ],
     "security": {
