@@ -1,0 +1,31 @@
+{
+  "name": "desktop",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "eslint \"src/**/*.ts\" --fix",
+    "start": "vite"
+  },
+  "dependencies": {
+    "@repo/ui": "workspace:*",
+    "solid-js": "^1.7.8",
+    "@tauri-apps/api": ">=2.0.0-beta.0",
+    "@tauri-apps/plugin-shell": ">=2.0.0-beta.0"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/tailwind-config": "workspace:*",
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4",
+    "vite-plugin-solid": "^2.10.2",
+    "@tauri-apps/cli": ">=2.0.0-beta.0",
+    "tailwindcss": "^3.4.1"
+  }
+}
