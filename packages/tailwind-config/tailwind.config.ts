@@ -2,6 +2,7 @@ import type { Config } from "tailwindcss";
 import kobaltePlugin from "@kobalte/tailwindcss";
 
 // We want each package to be responsible for its own content.
+/** @type {import('tailwindcss').Config} */
 const config: Omit<Config, "content"> = {
     theme: {
         extend: {
@@ -13,11 +14,24 @@ const config: Omit<Config, "content"> = {
         colors: {
             transparent: "transparent",
             current: "currentColor",
-            primary: "#0A0A0A",
-            secondary: "#373737",
-            "text-primary": "#BAB6BE",
-            "text-secondary": "#726F76",
-            accent: "#874295",
+            border: "#373737",
+            background: "#0A0A0A",
+            primary: {
+                DEFAULT: "#BAB6BE",
+            },
+            secondary: {
+                DEFAULT: "#726F76",
+            },
+            accent: {
+                DEFAULT: "#874295",
+            },
+        },
+        spacing: {
+            "72": "4.5rem",
+        },
+        borderWidth: {
+            DEFAULT: "1px",
+            "0": "0",
         },
     },
     plugins: [kobaltePlugin],

@@ -4,7 +4,7 @@ import Sidebar from "./components/Sidebar";
 const App = () => {
     return (
         <>
-            <WindowTitlebar class="fixed w-full z-50" />
+            <WindowTitlebar class="fixed w-full z-50 bg-transparent" />
             <Sidebar />
         </>
     );
