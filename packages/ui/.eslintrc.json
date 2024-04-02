@@ -1,6 +1,0 @@
-{
-  "extends": [
-    "@repo/eslint-config/base.json",
-    "plugin:storybook/recommended"
-  ]
-}

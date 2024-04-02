@@ -8,8 +8,8 @@
   },
   "license": "MIT",
   "scripts": {
-    "lint": "eslint \"**/*.ts\"",
-    "format": "eslint \"**/*.ts\" --fix",
+    "lint": "eslint \"**/*.{ts,tsx}\"",
+    "format": "eslint \"**/*.{ts,tsx}\" --fix",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

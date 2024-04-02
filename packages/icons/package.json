@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint \"**/*.ts\"",
-    "format": "eslint \"**/*.ts\" --fix"
+    "lint": "eslint \"**/*.{ts,tsx}\"",
+    "format": "eslint \"**/*.{ts,tsx}\" --fix"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

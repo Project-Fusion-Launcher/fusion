@@ -1,5 +1,7 @@
-import { Component, mergeProps, splitProps } from 'solid-js';
-import './button.css';
+/* eslint-disable solid/reactivity */
+import type { Component } from "solid-js";
+import { mergeProps, splitProps } from "solid-js";
+import "./button.css";
 
 export interface ButtonProps {
   /**
@@ -13,7 +15,7 @@ export interface ButtonProps {
   /**
    * How large should the button be?
    */
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
   /**
    * Button contents
    */
@@ -28,12 +30,12 @@ export interface ButtonProps {
  * Primary UI component for user interaction
  */
 export const Button: Component<ButtonProps> = (props) => {
-  props = mergeProps({ size: 'small' as ButtonProps['size'] }, props);
+  props = mergeProps({ size: "small" as ButtonProps["size"] }, props);
   const [local, rest] = splitProps(props, [
-    'primary',
-    'size',
-    'backgroundColor',
-    'label',
+    "primary",
+    "size",
+    "backgroundColor",
+    "label",
   ]);
 
   return (
@@ -41,14 +43,14 @@ export const Button: Component<ButtonProps> = (props) => {
       {...rest}
       type="button"
       classList={{
-        'storybook-button--small': local.size === 'small',
-        'storybook-button--medium': local.size === 'medium',
-        'storybook-button--large': local.size === 'large',
-        'storybook-button': true,
-        'storybook-button--primary': local.primary === true,
-        'storybook-button--secondary': local.primary === false,
+        "storybook-button--small": local.size === "small",
+        "storybook-button--medium": local.size === "medium",
+        "storybook-button--large": local.size === "large",
+        "storybook-button": true,
+        "storybook-button--primary": local.primary === true,
+        "storybook-button--secondary": local.primary === false,
       }}
-      style={{ 'background-color': local.backgroundColor }}
+      style={{ "background-color": local.backgroundColor }}
     >
       {local.label}
     </button>
