@@ -1,0 +1,39 @@
+{
+    "folders": [
+      {
+        "name": "ROOT",
+        "path": "../",
+      },
+      {
+        "name": "apps/desktop",
+        "path": "../apps/desktop",
+      },
+      {
+        "name": "packages/ui",
+        "path": "../packages/ui",
+      },
+      {
+        "name": "packages/eslint-config",
+        "path": "../packages/eslint-config",
+      },
+      {
+        "name": "packages/icons",
+        "path": "../packages/icons",
+      },
+      {
+        "name": "packages/tailwind-config",
+        "path": "../packages/tailwind-config",
+      },
+      {
+        "name": "packages/typescript-config",
+        "path": "../packages/typescript-config",
+      },
+    ],
+    "settings": {
+      "files.exclude": {
+        "node_modules/": true,
+        "packages/": true,
+        "apps/": true,
+      },
+    },
+  }
