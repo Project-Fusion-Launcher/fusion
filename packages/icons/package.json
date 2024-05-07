@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint \"**/*.{ts,tsx}\"",
-    "format": "eslint \"**/*.{ts,tsx}\" --fix"
+    "lint": "prettier --check \"**/*.{ts,tsx}\" && eslint \"**/*.{ts,tsx}\"",
+    "format": "prettier --write \"**/*.{ts,tsx}\""
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

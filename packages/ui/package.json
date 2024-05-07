@@ -8,8 +8,8 @@
   },
   "license": "MIT",
   "scripts": {
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "format": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "lint": "prettier --check \"src/**/*.{ts,tsx}\" && eslint \"src/**/*.{ts,tsx}\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
