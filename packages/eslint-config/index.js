@@ -1,30 +1,24 @@
-module.exports = {
-  env: {
-    browser: true,
-    node: true,
-  },
-  parser: "@typescript-eslint/parser",
-  extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:solid/typescript",
-    "plugin:prettier/recommended",
-  ],
-  plugins: ["@typescript-eslint", "solid"],
-  parserOptions: {
-    ecmaVersion: 2020,
-  },
-  rules: {
-    "@typescript-eslint/consistent-type-imports": "warn",
-    "prettier/prettier": [
-      "warn",
-      {
-        endOfLine: "auto",
-        singleQuote: false,
-        useTabs: false,
-        tabWidth: 2,
-        semi: true,
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import js from "@eslint/js";
+import solid from "eslint-plugin-solid/configs/typescript.js";
+
+/** @type {import('eslint').Linter.FlatConfig[]} */
+export default [
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  solid,
+  {
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
       },
-    ],
+      parser: tseslint.parser,
+    },
+    rules: {
+      "@typescript-eslint/consistent-type-imports": "warn",
+    },
   },
-};
+];
