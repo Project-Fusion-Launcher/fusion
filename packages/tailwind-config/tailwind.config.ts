@@ -21,6 +21,7 @@ const config: Omit<Config, "content"> = {
       },
     },
     spacing: {
+      "48": "3rem",
       "72": "4.5rem",
     },
     borderWidth: {

@@ -7,6 +7,9 @@
     },
     "lint": {},
     "format": {},
+    "storybook": {
+      "cache": false
+    },
     "dev": {
       "cache": false,
       "persistent": true
