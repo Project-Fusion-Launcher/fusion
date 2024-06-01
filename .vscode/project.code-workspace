@@ -9,8 +9,8 @@
         "path": "../apps/desktop",
       },
       {
-        "name": "packages/ui",
-        "path": "../packages/ui",
+        "name": "crates/myabandonware",
+        "path": "../crates/myabandonware",
       },
       {
         "name": "packages/eslint-config",
@@ -28,12 +28,17 @@
         "name": "packages/typescript-config",
         "path": "../packages/typescript-config",
       },
+      {
+        "name": "packages/ui",
+        "path": "../packages/ui",
+      },
     ],
     "settings": {
       "files.exclude": {
         "node_modules/": true,
         "packages/": true,
         "apps/": true,
+        "crates/": true,
       },
     },
   }
