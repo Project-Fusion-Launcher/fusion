@@ -1,3 +1,2 @@
-pub mod search;
-
 pub mod game;
+pub mod search;
