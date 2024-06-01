@@ -1,14 +1,14 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+use models::{GamePage, SearchResult};
+
+mod scraper;
+mod models;
+mod routes;
+mod tests;
+
+pub async fn search(query: &str, hide_sold: bool) -> Result<SearchResult, ()> {
+    Ok(scraper::search::search(query, hide_sold).await.unwrap())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub async fn game(id: &str) -> Result<(), ()> {
+    Ok(scraper::game::game(id).await.unwrap())
 }
