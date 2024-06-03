@@ -1,12 +1,13 @@
 pub const BASE_URL: &str = "https://www.myabandonware.com";
 
 /// Search for games on MyAbandonware given a query.
-pub fn route_search(query: &str, hide_sold: bool) -> String {
+pub fn route_search(query: &str, hide_sold: bool, page: u32) -> String {
     format!(
-        "{}/search/q/{}{}",
+        "{}/search/q/{}{}/page/{}/",
         BASE_URL,
         query,
-        if hide_sold { "/hs/1" } else { "" }
+        if hide_sold { "/hs/1" } else { "" },
+        page
     )
 }
 

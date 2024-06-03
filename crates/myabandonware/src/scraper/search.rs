@@ -1,10 +1,11 @@
+use scraper::selectable::Selectable;
 use scraper::{Html, Selector};
 
 use crate::models::{SearchItem, SearchResult};
 use crate::routes::{route_search, BASE_URL};
 
-pub async fn search(query: &str, hide_sold: bool) -> Result<SearchResult, &'static str> {
-    let response = reqwest::get(route_search(query, hide_sold))
+pub async fn search(query: &str, hide_sold: bool, page: u32) -> Result<SearchResult, &'static str> {
+    let response = reqwest::get(route_search(query, hide_sold, page))
         .await
         .map_err(|_| "Failed to fetch search results")?
         .text()
@@ -22,46 +23,44 @@ pub async fn search(query: &str, hide_sold: bool) -> Result<SearchResult, &'stat
     let current_page_selector = Selector::parse("a.current").unwrap();
 
     let mut result = Vec::new();
-
     let mut current_page = 0;
     let mut total_pages = 0;
 
     for game in document.select(&game_selector) {
-        let mut id = String::new();
-        let mut title = String::new();
-        let mut cover = String::new();
-        let mut year = 0;
-        for game_name in game.select(&name_selector) {
-            id = game_name
-                .attr("href")
-                .unwrap()
-                .to_string()
-                .replace("/game/", "");
-            title = game_name.text().collect();
-        }
+        let id = game
+            .select(&name_selector)
+            .next()
+            .map(|game_name| game_name.attr("href").unwrap().replace("/game/", ""))
+            .unwrap_or_default();
 
-        for game_cover in game.select(&cover_selector) {
-            cover = format!(
-                "{}{}",
-                BASE_URL,
-                game_cover.attr("src").unwrap().to_string()
-            );
-        }
+        let title = game
+            .select(&name_selector)
+            .next()
+            .map(|game_name| game_name.text().collect())
+            .unwrap_or_default();
 
-        for game_year in game.select(&year_selector) {
-            year = game_year.text().collect::<String>().parse().unwrap();
-        }
+        let cover = game
+            .select(&cover_selector)
+            .next()
+            .map(|game_cover| format!("{}{}", BASE_URL, game_cover.attr("src").unwrap()))
+            .unwrap_or_default();
+
+        let year = game
+            .select(&year_selector)
+            .next()
+            .map(|game_year| game_year.text().collect::<String>().parse().unwrap())
+            .unwrap_or_default();
 
         result.push(SearchItem {
             id,
             title,
             cover,
             year,
-        })
+        });
     }
 
-    for pagination_select in document.select(&pagination_selector) {
-        for current_page_select in pagination_select.select(&current_page_selector) {
+    if let Some(pagination_select) = document.select(&pagination_selector).next() {
+        if let Some(current_page_select) = pagination_select.select(&current_page_selector).next() {
             current_page = current_page_select
                 .text()
                 .collect::<String>()
@@ -72,11 +71,8 @@ pub async fn search(query: &str, hide_sold: bool) -> Result<SearchResult, &'stat
         total_pages = pagination_select
             .child_elements()
             .last()
-            .unwrap()
-            .text()
-            .collect::<String>()
-            .parse()
-            .unwrap();
+            .map(|last_element| last_element.text().collect::<String>().parse().unwrap())
+            .unwrap_or_default();
     }
 
     Ok(SearchResult {

@@ -1,10 +1,11 @@
 #[cfg(test)]
+#[allow(clippy::module_inception)]
 mod tests {
     use crate::*;
 
     #[tokio::test]
     async fn search_test() {
-        let games = search("CSI", false).await;
+        let games = search("Grand Theft Auto", false, 2).await;
         assert!(games.is_ok());
     }
 
