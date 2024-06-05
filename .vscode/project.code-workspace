@@ -9,8 +9,8 @@
         "path": "../apps/desktop",
       },
       {
-        "name": "crates/myabandonware",
-        "path": "../crates/myabandonware",
+        "name": "crates/myabandonware-scraper",
+        "path": "../crates/myabandonware-scraper",
       },
       {
         "name": "packages/eslint-config",
