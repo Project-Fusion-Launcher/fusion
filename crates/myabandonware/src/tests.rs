@@ -12,6 +12,7 @@ mod tests {
     #[tokio::test]
     async fn game_test() {
         let game_page = game("grand-theft-auto-3w6").await;
+        println!("{:?}", game_page);
         assert!(game_page.is_ok());
     }
 }

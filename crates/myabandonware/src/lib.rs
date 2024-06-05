@@ -1,4 +1,4 @@
-use models::{GamePage, SearchResult};
+use models::{Game, SearchResult};
 
 mod models;
 mod routes;
@@ -11,6 +11,6 @@ pub async fn search(query: &str, hide_sold: bool, page: u32) -> Result<SearchRes
         .unwrap())
 }
 
-pub async fn game(id: &str) -> Result<(), ()> {
+pub async fn game(id: &str) -> Result<Game, ()> {
     Ok(scraper::game::game(id).await.unwrap())
 }

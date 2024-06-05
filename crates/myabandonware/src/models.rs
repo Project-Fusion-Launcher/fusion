@@ -16,18 +16,12 @@ pub struct SearchResult {
 pub struct SearchItem {
     /// The unique identifier of the game.
     pub id: String,
-    /// The title of the game.
-    pub title: String,
+    /// The name of the game.
+    pub name: String,
     /// The cover image of the game.
     pub cover: String,
     /// The year the game was published.
     pub year: u16,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-/// Represents a game page.
-pub struct GamePage {
-    pub game: Game,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -35,10 +29,27 @@ pub struct GamePage {
 pub struct Game {
     /// The unique identifier of the game.
     pub id: String,
-    /// The title of the game.
-    pub title: String,
-    /// The cover image of the game.
-    pub cover: String,
+    /// The name of the game.
+    pub name: String,
+    /// The alternative names of the game.
+    pub alt_names: Vec<String>,
     /// The year the game was published.
     pub year: u16,
+    /// The publishers of the game.
+    pub publishers: Vec<String>,
+    /// The developer of the game.
+    pub developer: String,
+    /// The rating of the game.
+    pub rating: GameRating,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+/// Represents a game rating.
+pub struct GameRating {
+    /// The average rating of the game.
+    pub value: f32,
+    /// The maximum rating of the game. (5.0 at the time of writing this)
+    pub max: f32,
+    /// The current amount of votes.
+    pub votes: u32,
 }

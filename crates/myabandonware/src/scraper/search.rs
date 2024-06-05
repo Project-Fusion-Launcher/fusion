@@ -33,7 +33,7 @@ pub async fn search(query: &str, hide_sold: bool, page: u32) -> Result<SearchRes
             .map(|game_name| game_name.attr("href").unwrap().replace("/game/", ""))
             .unwrap_or_default();
 
-        let title = game
+        let name = game
             .select(&name_selector)
             .next()
             .map(|game_name| game_name.text().collect())
@@ -53,7 +53,7 @@ pub async fn search(query: &str, hide_sold: bool, page: u32) -> Result<SearchRes
 
         result.push(SearchItem {
             id,
-            title,
+            name,
             cover,
             year,
         });
