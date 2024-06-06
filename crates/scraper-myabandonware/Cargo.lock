@@ -584,16 +584,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "myabandonware-scraper"
-version = "0.1.0"
-dependencies = [
- "reqwest",
- "scraper",
- "serde",
- "tokio",
-]
-
-[[package]]
 name = "native-tls"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1013,6 +1003,16 @@ dependencies = [
  "once_cell",
  "selectors",
  "tendril",
+]
+
+[[package]]
+name = "scraper-myabandonware"
+version = "0.1.0"
+dependencies = [
+ "reqwest",
+ "scraper",
+ "serde",
+ "tokio",
 ]
 
 [[package]]
