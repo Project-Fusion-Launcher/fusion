@@ -13,6 +13,10 @@
       "path": "../crates/scraper-myabandonware",
     },
     {
+      "name": "crates/wrapper-itchio",
+      "path": "../crates/wrapper-itchio",
+    },
+    {
       "name": "packages/config-eslint",
       "path": "../packages/config-eslint",
     },
