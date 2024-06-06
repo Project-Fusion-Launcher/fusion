@@ -1,3 +1,3 @@
-import sharedConfig from "@repo/eslint-config";
+import sharedConfig from "@repo/config-eslint";
 
 export default [...sharedConfig];

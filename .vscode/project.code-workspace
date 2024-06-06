@@ -1,44 +1,44 @@
 {
-    "folders": [
-      {
-        "name": "ROOT",
-        "path": "../",
-      },
-      {
-        "name": "apps/desktop",
-        "path": "../apps/desktop",
-      },
-      {
-        "name": "crates/myabandonware-scraper",
-        "path": "../crates/myabandonware-scraper",
-      },
-      {
-        "name": "packages/eslint-config",
-        "path": "../packages/eslint-config",
-      },
-      {
-        "name": "packages/icons",
-        "path": "../packages/icons",
-      },
-      {
-        "name": "packages/tailwind-config",
-        "path": "../packages/tailwind-config",
-      },
-      {
-        "name": "packages/typescript-config",
-        "path": "../packages/typescript-config",
-      },
-      {
-        "name": "packages/ui",
-        "path": "../packages/ui",
-      },
-    ],
-    "settings": {
-      "files.exclude": {
-        "node_modules/": true,
-        "packages/": true,
-        "apps/": true,
-        "crates/": true,
-      },
+  "folders": [
+    {
+      "name": "ROOT",
+      "path": "../",
     },
-  }
+    {
+      "name": "apps/desktop",
+      "path": "../apps/desktop",
+    },
+    {
+      "name": "crates/myabandonware-scraper",
+      "path": "../crates/myabandonware-scraper",
+    },
+    {
+      "name": "packages/config-eslint",
+      "path": "../packages/config-eslint",
+    },
+    {
+      "name": "packages/config-tailwind",
+      "path": "../packages/config-tailwind",
+    },
+    {
+      "name": "packages/config-typescript",
+      "path": "../packages/config-typescript",
+    },
+    {
+      "name": "packages/icons",
+      "path": "../packages/icons",
+    },
+    {
+      "name": "packages/ui",
+      "path": "../packages/ui",
+    },
+  ],
+  "settings": {
+    "files.exclude": {
+      "node_modules/": true,
+      "packages/": true,
+      "apps/": true,
+      "crates/": true,
+    },
+  },
+}
