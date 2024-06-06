@@ -4,7 +4,7 @@ const Sidebar = () => {
   return (
     <Tabs.Root
       orientation="vertical"
-      class="h-full w-72 bg-background border-r border-border"
+      class="bg-background border-border h-full w-72 border-r"
     >
       <Tabs.List />
     </Tabs.Root>

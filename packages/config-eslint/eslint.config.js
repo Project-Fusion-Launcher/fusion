@@ -1,13 +1,13 @@
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import js from "@eslint/js";
-import solid from "eslint-plugin-solid/configs/typescript.js";
+import plugin from "eslint-plugin-solid";
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  solid,
+  plugin.configs["flat/typescript"],
   {
     languageOptions: {
       ecmaVersion: 2020,
