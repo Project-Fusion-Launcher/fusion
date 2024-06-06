@@ -5,13 +5,14 @@ mod tests {
 
     #[tokio::test]
     async fn search_test() {
-        let games = search("Grand Theft Auto", false, 2).await;
+        let games = search("need for speed", false, 1).await;
+        println!("{:?}", games);
         assert!(games.is_ok());
     }
 
     #[tokio::test]
     async fn game_test() {
-        let game_page = game("grand-theft-auto-3w6").await;
+        let game_page = game("need-for-speed-underground-2-ega").await;
         println!("{:?}", game_page);
         assert!(game_page.is_ok());
     }

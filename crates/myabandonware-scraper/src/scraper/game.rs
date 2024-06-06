@@ -1,7 +1,7 @@
 use scraper::{Html, Selector};
 
 use crate::{
-    models::{Game, GameRating},
+    models::{Game, GameDownload, GameRating},
     routes::route_game,
 };
 
@@ -20,7 +20,8 @@ pub async fn game(id: &str) -> Result<Game, &'static str> {
     let game_info_type_selector = Selector::parse("th").unwrap();
     let game_info_data_selector = Selector::parse("td").unwrap();
     let a_selector = Selector::parse("a").unwrap();
-    let rating_selector = Selector::parse("div.gameRated").unwrap();
+    let game_rating_selector = Selector::parse("div.gameRated").unwrap();
+    let game_downloads_selector = Selector::parse("div#download").unwrap();
 
     let name = document
         .select(&title_selector)
@@ -82,7 +83,7 @@ pub async fn game(id: &str) -> Result<Game, &'static str> {
     }
 
     let rating = document
-        .select(&rating_selector)
+        .select(&game_rating_selector)
         .next()
         .map(|rating| {
             let rating_text = rating.text().collect::<String>();
@@ -95,6 +96,27 @@ pub async fn game(id: &str) -> Result<Game, &'static str> {
         })
         .unwrap_or_default();
 
+    let mut downloads = Vec::new();
+    let mut current_platform = String::new();
+
+    for game_download_child in document
+        .select(&game_downloads_selector)
+        .next()
+        .unwrap()
+        .child_elements()
+    {
+        match game_download_child.value().name() {
+            "h4" => {
+                // current_platform is the id of the element
+                current_platform = game_download_child.text().collect();
+            }
+            "span" => downloads.push(GameDownload {
+                name: game_download_child.text().collect(),
+            }),
+            _ => {}
+        }
+    }
+
     Ok(Game {
         id: id.to_string(),
         name,
@@ -103,5 +125,6 @@ pub async fn game(id: &str) -> Result<Game, &'static str> {
         publishers,
         developer,
         rating,
+        downloads,
     })
 }

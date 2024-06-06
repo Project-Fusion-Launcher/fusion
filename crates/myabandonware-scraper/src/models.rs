@@ -41,6 +41,8 @@ pub struct Game {
     pub developer: String,
     /// The rating of the game.
     pub rating: GameRating,
+    /// The available downloads of the game.
+    pub downloads: Vec<GameDownload>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -52,4 +54,11 @@ pub struct GameRating {
     pub max: f32,
     /// The current amount of votes.
     pub votes: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+/// Represents a game download.
+pub struct GameDownload {
+    /// The name of the download.
+    pub name: String,
 }
