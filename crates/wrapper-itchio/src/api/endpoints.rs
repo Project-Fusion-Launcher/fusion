@@ -1,18 +1,19 @@
-use serde_json::Value;
+use super::models::OwnedKeys;
 
 const BASE_URL: &str = "https://api.itch.io";
 
-pub async fn owned_keys<S: AsRef<str>>(api_key: S, page: S) {
-    let url = format!("{}/owned-keys", BASE_URL);
+/// Get the list of keys (games) that the user owns.
+pub async fn owned_keys<S: AsRef<str>>(api_key: S, page: u32) -> Result<OwnedKeys, reqwest::Error> {
+    let url = format!("{}/profile/owned-keys", BASE_URL);
 
-    let response: Value = reqwest::Client::new()
+    let response: OwnedKeys = reqwest::Client::new()
         .get(url)
-        .query(&("page", page.as_ref()))
+        .query(&[("page", page)])
         .header("Authorization", api_key.as_ref())
         .send()
-        .await
-        .unwrap()
+        .await?
         .json()
-        .await
-        .unwrap();
+        .await?;
+
+    Ok(response)
 }
