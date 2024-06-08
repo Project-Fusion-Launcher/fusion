@@ -41,3 +41,18 @@ pub fn build(build_id: u32, download_key_id: u32) -> String {
     );
     url
 }
+
+/// The list of collections that the user has created.
+pub fn collections() -> String {
+    let url = format!("{}/profile/collections", BASE_URL);
+    url
+}
+
+/// The list of games in a collection.
+pub fn collection_games(collection_id: u32, page: u32) -> String {
+    let url = format!(
+        "{}/collections/{}/collection-games?page={}",
+        BASE_URL, collection_id, page
+    );
+    url
+}

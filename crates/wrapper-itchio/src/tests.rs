@@ -42,4 +42,20 @@ mod tests {
         println!("{:?}", build);
         assert!(build.is_ok());
     }
+
+    #[tokio::test]
+    async fn collections_test() {
+        let client = ItchioClient::new("abcd");
+        let collections = client.fetch_collections().await;
+        println!("{:?}", collections);
+        assert!(collections.is_ok());
+    }
+
+    #[tokio::test]
+    async fn collection_games_test() {
+        let client = ItchioClient::new("abcd");
+        let collection_games = client.fetch_collection_games(3934578, 1).await;
+        println!("{:?}", collection_games);
+        assert!(collection_games.is_ok());
+    }
 }

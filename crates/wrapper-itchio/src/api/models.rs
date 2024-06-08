@@ -150,6 +150,39 @@ pub struct BuildFile {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct CollectionsResponse {
+    pub collections: Vec<Collection>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Collection {
+    pub id: u32,
+    pub title: String,
+    pub games_count: u32,
+    #[serde(deserialize_with = "deserialize_date")]
+    pub created_at: NaiveDateTime,
+    #[serde(deserialize_with = "deserialize_date")]
+    pub updated_at: NaiveDateTime,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct CollectionGames {
+    pub page: u32,
+    pub per_page: u8,
+    pub collection_games: Vec<CollectionGame>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct CollectionGame {
+    pub blurb: Option<String>,
+    pub position: u32,
+    pub user_id: u32,
+    #[serde(deserialize_with = "deserialize_date")]
+    pub created_at: NaiveDateTime,
+    pub game: Game,
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum GameType {
     Default,

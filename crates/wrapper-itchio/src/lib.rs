@@ -4,6 +4,9 @@ mod tests;
 use api::models::Build;
 use api::models::BuildResponse;
 use api::models::Builds;
+use api::models::Collection;
+use api::models::CollectionGames;
+use api::models::CollectionsResponse;
 use api::models::OwnedKeys;
 use api::models::Upload;
 use api::models::UploadResponse;
@@ -66,6 +69,22 @@ impl ItchioClient {
             .make_get_request(&api::endpoints::build(build_id, download_key_id))
             .await?;
         Ok(response.build)
+    }
+
+    pub async fn fetch_collections(&self) -> Result<Vec<Collection>, reqwest::Error> {
+        let response: CollectionsResponse = self
+            .make_get_request(&api::endpoints::collections())
+            .await?;
+        Ok(response.collections)
+    }
+
+    pub async fn fetch_collection_games(
+        &self,
+        collection_id: u32,
+        page: u32,
+    ) -> Result<CollectionGames, reqwest::Error> {
+        self.make_get_request(&api::endpoints::collection_games(collection_id, page))
+            .await
     }
 
     async fn make_get_request<T: DeserializeOwned>(&self, url: &str) -> Result<T, reqwest::Error> {
