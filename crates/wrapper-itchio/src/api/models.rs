@@ -1,5 +1,8 @@
 use chrono::NaiveDateTime;
-use serde::{de::Error, Deserialize, Deserializer, Serialize};
+use serde::{
+    de::{DeserializeOwned, Error},
+    Deserialize, Deserializer, Serialize,
+};
 use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
@@ -41,7 +44,7 @@ pub struct Game {
     pub min_price: u32,
     pub user: Option<User>,
     pub sale: Option<Sale>,
-    #[serde(deserialize_with = "deserialize_game_traits")]
+    #[serde(deserialize_with = "deserialize_traits")]
     pub traits: Vec<GameTraits>,
 }
 
@@ -106,7 +109,7 @@ pub struct Upload {
     pub created_at: NaiveDateTime,
     #[serde(deserialize_with = "deserialize_date")]
     pub updated_at: NaiveDateTime,
-    #[serde(deserialize_with = "deserialize_upload_traits")]
+    #[serde(deserialize_with = "deserialize_traits")]
     pub traits: Vec<UploadTraits>,
 }
 
@@ -266,24 +269,10 @@ where
 }
 
 // Deserialize traits. For some reason sometimes it can be an empty object instead of an array.
-fn deserialize_game_traits<'de, D>(deserializer: D) -> Result<Vec<GameTraits>, D::Error>
+fn deserialize_traits<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,
-{
-    let value: Value = Deserialize::deserialize(deserializer)?;
-
-    match value {
-        Value::Array(vec) => {
-            Ok(serde_json::from_value(Value::Array(vec)).unwrap_or_else(|_| Vec::new()))
-        }
-        Value::Object(_) => Ok(Vec::new()),
-        _ => Err(serde::de::Error::custom("Invalid data type for traits")),
-    }
-}
-
-fn deserialize_upload_traits<'de, D>(deserializer: D) -> Result<Vec<UploadTraits>, D::Error>
-where
-    D: Deserializer<'de>,
+    T: DeserializeOwned,
 {
     let value: Value = Deserialize::deserialize(deserializer)?;
 
