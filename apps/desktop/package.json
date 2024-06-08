@@ -11,11 +11,11 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
-    "@kobalte/core": "^0.13.1",
+    "@kobalte/core": "^0.13.3",
     "@repo/ui": "workspace:*",
     "@solidjs/router": "^0.13.3",
     "@tauri-apps/api": "2.0.0-beta.11",
-    "@tauri-apps/plugin-os": "2.0.0-beta.3",
+    "@tauri-apps/plugin-os": "2.0.0-beta.5",
     "@tauri-controls/solid": "^0.4.0",
     "solid-js": "^1.8.17"
   },
@@ -29,9 +29,9 @@
     "eslint": "^9.2.0",
     "postcss": "^8.4.38",
     "tailwind-merge": "^2.3.0",
-    "tailwindcss": "^3.4.3",
+    "tailwindcss": "^3.4.4",
     "typescript": "^5.4.5",
-    "vite": "^5.2.11",
+    "vite": "^5.2.13",
     "vite-plugin-solid": "^2.10.2"
   }
 }
