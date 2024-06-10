@@ -9,5 +9,6 @@ dist-ssr
 .cache
 server/dist
 public/dist
+pnpm-lock.yaml
 
 *storybook.log
