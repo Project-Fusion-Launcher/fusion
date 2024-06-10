@@ -93,10 +93,26 @@ impl ItchioClient {
 
     /// Static function to login to the itch.io API.
     pub async fn login(username: String, password: String) -> Result<Login, reqwest::Error> {
+        Self::login_with_recaptcha(username, password, String::from("")).await
+    }
+
+    /// Static function to log in to the itch.io API using reCAPTCHA.
+    /// The recaptcha parameter is the response token from the reCAPTCHA widget,
+    /// whose URL is obtained previously from the [login](ItchioClient::login) response.
+    pub async fn login_with_recaptcha(
+        username: String,
+        password: String,
+        recaptcha: String,
+    ) -> Result<Login, reqwest::Error> {
         let params = LoginParams {
             source: "desktop",
             username,
             password,
+            recaptcha_response: if recaptcha.is_empty() {
+                None
+            } else {
+                Some(recaptcha)
+            },
         };
 
         let response: Login = Self::make_post_request(&api::endpoints::login(), params).await?;

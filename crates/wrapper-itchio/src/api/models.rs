@@ -47,6 +47,7 @@ pub struct LoginParams {
     pub source: &'static str,
     pub username: String,
     pub password: String,
+    pub recaptcha_response: Option<String>,
 }
 
 /// The totp login request body
