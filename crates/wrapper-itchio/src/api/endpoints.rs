@@ -56,3 +56,17 @@ pub fn collection_games(collection_id: u32, page: u32) -> String {
     );
     url
 }
+
+/// Obtain API key with username/email and password.
+/// A TOTP code response may be returned instead.
+/// This is a POST request.
+pub fn login() -> String {
+    let url = format!("{}/login", BASE_URL);
+    url
+}
+
+/// Verify a TOTP code to obtain an API key.
+pub fn totp_verify() -> String {
+    let url = format!("{}/totp/verify", BASE_URL);
+    url
+}

@@ -1,17 +1,13 @@
 mod api;
 mod tests;
 
-use api::models::Build;
-use api::models::BuildResponse;
-use api::models::Builds;
-use api::models::Collection;
-use api::models::CollectionGames;
-use api::models::CollectionsResponse;
-use api::models::OwnedKeys;
-use api::models::Upload;
-use api::models::UploadResponse;
-use api::models::Uploads;
+use api::models::{
+    Build, BuildResponse, Builds, Collection, CollectionGames, CollectionsResponse, Login,
+    LoginParams, OwnedKeys, TOTPLoginParams, Upload, UploadResponse, Uploads,
+};
+use reqwest::header::CONTENT_TYPE;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 pub struct ItchioClient {
     api_key: String,
@@ -19,6 +15,7 @@ pub struct ItchioClient {
 }
 
 impl ItchioClient {
+    /// Creates a new ItchioClient associated with the given API key.
     pub fn new<S: AsRef<str>>(api_key: S) -> Self {
         Self {
             api_key: api_key.as_ref().to_string(),
@@ -26,11 +23,13 @@ impl ItchioClient {
         }
     }
 
+    /// Fetches the list of keys (games) that the user owns.
     pub async fn fetch_owned_keys(&self, page: u32) -> Result<OwnedKeys, reqwest::Error> {
         self.make_get_request(&api::endpoints::owned_keys(page))
             .await
     }
 
+    /// Fetches the list of uploads for a game.
     pub async fn fetch_game_uploads(
         &self,
         game_id: u32,
@@ -40,6 +39,7 @@ impl ItchioClient {
             .await
     }
 
+    /// Fetches a specific upload.
     pub async fn fetch_game_upload(
         &self,
         upload_id: u32,
@@ -51,6 +51,7 @@ impl ItchioClient {
         Ok(response.upload)
     }
 
+    /// Fetches the list of builds associated to an upload.
     pub async fn fetch_upload_builds(
         &self,
         upload_id: u32,
@@ -60,6 +61,7 @@ impl ItchioClient {
             .await
     }
 
+    /// Fetches a specific build.
     pub async fn fetch_upload_build(
         &self,
         build_id: u32,
@@ -71,6 +73,7 @@ impl ItchioClient {
         Ok(response.build)
     }
 
+    /// Fetches the list of collections that the user has created.
     pub async fn fetch_collections(&self) -> Result<Vec<Collection>, reqwest::Error> {
         let response: CollectionsResponse = self
             .make_get_request(&api::endpoints::collections())
@@ -78,6 +81,7 @@ impl ItchioClient {
         Ok(response.collections)
     }
 
+    /// Fetches the list of games in a collection.
     pub async fn fetch_collection_games(
         &self,
         collection_id: u32,
@@ -87,10 +91,55 @@ impl ItchioClient {
             .await
     }
 
-    async fn make_get_request<T: DeserializeOwned>(&self, url: &str) -> Result<T, reqwest::Error> {
+    /// Static function to login to the itch.io API.
+    pub async fn login(username: String, password: String) -> Result<Login, reqwest::Error> {
+        let params = LoginParams {
+            source: "desktop",
+            username,
+            password,
+        };
+
+        let response: Login = Self::make_post_request(&api::endpoints::login(), params).await?;
+
+        Ok(response)
+    }
+
+    /// Static function to login to the itch.io API using TOTP.
+    pub async fn totp_verify(code: String, token: String) -> Result<Login, reqwest::Error> {
+        let params = TOTPLoginParams { token, code };
+
+        let response: Login =
+            Self::make_post_request(&api::endpoints::totp_verify(), params).await?;
+
+        Ok(response)
+    }
+
+    /// Makes a GET request to the itch.io API.
+    async fn make_get_request<D>(&self, url: &str) -> Result<D, reqwest::Error>
+    where
+        D: DeserializeOwned,
+    {
         self.http
             .get(url)
             .header("Authorization", &self.api_key)
+            .send()
+            .await?
+            .json()
+            .await
+    }
+
+    /// Makes a POST request to the itch.io API.
+    /// This function does not depend on self, so it can be called statically
+    /// even without an API key.
+    async fn make_post_request<D, S>(url: &str, params: S) -> Result<D, reqwest::Error>
+    where
+        D: DeserializeOwned,
+        S: Serialize,
+    {
+        reqwest::Client::new()
+            .post(url)
+            .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
+            .body(serde_urlencoded::to_string(&params).unwrap())
             .send()
             .await?
             .json()

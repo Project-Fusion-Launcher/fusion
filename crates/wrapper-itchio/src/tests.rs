@@ -58,4 +58,18 @@ mod tests {
         println!("{:?}", collection_games);
         assert!(collection_games.is_ok());
     }
+
+    #[tokio::test]
+    async fn test_login() {
+        let login = ItchioClient::login(String::from("ABCD"), String::from("abcd")).await;
+        println!("{:?}", login);
+        assert!(login.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_totp_verify() {
+        let login = ItchioClient::totp_verify(String::from("ABCD"), String::from("abcd")).await;
+        println!("{:?}", login);
+        assert!(login.is_ok());
+    }
 }

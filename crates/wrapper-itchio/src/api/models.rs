@@ -6,6 +6,57 @@ use serde::{
 use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
+pub struct Login {
+    #[serde(default = "default_false")]
+    pub success: bool,
+    #[serde(default = "default_false")]
+    pub totp_needed: bool,
+    pub token: Option<String>,
+    #[serde(default = "default_false")]
+    pub recaptcha_needed: bool,
+    pub recaptcha_url: Option<String>,
+    pub cookie: Option<Cookie>,
+    pub key: Option<Key>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Cookie {
+    pub itchio: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Key {
+    pub key: String,
+    #[serde(deserialize_with = "deserialize_date")]
+    pub updated_at: NaiveDateTime,
+    #[serde(deserialize_with = "deserialize_date")]
+    pub created_at: NaiveDateTime,
+    #[serde(deserialize_with = "deserialize_date")]
+    pub last_used_at: NaiveDateTime,
+    pub source: KeySource,
+    pub source_version: String,
+    #[serde(default = "default_false")]
+    pub revoked: bool,
+    pub user_id: u32,
+    pub id: u32,
+}
+
+/// The login request body
+#[derive(Serialize, Debug)]
+pub struct LoginParams {
+    pub source: &'static str,
+    pub username: String,
+    pub password: String,
+}
+
+/// The totp login request body
+#[derive(Serialize, Debug)]
+pub struct TOTPLoginParams {
+    pub token: String,
+    pub code: String,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct OwnedKeys {
     pub per_page: u8,
     pub page: u32,
@@ -180,6 +231,15 @@ pub struct CollectionGame {
     #[serde(deserialize_with = "deserialize_date")]
     pub created_at: NaiveDateTime,
     pub game: Game,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum KeySource {
+    Desktop,
+    Web,
+    Wharf,
+    Android,
 }
 
 #[derive(Deserialize, Debug)]
