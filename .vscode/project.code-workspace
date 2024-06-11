@@ -17,6 +17,10 @@
       "path": "../crates/wrapper-itchio",
     },
     {
+      "name": "crates/wrapper-legacygames",
+      "path": "../crates/wrapper-legacygames",
+    },
+    {
       "name": "packages/config-eslint",
       "path": "../packages/config-eslint",
     },
