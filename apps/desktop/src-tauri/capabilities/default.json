@@ -4,19 +4,13 @@
   "description": "Capability for the main window",
   "windows": ["main"],
   "permissions": [
-    "path:default",
-    "event:default",
-    "app:default",
-    "image:default",
-    "resources:default",
-    "menu:default",
-    "tray:default",
-
-    "window:default",
-    "window:allow-toggle-maximize",
-    "window:allow-minimize",
-    "window:allow-close",
-    "window:allow-start-dragging",
+    "core:window:allow-start-dragging",
+    "core:window:allow-close",
+    "core:window:allow-minimize",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-is-maximized",
+    "core:window:allow-is-minimized",
 
     "os:allow-os-type"
   ]

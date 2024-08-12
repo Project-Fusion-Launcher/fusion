@@ -11,27 +11,27 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
-    "@kobalte/core": "^0.13.3",
+    "@kobalte/core": "^0.13.4",
     "@repo/ui": "workspace:*",
-    "@solidjs/router": "^0.13.3",
+    "@solidjs/router": "^0.14.1",
     "@tauri-apps/api": "2.0.0-beta.11",
-    "@tauri-apps/plugin-os": "2.0.0-beta.5",
+    "@tauri-apps/plugin-os": "2.0.0-rc.0",
     "@tauri-controls/solid": "^0.4.0",
-    "solid-js": "^1.8.17"
+    "solid-js": "^1.8.20"
   },
   "devDependencies": {
     "@repo/config-eslint": "workspace:*",
     "@repo/config-tailwind": "workspace:*",
     "@repo/config-typescript": "workspace:*",
     "@tauri-apps/cli": "2.0.0-beta.16",
-    "autoprefixer": "^10.4.19",
+    "autoprefixer": "^10.4.20",
     "clsx": "^2.1.1",
-    "eslint": "^9.2.0",
-    "postcss": "^8.4.38",
-    "tailwind-merge": "^2.3.0",
-    "tailwindcss": "^3.4.4",
-    "typescript": "^5.4.5",
-    "vite": "^5.2.13",
+    "eslint": "^9.9.0",
+    "postcss": "^8.4.41",
+    "tailwind-merge": "^2.5.2",
+    "tailwindcss": "^3.4.9",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0",
     "vite-plugin-solid": "^2.10.2"
   }
 }
