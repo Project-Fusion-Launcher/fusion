@@ -21,12 +21,18 @@ const config: Omit<Config, "content"> = {
       },
     },
     spacing: {
+      "8": "0.5rem",
+      "32": "2rem",
       "48": "3rem",
+      "52": "3.25rem",
       "72": "4.5rem",
+      "136": "8.5rem",
     },
     borderWidth: {
       DEFAULT: "1px",
       "0": "0",
+      sm: "1px",
+      md: "2px",
     },
   },
   plugins: [kobaltePlugin],

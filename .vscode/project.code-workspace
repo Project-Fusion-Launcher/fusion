@@ -48,5 +48,8 @@
       "apps/": true,
       "crates/": true,
     },
+    "files.associations": {
+      "*.css": "tailwindcss",
+    },
   },
 }
