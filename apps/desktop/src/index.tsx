@@ -3,6 +3,7 @@ import { render } from "solid-js/web";
 
 import App from "./App";
 import "./styles.css";
+import "@repo/ui/fonts";
 import { Navigate, Route, Router } from "@solidjs/router";
 import Library from "./routes/Library";
 

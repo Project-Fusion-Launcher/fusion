@@ -24,6 +24,7 @@
     "@repo/config-eslint": "workspace:*",
     "@repo/config-tailwind": "workspace:*",
     "@repo/config-typescript": "workspace:*",
+    "@repo/ui": "workspace:*",
     "@tauri-apps/cli": "2.0.0-beta.16",
     "autoprefixer": "^10.4.20",
     "clsx": "^2.1.1",

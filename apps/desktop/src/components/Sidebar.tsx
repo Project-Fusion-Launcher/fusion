@@ -41,7 +41,7 @@ const Sidebar = (props: SidebarProps) => {
             </Tabs.Trigger>
           )}
         </For>
-        <Separator class="bg-border m-8 h-[2px] w-32 border-0" />
+        <Separator class="bg-border m-8 h-1 w-32 border-0" />
         <For each={pagesSection2}>
           {(page) => (
             <Tabs.Trigger

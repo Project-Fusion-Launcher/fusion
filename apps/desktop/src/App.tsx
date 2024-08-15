@@ -3,6 +3,7 @@ import Sidebar from "./components/Sidebar";
 import type { RouteSectionProps } from "@solidjs/router";
 import { useNavigate } from "@solidjs/router";
 import { createSignal } from "solid-js";
+import Header from "./components/Header";
 
 const App = (props: RouteSectionProps) => {
   const [currentTab, setCurrentTab] = createSignal("library");
@@ -18,7 +19,10 @@ const App = (props: RouteSectionProps) => {
     <>
       <WindowTitlebar class="fixed z-50 w-full bg-transparent" />
       <Sidebar currentTab={currentTab()} onTabChange={handleTabChange} />
-      {props.children}
+      <div class="w-full">
+        <Header />
+        {props.children}
+      </div>
     </>
   );
 };

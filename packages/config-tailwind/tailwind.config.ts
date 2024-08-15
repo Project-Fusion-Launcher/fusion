@@ -21,6 +21,7 @@ const config: Omit<Config, "content"> = {
       },
     },
     spacing: {
+      "1": "1px",
       "8": "0.5rem",
       "28": "1.75rem",
       "32": "2rem",
@@ -36,6 +37,9 @@ const config: Omit<Config, "content"> = {
       "0": "0",
       sm: "1px",
       md: "2px",
+    },
+    fontFamily: {
+      sans: ['"Metropolis"'],
     },
   },
   plugins: [kobaltePlugin],
