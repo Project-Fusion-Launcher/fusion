@@ -3,6 +3,11 @@ import { Separator } from "@kobalte/core/separator";
 import { Box, Boxes, Joystick, Library, Store, UsersRound } from "lucide-solid";
 import { For } from "solid-js";
 
+interface SidebarProps {
+  currentTab: string;
+  onTabChange: (tab: string) => void;
+}
+
 const pagesSection1 = [
   { name: "library", icon: Library },
   { name: "retro", icon: Joystick },
@@ -14,11 +19,13 @@ const pagesSection2 = [
   { name: "friends", icon: UsersRound },
 ];
 
-const Sidebar = () => {
+const Sidebar = (props: SidebarProps) => {
   return (
     <Tabs.Root
       orientation="vertical"
-      class="bg-background border-border flex h-full w-72 flex-col items-center border-r"
+      class="bg-background border-border z-50 flex h-full w-72 flex-shrink-0 flex-col items-center border-r"
+      value={props.currentTab}
+      onChange={props.onTabChange}
     >
       <div class="h-136 flex items-center">
         <Box class="text-primary size-48" style={{ "stroke-width": "2px" }} />
@@ -34,7 +41,7 @@ const Sidebar = () => {
             </Tabs.Trigger>
           )}
         </For>
-        <Separator class="bg-border m-8 h-[2px] w-1/2 border-0" />
+        <Separator class="bg-border m-8 h-[2px] w-32 border-0" />
         <For each={pagesSection2}>
           {(page) => (
             <Tabs.Trigger

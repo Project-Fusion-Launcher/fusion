@@ -22,7 +22,10 @@ const config: Omit<Config, "content"> = {
     },
     spacing: {
       "8": "0.5rem",
+      "28": "1.75rem",
       "32": "2rem",
+      "40": "2.5rem",
+      "44": "2.75rem",
       "48": "3rem",
       "52": "3.25rem",
       "72": "4.5rem",
