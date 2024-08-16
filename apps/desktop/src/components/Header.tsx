@@ -1,9 +1,17 @@
-const Header = () => {
+import { capitalizeFirstLetter } from "../util/string";
+
+interface HeaderProps {
+  title: string;
+}
+
+const Header = (props: HeaderProps) => {
   return (
-    <div class="h-136 w-full pl-40 pt-44">
+    <div class="w-full px-40 py-44">
       <div class="flex items-center gap-40">
-        <span class="text-primary text-4xl font-bold">Library</span>
-        <input class="h-48" type="text" />
+        <span class="text-primary w-auto text-4xl font-bold transition-all">
+          {capitalizeFirstLetter(props.title)}
+        </span>
+        <input class="h-48 w-full transition-all" type="text" />
       </div>
     </div>
   );

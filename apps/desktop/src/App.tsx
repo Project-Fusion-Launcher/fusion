@@ -20,7 +20,7 @@ const App = (props: RouteSectionProps) => {
       <WindowTitlebar class="fixed z-50 w-full bg-transparent" />
       <Sidebar currentTab={currentTab()} onTabChange={handleTabChange} />
       <div class="w-full">
-        <Header />
+        <Header title={currentTab()} />
         {props.children}
       </div>
     </>
