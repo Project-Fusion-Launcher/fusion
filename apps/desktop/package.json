@@ -13,12 +13,13 @@
   "dependencies": {
     "@kobalte/core": "^0.13.4",
     "@repo/ui": "workspace:*",
-    "@solidjs/router": "^0.14.1",
+    "@solidjs/router": "^0.14.3",
     "@tauri-apps/api": "2.0.0-beta.11",
     "@tauri-apps/plugin-os": "2.0.0-rc.0",
     "@tauri-controls/solid": "^0.4.0",
-    "lucide-solid": "^0.427.0",
-    "solid-js": "^1.8.20"
+    "lucide-solid": "^0.428.0",
+    "solid-js": "^1.8.21",
+    "solid-motionone": "^1.0.0"
   },
   "devDependencies": {
     "@repo/config-eslint": "workspace:*",
@@ -31,9 +32,9 @@
     "eslint": "^9.9.0",
     "postcss": "^8.4.41",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss": "^3.4.9",
+    "tailwindcss": "^3.4.10",
     "typescript": "^5.5.4",
-    "vite": "^5.4.0",
+    "vite": "^5.4.1",
     "vite-plugin-solid": "^2.10.2"
   }
 }
