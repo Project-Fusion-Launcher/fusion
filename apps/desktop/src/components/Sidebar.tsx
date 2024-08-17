@@ -27,7 +27,7 @@ const Sidebar = (props: SidebarProps) => {
       value={props.currentTab}
       onChange={props.onTabChange}
     >
-      <div class="h-136 flex items-center">
+      <div class="flex items-center py-44">
         <Box class="text-primary size-48" style={{ "stroke-width": "2px" }} />
       </div>
       <Tabs.List class="text-primary relative flex w-full flex-col items-center">

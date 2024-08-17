@@ -34,12 +34,17 @@ const config: Omit<Config, "content"> = {
     },
     borderWidth: {
       DEFAULT: "1px",
-      "0": "0",
+      none: "0",
       sm: "1px",
       md: "2px",
     },
     fontFamily: {
       sans: ['"Metropolis"'],
+    },
+    borderRadius: {
+      DEFAULT: "5px",
+      none: "0",
+      md: "5px",
     },
   },
   plugins: [kobaltePlugin],
