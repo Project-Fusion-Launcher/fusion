@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import { TextField as KTextField } from "@kobalte/core/text-field";
 import { X } from "lucide-solid";

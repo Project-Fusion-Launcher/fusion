@@ -21,6 +21,7 @@ export default [
         "warn",
         { prefer: "type-imports", fixStyle: "separate-type-imports" },
       ],
+      "@typescript-eslint/ban-ts-comment": "off",
     },
   },
 ];
