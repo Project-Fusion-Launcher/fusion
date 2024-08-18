@@ -21,10 +21,10 @@ const variants = tv({
     width: {
       full: "w-full flex-grow",
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+  },
+  defaultVariants: {
+    variant: "default",
+    size: "default",
   },
 });
 
