@@ -3,15 +3,16 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const variants = tv({
-  base: "bg-border m-8 h-1 w-32 border-0",
+  base: "bg-border m-8 h-1 border-none",
   variants: {
     width: {
-      default: "w-32",
+      "50": "w-1/2",
+      "75": "w-3/4",
       full: "w-full flex-grow",
     },
   },
   defaultVariants: {
-    width: "default",
+    width: "50",
   },
 });
 

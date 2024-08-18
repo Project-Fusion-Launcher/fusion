@@ -1,5 +1,5 @@
 import { Tabs } from "@kobalte/core";
-import { Separator } from "@kobalte/core/separator";
+import { Separator } from "@repo/ui";
 import { Box, Boxes, Joystick, Library, Store, UsersRound } from "lucide-solid";
 import { For } from "solid-js";
 
@@ -41,7 +41,7 @@ const Sidebar = (props: SidebarProps) => {
             </Tabs.Trigger>
           )}
         </For>
-        <Separator class="bg-border m-8 h-1 w-32 border-0" />
+        <Separator />
         <For each={pagesSection2}>
           {(page) => (
             <Tabs.Trigger
