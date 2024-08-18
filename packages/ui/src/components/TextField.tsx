@@ -8,7 +8,7 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const variants = tv({
-  base: "focus-within:ring-accent flex items-center rounded focus-within:ring-2",
+  base: "focus-within:ring-accent flex cursor-text items-center rounded focus-within:ring-2",
   variants: {
     variant: {
       default: "bg-border",
@@ -54,8 +54,7 @@ const TextField = (props: TextFieldProps) => {
   let clearButtonRef!: SVGSVGElement;
 
   const handleClick = (e: MouseEvent) => {
-    console.log(e.target);
-    if (!clearButtonRef.contains(e.target as Node)) {
+    if (!clearButtonRef || !clearButtonRef.contains(e.target as Node)) {
       inputRef?.focus();
     } else {
       props.onChange?.("");
