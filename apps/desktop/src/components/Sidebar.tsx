@@ -1,7 +1,7 @@
 import { Tabs } from "@kobalte/core";
 import { Separator } from "@repo/ui";
 import { Box, Boxes, Joystick, Library, Store, UsersRound } from "lucide-solid";
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 
 interface SidebarProps {
   currentTab: string;
@@ -31,25 +31,19 @@ const Sidebar = (props: SidebarProps) => {
         <Box class="text-primary size-48" style={{ "stroke-width": "2px" }} />
       </div>
       <Tabs.List class="text-primary relative flex w-full flex-col items-center">
-        <For each={pagesSection1}>
-          {(page) => (
-            <Tabs.Trigger
-              value={page.name}
-              class="relative flex h-52 items-center justify-center"
-            >
-              <page.icon class="size-32" />
-            </Tabs.Trigger>
-          )}
-        </For>
-        <Separator />
-        <For each={pagesSection2}>
-          {(page) => (
-            <Tabs.Trigger
-              value={page.name}
-              class="relative flex h-52 items-center justify-center"
-            >
-              <page.icon class="size-32" />
-            </Tabs.Trigger>
+        <For each={[...pagesSection1, ...pagesSection2]}>
+          {(page, i) => (
+            <>
+              <Show when={i() === pagesSection1.length}>
+                <Separator />
+              </Show>
+              <Tabs.Trigger
+                value={page.name}
+                class="relative flex h-52 w-full items-center justify-center"
+              >
+                <page.icon class="size-32" />
+              </Tabs.Trigger>
+            </>
           )}
         </For>
         <Tabs.Indicator class="bg-primary background border-r-md border-accent absolute w-full bg-opacity-5 transition-transform" />
