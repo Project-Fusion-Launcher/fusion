@@ -17,7 +17,7 @@ const Header = (props: HeaderProps) => {
         </span>
         <TextField
           variant="outline"
-          size="large"
+          size="lg"
           placeholder="Search"
           width="full"
           autocomplete="off"

@@ -11,12 +11,12 @@ const variants = tv({
   base: "focus-within:ring-accent flex cursor-text items-center rounded focus-within:ring-2",
   variants: {
     variant: {
-      default: "bg-border",
+      default: "bg-secondary",
       outline: "border-border border bg-transparent",
     },
     size: {
-      default: "h-32 gap-8 px-8",
-      large: "h-48 gap-16 px-16",
+      md: "h-32 gap-8 px-8",
+      lg: "h-48 gap-16 px-16",
     },
     width: {
       full: "w-full flex-grow",
@@ -24,7 +24,7 @@ const variants = tv({
   },
   defaultVariants: {
     variant: "default",
-    size: "default",
+    size: "md",
   },
 });
 
@@ -32,9 +32,12 @@ const iconVariants = tv({
   base: "stroke-primary shrink-0",
   variants: {
     size: {
-      default: "size-16",
-      large: "size-20",
+      md: "size-16",
+      lg: "size-20",
     },
+  },
+  defaultVariants: {
+    size: "md",
   },
 });
 

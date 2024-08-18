@@ -11,30 +11,30 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const DefaultDefault: Story = {
+export const DefaultMedium: Story = {
   args: {
-    size: "default",
+    size: "md",
     variant: "default",
   },
 };
 
-export const DefaultOutline: Story = {
+export const OutlineMedium: Story = {
   args: {
-    size: "default",
+    size: "md",
     variant: "outline",
   },
 };
 
-export const LargeDefault: Story = {
+export const DefaultLarge: Story = {
   args: {
-    size: "large",
+    size: "lg",
     variant: "default",
   },
 };
 
-export const LargeOutline: Story = {
+export const OutlineLarge: Story = {
   args: {
-    size: "large",
+    size: "lg",
     variant: "outline",
   },
 };

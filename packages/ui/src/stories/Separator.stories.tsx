@@ -11,8 +11,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Full: Story = {
   args: {
-    width: "default",
+    width: "full",
+  },
+};
+
+export const Half: Story = {
+  args: {
+    width: "50",
   },
 };
