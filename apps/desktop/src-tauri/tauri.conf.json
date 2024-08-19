@@ -1,7 +1,7 @@
 {
   "productName": "fusion",
   "version": "0.0.0",
-  "identifier": "com.fusion.dev",
+  "identifier": "fusion",
   "build": {
     "beforeDevCommand": "vite",
     "devUrl": "http://localhost:1420",
