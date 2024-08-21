@@ -4,7 +4,7 @@ use tauri::{AppHandle, Manager};
 
 pub mod managers;
 pub mod models;
-pub mod schemas;
+pub mod schema;
 
 /// A [`OnceLock`](OnceLock) containing a [`tauri`](tauri) [`AppHandle`](AppHandle) for easy access.
 static APP: OnceLock<AppHandle> = OnceLock::new();
