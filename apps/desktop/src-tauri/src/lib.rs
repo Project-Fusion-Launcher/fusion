@@ -1,7 +1,29 @@
-pub fn run() {
+use managers::database::DatabaseManager;
+use std::sync::OnceLock;
+use tauri::{AppHandle, Manager};
+
+pub mod managers;
+pub mod models;
+pub mod schemas;
+
+/// A [`OnceLock`](OnceLock) containing a [`tauri`](tauri) [`AppHandle`](AppHandle) for easy access.
+static APP: OnceLock<AppHandle> = OnceLock::new();
+
+pub async fn run() {
+    // Shares the current tokio runtime with tauri.
+    tauri::async_runtime::set(tokio::runtime::Handle::current());
+
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .invoke_handler(tauri::generate_handler![])
+        .setup(|app| {
+            APP.set(app.handle().clone())
+                .expect("Error setting up global app handle");
+
+            app.manage(DatabaseManager::new());
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
