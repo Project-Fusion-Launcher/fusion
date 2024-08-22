@@ -7,7 +7,9 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use std::{fs, sync::Mutex};
 use tauri::Manager;
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+
+const DATABASE_NAME: &str = "app_data.db";
 
 pub struct DatabaseManager {
     connection: Mutex<SqliteConnection>,
@@ -17,7 +19,8 @@ impl DatabaseManager {
     pub fn new() -> Self {
         let app_data_path = APP.get().unwrap().path().app_data_dir().unwrap();
         fs::create_dir_all(&app_data_path).expect("Error creating app data directory");
-        let database_path = app_data_path.join("data.db");
+        let database_path = app_data_path.join(DATABASE_NAME);
+
         let uri = format!("sqlite://{}?mode=rwc", database_path.to_str().unwrap());
 
         let mut connection =
@@ -36,6 +39,10 @@ impl DatabaseManager {
         Self {
             connection: Mutex::new(connection),
         }
+    }
+
+    pub fn connection(&self) -> &Mutex<SqliteConnection> {
+        &self.connection
     }
 }
 
