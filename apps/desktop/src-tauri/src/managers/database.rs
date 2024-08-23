@@ -1,10 +1,7 @@
-use crate::{models::config::Config, schema::configs::dsl::*, APP};
-use diesel::{
-    query_dsl::methods::{LimitDsl, SelectDsl},
-    Connection, RunQueryDsl, SelectableHelper, SqliteConnection,
-};
+use crate::APP;
+use diesel::{Connection, SqliteConnection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use std::{fs, sync::Mutex};
+use std::fs;
 use tauri::Manager;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
@@ -12,7 +9,7 @@ const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 const DATABASE_NAME: &str = "app_data.db";
 
 pub struct DatabaseManager {
-    connection: Mutex<SqliteConnection>,
+    uri: String,
 }
 
 impl DatabaseManager {
@@ -28,21 +25,11 @@ impl DatabaseManager {
 
         connection.run_pending_migrations(MIGRATIONS).unwrap();
 
-        // TEMPORARY
-        let config = configs
-            .limit(1)
-            .select(Config::as_select())
-            .load(&mut connection);
-
-        println!("{:?}", config);
-
-        Self {
-            connection: Mutex::new(connection),
-        }
+        Self { uri }
     }
 
-    pub fn connection(&self) -> &Mutex<SqliteConnection> {
-        &self.connection
+    pub fn create_connection(&self) -> SqliteConnection {
+        SqliteConnection::establish(&self.uri).expect("Error connecting to database")
     }
 }
 

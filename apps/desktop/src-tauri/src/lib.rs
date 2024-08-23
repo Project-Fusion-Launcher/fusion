@@ -1,4 +1,4 @@
-use managers::database::DatabaseManager;
+use managers::{config::ConfigManager, database::DatabaseManager};
 use std::sync::OnceLock;
 use tauri::{AppHandle, Manager};
 
@@ -21,6 +21,7 @@ pub async fn run() {
                 .expect("Error setting up global app handle");
 
             app.manage(DatabaseManager::new());
+            app.manage(ConfigManager::new());
 
             Ok(())
         })
