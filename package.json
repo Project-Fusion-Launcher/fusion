@@ -12,10 +12,11 @@
     "@commitlint/config-conventional": "^19.2.2",
     "@commitlint/types": "^19.0.3",
     "@repo/config-eslint": "workspace:*",
-    "eslint": "^9.9.0",
-    "husky": "^9.1.4",
+    "eslint": "^9.9.1",
+    "husky": "^9.1.5",
     "lint-staged": "^15.2.9",
     "prettier": "^3.3.3",
+    "prettier-plugin-sql": "^0.18.1",
     "prettier-plugin-tailwindcss": "^0.6.6",
     "turbo": "^2.0.14"
   },

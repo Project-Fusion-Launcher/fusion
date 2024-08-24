@@ -13,7 +13,7 @@
     "build-storybook": "storybook build"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^1.6.1",
+    "@chromatic-com/storybook": "^1.7.0",
     "@repo/config-eslint": "workspace:*",
     "@repo/config-tailwind": "workspace:*",
     "@repo/config-typescript": "workspace:*",
@@ -24,7 +24,7 @@
     "@storybook/docs-tools": "^8.2.9",
     "@storybook/test": "8.2.9",
     "autoprefixer": "^10.4.20",
-    "eslint": "^9.9.0",
+    "eslint": "^9.9.1",
     "eslint-plugin-storybook": "^0.8.0",
     "postcss": "^8.4.41",
     "storybook": "^8.2.9",
@@ -33,12 +33,12 @@
     "tailwind-variants": "0.2.1",
     "tailwindcss": "^3.4.10",
     "typescript": "^5.5.4",
-    "vite": "^5.4.1",
+    "vite": "^5.4.2",
     "vite-plugin-solid": "^2.10.2"
   },
   "dependencies": {
     "@kobalte/core": "^0.13.4",
-    "lucide-solid": "^0.428.0",
+    "lucide-solid": "^0.435.0",
     "solid-js": "^1.8.21"
   }
 }
