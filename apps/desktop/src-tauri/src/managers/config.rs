@@ -1,5 +1,5 @@
 use crate::{models::config::Config, schema::configs::dsl::configs, APP};
-use diesel::{associations::HasTable, QueryDsl, RunQueryDsl, SelectableHelper};
+use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use tauri::Manager;
 
 use super::database::DatabaseManager;
@@ -19,7 +19,7 @@ impl ConfigManager {
         let database_manager = APP.get().unwrap().state::<DatabaseManager>();
         let mut connection = database_manager.create_connection();
 
-        diesel::update(configs::table())
+        diesel::update(configs)
             .set(self.config.clone())
             .execute(&mut connection)
             .unwrap();
@@ -51,7 +51,7 @@ impl ConfigManager {
             itchio_api_key: None,
         };
 
-        diesel::insert_into(configs::table())
+        diesel::insert_into(configs)
             .values(&config)
             .execute(&mut connection)
             .unwrap();
@@ -61,11 +61,11 @@ impl ConfigManager {
 
     // Getters and setters
 
-    fn itchio_api_key(&self) -> Option<&str> {
+    pub fn itchio_api_key(&self) -> Option<&str> {
         self.config.itchio_api_key.as_deref()
     }
 
-    fn set_itchio_api_key(&mut self, itchio_api_key: Option<String>) {
+    pub fn set_itchio_api_key(&mut self, itchio_api_key: Option<String>) {
         self.config.itchio_api_key = itchio_api_key;
     }
 }
