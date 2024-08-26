@@ -27,11 +27,15 @@ type ButtonVariants = VariantProps<typeof variants>;
 
 export interface ButtonProps extends ButtonVariants {
   children: JSX.Element;
+  onClick?: () => void;
 }
 
 const Button = (props: ButtonProps) => {
   return (
-    <KButton class={variants({ variant: props.variant })}>
+    <KButton
+      class={variants({ variant: props.variant })}
+      onClick={props.onClick}
+    >
       {props.children}
     </KButton>
   );
