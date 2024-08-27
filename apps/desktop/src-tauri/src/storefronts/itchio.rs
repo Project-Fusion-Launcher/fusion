@@ -13,6 +13,8 @@ pub async fn fetch_games(api_key: &str) -> Vec<Game> {
         games.push(Game {
             id: key.game.id.to_string(),
             title: key.game.title,
+            source: "itchio".to_string(),
+            key: Some(key.id.to_string()),
         });
     }
 

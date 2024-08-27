@@ -6,8 +6,10 @@ diesel::table! {
 }
 
 diesel::table! {
-    games (id) {
+    games (id, source) {
         id -> Text,
+        source -> Text,
         title -> Text,
+        key -> Nullable<Text>,
     }
 }

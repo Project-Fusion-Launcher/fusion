@@ -5,5 +5,7 @@ use diesel::prelude::*;
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Game {
     pub id: String,
+    pub source: String,
     pub title: String,
+    pub key: Option<String>,
 }
