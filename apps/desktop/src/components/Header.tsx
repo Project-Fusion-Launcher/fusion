@@ -10,7 +10,7 @@ const Header = (props: HeaderProps) => {
   const [search, setSearch] = createSignal("");
 
   return (
-    <div class="w-full px-40 py-44">
+    <div class="px-40 py-44">
       <div class="flex grow items-center gap-40">
         <span class="text-primary w-auto text-4xl font-bold">
           {props.title}

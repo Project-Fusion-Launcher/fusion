@@ -27,7 +27,32 @@ const Library = () => {
       refetch: refetching,
     }).catch(() => [])) as Game[];
     newGames.sort((a, b) => a.title.localeCompare(b.title));
-    newGames = newGames.concat(newGames).concat(newGames).concat(newGames);
+    newGames = newGames
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames)
+      .concat(newGames);
     return newGames;
   }
 
@@ -67,8 +92,7 @@ const Library = () => {
       </div>
       <div
         ref={(el) => (gameContainerRef = el)}
-        class="m-40 overflow-auto"
-        style={{ "scrollbar-width": "none" }}
+        class="my-40 ml-40 mr-[14px] overflow-auto pr-[20px]"
       >
         <Virtualizer data={groupArrayElements(games(), columns())} overscan={1}>
           {(gameRow) => (
