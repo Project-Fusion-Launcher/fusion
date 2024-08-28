@@ -18,7 +18,7 @@ const App = (props: RouteSectionProps) => {
     <>
       <WindowTitlebar class="fixed z-50 w-full bg-transparent" />
       <Sidebar currentTab={currentTab()} onTabChange={handleTabChange} />
-      <div class="w-full">{props.children}</div>
+      <div class="flex w-full flex-col">{props.children}</div>
     </>
   );
 };

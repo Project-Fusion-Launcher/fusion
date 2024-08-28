@@ -25,6 +25,7 @@ const config: Omit<Config, "content"> = {
       "8": "0.5rem",
       "16": "1rem",
       "20": "1.25rem",
+      "24": "1.5rem",
       "28": "1.75rem",
       "32": "2rem",
       "40": "2.5rem",
@@ -33,6 +34,8 @@ const config: Omit<Config, "content"> = {
       "52": "3.25rem",
       "72": "4.5rem",
       "136": "8.5rem",
+      "192": "12rem",
+      "288": "18rem",
     },
     borderWidth: {
       DEFAULT: "1px",

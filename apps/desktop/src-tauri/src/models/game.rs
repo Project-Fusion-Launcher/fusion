@@ -1,6 +1,7 @@
 use diesel::prelude::*;
+use serde::Serialize;
 
-#[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug)]
+#[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug, Serialize)]
 #[diesel(table_name = crate::schema::games)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Game {
