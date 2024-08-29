@@ -13,7 +13,7 @@
     "build-storybook": "storybook build"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^1.7.0",
+    "@chromatic-com/storybook": "^1.8.0",
     "@repo/config-eslint": "workspace:*",
     "@repo/config-tailwind": "workspace:*",
     "@repo/config-typescript": "workspace:*",
@@ -37,8 +37,8 @@
     "vite-plugin-solid": "^2.10.2"
   },
   "dependencies": {
-    "@kobalte/core": "^0.13.4",
+    "@kobalte/core": "^0.13.6",
     "lucide-solid": "^0.435.0",
-    "solid-js": "^1.8.21"
+    "solid-js": "^1.8.22"
   }
 }

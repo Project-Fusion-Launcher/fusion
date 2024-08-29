@@ -8,8 +8,8 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.4.0",
-    "@commitlint/config-conventional": "^19.2.2",
+    "@commitlint/cli": "^19.4.1",
+    "@commitlint/config-conventional": "^19.4.1",
     "@commitlint/types": "^19.0.3",
     "@repo/config-eslint": "workspace:*",
     "eslint": "^9.9.1",
@@ -18,7 +18,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-sql": "^0.18.1",
     "prettier-plugin-tailwindcss": "^0.6.6",
-    "turbo": "^2.0.14"
+    "turbo": "^2.1.0"
   },
   "packageManager": "pnpm@9.2.0",
   "name": "fusion"
