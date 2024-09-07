@@ -11,5 +11,6 @@ diesel::table! {
         source -> Text,
         title -> Text,
         key -> Nullable<Text>,
+        developer -> Nullable<Text>,
     }
 }

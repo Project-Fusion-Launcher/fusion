@@ -9,5 +9,6 @@ CREATE TABLE `games` (
   `source` TEXT NOT NULL,
   `title` TEXT NOT NULL,
   `key` TEXT,
+  `developer` TEXT,
   PRIMARY KEY (`id`, `source`)
 );

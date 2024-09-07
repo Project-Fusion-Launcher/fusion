@@ -11,6 +11,7 @@ interface Game {
   id: string;
   title: string;
   source: string;
+  developer?: string;
 }
 
 const Library = () => {
@@ -27,6 +28,7 @@ const Library = () => {
       refetch: refetching,
     }).catch(() => [])) as Game[];
     newGames.sort((a, b) => a.title.localeCompare(b.title));
+    console.log(newGames);
     return newGames;
   }
 
@@ -74,7 +76,7 @@ const Library = () => {
               <For each={gameRow}>
                 {(game, i) => (
                   <>
-                    <GameCard title={game.title} />
+                    <GameCard title={game.title} developer={game.developer} />
                     {i() === gameRow.length - 1 && i() < columns() - 1 && (
                       <For
                         each={Array.from({

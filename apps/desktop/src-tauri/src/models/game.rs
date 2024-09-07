@@ -9,4 +9,5 @@ pub struct Game {
     pub source: String,
     pub title: String,
     pub key: Option<String>,
+    pub developer: Option<String>,
 }
