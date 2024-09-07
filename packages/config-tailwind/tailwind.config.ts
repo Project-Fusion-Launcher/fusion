@@ -46,6 +46,11 @@ const config: Omit<Config, "content"> = {
     fontFamily: {
       sans: ['"Metropolis"'],
     },
+    fontSize: {
+      sm: ["0.75rem", "0.75rem"],
+      base: ["1rem", "1rem"],
+      xl: ["2rem", "2rem"],
+    },
     borderRadius: {
       DEFAULT: "5px",
       none: "0",

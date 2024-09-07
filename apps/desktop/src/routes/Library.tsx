@@ -23,36 +23,10 @@ const Library = () => {
     _source: unknown,
     { refetching }: { refetching: boolean },
   ): Promise<Game[]> {
-    let newGames = (await invoke("get_games", {
+    const newGames = (await invoke("get_games", {
       refetch: refetching,
     }).catch(() => [])) as Game[];
     newGames.sort((a, b) => a.title.localeCompare(b.title));
-    newGames = newGames
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames)
-      .concat(newGames);
     return newGames;
   }
 
@@ -92,11 +66,11 @@ const Library = () => {
       </div>
       <div
         ref={(el) => (gameContainerRef = el)}
-        class="my-40 ml-40 mr-[14px] overflow-auto pr-[20px]"
+        class="mr-[14px] overflow-auto pb-40"
       >
         <Virtualizer data={groupArrayElements(games(), columns())} overscan={1}>
           {(gameRow) => (
-            <div class="flex justify-between gap-24">
+            <div class="ml-40 mt-40 flex justify-between gap-24 pr-[20px]">
               <For each={gameRow}>
                 {(game, i) => (
                   <>
