@@ -34,7 +34,7 @@ const Library = () => {
 
   createEffect(() => {
     const calculateColumns = () => {
-      let numColumns = Math.floor(gameContainerRef.clientWidth / (192 + 24));
+      let numColumns = Math.floor(gameContainerRef.clientWidth / (192 + 36));
       if (numColumns < 1) numColumns = 1;
       setColumns(numColumns);
     };
@@ -68,7 +68,8 @@ const Library = () => {
       </div>
       <div
         ref={(el) => (gameContainerRef = el)}
-        class="mr-[14px] overflow-auto pb-40"
+        class="mr-[14px] overflow-y-auto overflow-x-hidden pb-40"
+        style={{ "scrollbar-gutter": "stable" }}
       >
         <Virtualizer data={groupArrayElements(games(), columns())} overscan={1}>
           {(gameRow) => (

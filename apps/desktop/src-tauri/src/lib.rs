@@ -16,6 +16,8 @@ pub async fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(tauri_plugin_single_instance::init(|_, _, _| {}))
         .invoke_handler(tauri::generate_handler![storefronts::get_games,])
         .setup(|app| {
             APP.set(app.handle().clone())
