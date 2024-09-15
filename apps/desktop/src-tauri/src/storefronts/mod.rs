@@ -1,6 +1,6 @@
 use crate::{
     managers::{config::ConfigManager, database::DatabaseManager},
-    models::game::Game,
+    models::game::ReducedGame,
     schema::games::dsl::games,
 };
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
@@ -12,7 +12,7 @@ pub async fn get_games(
     config_manager: State<'_, ConfigManager>,
     database_manager: State<'_, DatabaseManager>,
     refetch: bool,
-) -> Result<Vec<Game>, String> {
+) -> Result<Vec<ReducedGame>, String> {
     let mut connection = database_manager.create_connection();
 
     if refetch {
@@ -29,8 +29,8 @@ pub async fn get_games(
             .unwrap();
     }
 
-    let results = games
-        .select(Game::as_select())
+    let results: Vec<ReducedGame> = games
+        .select(ReducedGame::as_select())
         .load(&mut connection)
         .unwrap();
 

@@ -46,7 +46,7 @@ const Sidebar = (props: SidebarProps) => {
             </>
           )}
         </For>
-        <Tabs.Indicator class="bg-primary background border-r-md border-accent absolute w-full bg-opacity-5 transition-transform" />
+        <Tabs.Indicator class="bg-highlighted border-r-md border-accent absolute w-full transition-transform" />
       </Tabs.List>
     </Tabs.Root>
   );

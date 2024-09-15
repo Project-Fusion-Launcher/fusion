@@ -1,3 +1,5 @@
+import { ArrowDownToLine } from "lucide-solid";
+
 interface GameCardProps {
   title: string;
   developer?: string;
@@ -6,8 +8,14 @@ interface GameCardProps {
 const GameCard = (props: GameCardProps) => {
   return (
     <div class="w-192 group flex flex-shrink-0 flex-col">
-      <div class="bg-secondary h-288 group-hover:outline-accent w-full rounded outline-none outline-2 transition-all group-hover:shadow-[0_0_1.5rem_rgba(255,255,255,0.25)]">
-        img goes here
+      <div class="bg-secondary h-288 group-hover:outline-accent relative w-full overflow-hidden rounded outline-none outline-2 transition-all group-hover:shadow-[0_0_1.5rem_rgba(255,255,255,0.25)]">
+        <img
+          class="absolute object-cover"
+          src="https://thumbnails.pcgamingwiki.com/7/74/Mindustry_-_cover.jpg/400px-Mindustry_-_cover.jpg"
+        />
+        <div class="bg-background absolute z-10 flex h-full w-full items-center justify-center bg-opacity-70 opacity-0 transition-opacity group-hover:opacity-100">
+          <ArrowDownToLine class="stroke-primary size-1/3" />
+        </div>
       </div>
       <span class="text-primary mb-8 mt-16 w-full overflow-hidden text-ellipsis text-nowrap font-medium">
         {props.title}
