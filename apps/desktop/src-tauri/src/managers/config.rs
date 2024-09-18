@@ -48,7 +48,7 @@ impl ConfigManager {
 
         let config = Config {
             id: 0,
-            itchio_api_key: Some("JrfKUqAAjkGeWc4uzpCcE3tIxyofoYDlQBMYabZc".to_string()),
+            itchio_api_key: None,
         };
 
         diesel::insert_into(configs)
