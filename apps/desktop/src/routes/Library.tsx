@@ -28,7 +28,6 @@ const Library = () => {
       refetch: refetching,
     }).catch(() => [])) as Game[];
     newGames.sort((a, b) => a.title.localeCompare(b.title));
-    console.log(newGames);
     return newGames;
   }
 
