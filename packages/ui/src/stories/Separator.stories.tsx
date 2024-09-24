@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "storybook-solidjs";
 import Separator from "../components/Separator";
-import "../index.pcss";
+import "../index.css";
 
 const meta = {
   title: "Separator",

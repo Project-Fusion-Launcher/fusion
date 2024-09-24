@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "storybook-solidjs";
 import TextField from "../components/TextField";
-import "../index.pcss";
+import "../index.css";
 
 const meta = {
   title: "TextField",

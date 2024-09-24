@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "storybook-solidjs";
 import Button from "../components/Button";
-import "../index.pcss";
+import "../index.css";
 
 const meta = {
   title: "Button",

@@ -15,7 +15,8 @@ const variants = tv({
       outline: "border-border border bg-transparent",
     },
     size: {
-      md: "h-32 gap-8 px-8",
+      sm: "h-32 gap-8 px-8",
+      md: "h-40 gap-12 px-12",
       lg: "h-48 gap-16 px-16",
     },
     width: {
@@ -32,6 +33,7 @@ const iconVariants = tv({
   base: "stroke-primary shrink-0",
   variants: {
     size: {
+      sm: "size-16",
       md: "size-16",
       lg: "size-20",
     },

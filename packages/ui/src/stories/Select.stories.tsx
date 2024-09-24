@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "storybook-solidjs";
 import Select from "../components/Select";
-import "../index.pcss";
+import "../index.css";
 
 const meta = {
   title: "Select",
@@ -11,11 +11,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Primary: Story = {
   args: {
     options: ["Option 1", "Option 2", "Option 3"],
     placeholder: "Select an option",
-    variant: "default",
+    variant: "primary",
+  },
+};
+
+export const Secondary: Story = {
+  args: {
+    options: ["Option 1", "Option 2", "Option 3"],
+    placeholder: "Select an option",
+    variant: "secondary",
   },
 };
 

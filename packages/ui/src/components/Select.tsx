@@ -5,25 +5,30 @@ import { tv } from "tailwind-variants";
 import "./styles.css";
 
 const triggerVariants = tv({
-  base: "w-192 flex h-32 items-center gap-8 rounded px-8",
+  base: "min-w-136 max-w-192 flex h-40 items-center gap-8 rounded px-16",
   variants: {
     variant: {
-      default: "bg-secondary",
-      outline: "border-border border bg-transparent",
-    },
-  },
-});
-
-const portalVariants = tv({
-  base: "overflow-hidden rounded",
-  variants: {
-    variant: {
-      default: "bg-secondary",
+      primary: "bg-primary",
+      secondary: "bg-secondary",
       outline: "border-border border bg-transparent",
     },
   },
   defaultVariants: {
-    variant: "default",
+    variant: "primary",
+  },
+});
+
+const portalVariants = tv({
+  base: "overflow-hidden rounded p-8",
+  variants: {
+    variant: {
+      primary: "bg-primary",
+      secondary: "bg-secondary",
+      outline: "border-border border bg-transparent",
+    },
+  },
+  defaultVariants: {
+    variant: "primary",
   },
 });
 
@@ -44,11 +49,14 @@ const Select = (props: SelectProps) => {
       options={props.options || []}
       placeholder={props.placeholder}
       value={props.value}
+      placement="bottom-start"
+      gutter={8}
+      sameWidth={true}
       onChange={props.onChange}
       itemComponent={(props) => (
         <KSelect.Item
           item={props.item}
-          class="hover:bg-accent flex h-32 items-center gap-8 px-8"
+          class="focus:bg-accent flex h-32 items-center gap-8 rounded px-8 focus:outline-none"
         >
           <KSelect.ItemLabel>{props.item.rawValue}</KSelect.ItemLabel>
           <KSelect.ItemIndicator class="ml-auto">

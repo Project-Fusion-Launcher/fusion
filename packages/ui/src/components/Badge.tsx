@@ -11,7 +11,8 @@ const variants = tv({
       outline: "border-border text-secondary border",
     },
     size: {
-      md: "h-28 px-[6px]",
+      sm: "h-24 px-8 text-sm",
+      md: "h-28 px-12",
     },
   },
   defaultVariants: {
@@ -28,7 +29,9 @@ export interface BadgeProps extends BadgeVariants {
 
 const Badge = (props: BadgeProps) => {
   return (
-    <div class={variants({ variant: props.variant })}>{props.children}</div>
+    <div class={variants({ variant: props.variant, size: props.size })}>
+      {props.children}
+    </div>
   );
 };
 

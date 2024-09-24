@@ -4,7 +4,7 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const variants = tv({
-  base: "flex items-center justify-center gap-8 rounded px-16 py-8",
+  base: "flex items-center justify-center gap-8 rounded",
   variants: {
     variant: {
       primary: "bg-primary text-bg",
@@ -14,7 +14,8 @@ const variants = tv({
       outline: "border-border border",
     },
     size: {
-      md: "h-32",
+      sm: "h-32 px-12 text-sm",
+      md: "h-40 px-20",
     },
   },
   defaultVariants: {
@@ -33,7 +34,7 @@ export interface ButtonProps extends ButtonVariants {
 const Button = (props: ButtonProps) => {
   return (
     <KButton
-      class={variants({ variant: props.variant })}
+      class={variants({ variant: props.variant, size: props.size })}
       onClick={props.onClick}
     >
       {props.children}
