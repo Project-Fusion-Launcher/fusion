@@ -24,6 +24,7 @@ const config: Omit<Config, "content"> = {
       white: "#FFFFFF",
     },
     spacing: {
+      "0": "0px",
       "1": "1px",
       "8": "0.5rem",
       "12": "0.75rem",
@@ -53,12 +54,14 @@ const config: Omit<Config, "content"> = {
     fontSize: {
       sm: ["0.75rem", "0.75rem"],
       base: ["1rem", "1rem"],
+      lg: ["1.5rem", "1.5rem"],
       xl: ["2rem", "2rem"],
     },
     borderRadius: {
       DEFAULT: "5px",
       none: "0",
       md: "5px",
+      lg: "10px",
     },
   },
   plugins: [kobaltePlugin],
