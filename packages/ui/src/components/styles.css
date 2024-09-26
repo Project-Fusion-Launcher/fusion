@@ -1,13 +1,27 @@
 .select__content {
   transform-origin: var(--kb-select-content-transform-origin);
-  animation: contentHide 150ms ease-in forwards;
+  animation: selectContentHide 150ms ease-in forwards;
 }
 
 .select__content[data-expanded] {
-  animation: contentShow 150ms ease-out;
+  animation: selectContentShow 150ms ease-out;
 }
 
-@keyframes contentShow {
+.dialog__overlay {
+  animation: dialogOverlayHide 250ms ease 100ms forwards;
+}
+.dialog__overlay[data-expanded] {
+  animation: dialogOverlayShow 250ms ease;
+}
+
+.dialog__content {
+  animation: dialogContentHide 300ms ease-in forwards;
+}
+.dialog__content[data-expanded] {
+  animation: dialogContentShow 300ms ease-out;
+}
+
+@keyframes selectContentShow {
   from {
     opacity: 0;
     transform: translateY(-10px);
@@ -17,7 +31,7 @@
     transform: translateY(0);
   }
 }
-@keyframes contentHide {
+@keyframes selectContentHide {
   from {
     opacity: 1;
     transform: translateY(0);
@@ -25,5 +39,43 @@
   to {
     opacity: 0;
     transform: translateY(-10px);
+  }
+}
+
+@keyframes dialogOverlayShow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes dialogOverlayHide {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes dialogContentShow {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes dialogContentHide {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
   }
 }

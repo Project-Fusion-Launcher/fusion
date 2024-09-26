@@ -1,4 +1,4 @@
-import { Badge, Button } from "@repo/ui";
+import { Badge, Button, Dialog, Select } from "@repo/ui";
 import Header from "../components/Header";
 import GameCard from "../components/GameCard";
 import { createEffect, createResource, createSignal, For } from "solid-js";
@@ -17,6 +17,9 @@ interface Game {
 const Library = () => {
   const [games, { refetch }] = createResource(fetchGames);
   const [columns, setColumns] = createSignal(4);
+
+  const [isDialogOpen, setIsDialogOpen] = createSignal(false);
+  const [selectedGame, setSelectedGame] = createSignal<Game | null>(null);
 
   let gameContainerRef: HTMLDivElement;
 
@@ -42,6 +45,16 @@ const Library = () => {
 
     calculateColumns();
   });
+
+  const handleGameClick = (game: Game) => {
+    setSelectedGame(game);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setTimeout(() => setSelectedGame(null), 300);
+  };
 
   return (
     <>
@@ -76,7 +89,11 @@ const Library = () => {
               <For each={gameRow}>
                 {(game, i) => (
                   <>
-                    <GameCard title={game.title} developer={game.developer} />
+                    <GameCard
+                      title={game.title}
+                      developer={game.developer}
+                      onClick={() => handleGameClick(game)}
+                    />
                     {i() === gameRow.length - 1 && i() < columns() - 1 && (
                       <For
                         each={Array.from({
@@ -93,6 +110,20 @@ const Library = () => {
           )}
         </Virtualizer>
       </div>
+      <Dialog
+        title={
+          "Install" + (selectedGame() ? ` ${selectedGame()?.title}` : "Game")
+        }
+        defaultOpen
+        open={isDialogOpen()}
+        onOpenChange={handleDialogClose}
+      >
+        <Select
+          variant="outline"
+          placeholder="Choose a version"
+          options={["Option 1", "Option 2", "Option 3"]}
+        />
+      </Dialog>
     </>
   );
 };

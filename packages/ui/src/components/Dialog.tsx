@@ -18,14 +18,14 @@ const Dialog = (props: DialogProps) => {
       onOpenChange={props.onOpenChange}
     >
       <KDialog.Portal>
-        <KDialog.Overlay class="bg-highlighted fixed inset-0 z-50 h-full w-full" />
+        <KDialog.Overlay class="dialog__overlay fixed inset-0 z-50 h-full w-full bg-black bg-opacity-55" />
         <div class="fixed inset-0 z-50 flex h-full w-full items-center justify-center">
-          <KDialog.Content class="min-w-288 min-h-288 bg-background border-t-accent border-t-md relative z-50 flex flex-col overflow-hidden rounded p-24 font-medium">
-            <div class="mb-24 flex w-full items-center">
-              <KDialog.Title class="font-lightmedium h-min text-lg">
-                {props.title}
+          <KDialog.Content class="dialog__content min-w-288 min-h-288 bg-background relative z-50 flex flex-col overflow-hidden rounded-lg p-40 font-medium">
+            <div class="text-primary mb-40 flex w-full items-center justify-center gap-48">
+              <KDialog.Title class="h-min text-base font-bold">
+                {props.title.toUpperCase()}
               </KDialog.Title>
-              <KDialog.CloseButton class="ml-auto h-full">
+              <KDialog.CloseButton class="text-secondary absolute right-40 ml-auto size-24">
                 <X class="size-24" />
               </KDialog.CloseButton>
             </div>

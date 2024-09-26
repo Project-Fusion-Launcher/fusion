@@ -10,7 +10,7 @@ const triggerVariants = tv({
     variant: {
       primary: "bg-primary",
       secondary: "bg-secondary",
-      outline: "border-border border bg-transparent",
+      outline: "border-border text-primary border bg-transparent",
     },
   },
   defaultVariants: {
@@ -24,7 +24,7 @@ const portalVariants = tv({
     variant: {
       primary: "bg-primary",
       secondary: "bg-secondary",
-      outline: "border-border border bg-transparent",
+      outline: "border-border text-primary border bg-transparent",
     },
   },
   defaultVariants: {
@@ -72,12 +72,12 @@ const Select = (props: SelectProps) => {
         <KSelect.Value<string> class="flex-grow overflow-hidden text-ellipsis text-left">
           {(state) => state.selectedOption()}
         </KSelect.Value>
-        <KSelect.Icon class="ml-auto">
+        <KSelect.Icon class="ml-auto text-wrap">
           <ChevronsUpDown class="size-16" />
         </KSelect.Icon>
       </KSelect.Trigger>
       <KSelect.Portal>
-        <KSelect.Content class="select__content">
+        <KSelect.Content class="select__content z-50">
           <KSelect.Listbox class={portalVariants({ variant: props.variant })} />
         </KSelect.Content>
       </KSelect.Portal>
