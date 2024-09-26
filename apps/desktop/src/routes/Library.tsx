@@ -20,6 +20,7 @@ const Library = () => {
 
   const [isDialogOpen, setIsDialogOpen] = createSignal(false);
   const [selectedGame, setSelectedGame] = createSignal<Game | null>(null);
+  const [selectedGameVersions, setSelectedGameVersions] = createSignal([]);
 
   let gameContainerRef: HTMLDivElement;
 
@@ -49,11 +50,21 @@ const Library = () => {
   const handleGameClick = (game: Game) => {
     setSelectedGame(game);
     setIsDialogOpen(true);
+    invoke("fetch_game_versions", {
+      gameId: game.id,
+      gameSource: game.source,
+    }).then((versions) => {
+      setSelectedGameVersions(versions);
+      console.log(versions);
+    });
   };
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
-    setTimeout(() => setSelectedGame(null), 300);
+    setTimeout(() => {
+      setSelectedGame(null);
+      setSelectedGameVersions([]);
+    }, 300);
   };
 
   return (
@@ -121,7 +132,7 @@ const Library = () => {
         <Select
           variant="outline"
           placeholder="Choose a version"
-          options={["Option 1", "Option 2", "Option 3"]}
+          options={selectedGameVersions().map((version) => version.name)}
         />
       </Dialog>
     </>

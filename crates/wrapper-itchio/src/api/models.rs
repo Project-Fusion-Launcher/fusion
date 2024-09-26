@@ -96,7 +96,7 @@ pub struct Game {
     pub min_price: u32,
     pub user: Option<User>,
     pub sale: Option<Sale>,
-    #[serde(deserialize_with = "deserialize_traits")]
+    #[serde(deserialize_with = "deserialize_empty_object")]
     pub traits: Vec<GameTraits>,
 }
 
@@ -133,6 +133,7 @@ pub struct GameEmbedData {
 
 #[derive(Debug, Deserialize)]
 pub struct Uploads {
+    #[serde(deserialize_with = "deserialize_empty_object")]
     pub uploads: Vec<Upload>,
 }
 
@@ -149,7 +150,7 @@ pub struct Upload {
     pub storage: UploadStorage,
     pub host: Option<String>,
     pub filename: String,
-    pub display_name: String,
+    pub display_name: Option<String>,
     pub size: Option<u32>,
     pub channel_name: Option<String>,
     pub build: Option<Build>,
@@ -161,7 +162,7 @@ pub struct Upload {
     pub created_at: NaiveDateTime,
     #[serde(deserialize_with = "deserialize_date")]
     pub updated_at: NaiveDateTime,
-    #[serde(deserialize_with = "deserialize_traits")]
+    #[serde(deserialize_with = "deserialize_empty_object")]
     pub traits: Vec<UploadTraits>,
 }
 
@@ -362,8 +363,8 @@ where
     NaiveDateTime::parse_from_str(&s, "%Y-%m-%dT%H:%M:%S.%fZ").map_err(Error::custom)
 }
 
-// Deserialize traits. For some reason sometimes it can be an empty object instead of an array.
-fn deserialize_traits<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
+// Deserialize empty objects as vecs. For some reason some fields can be an empty object ({}) instead of an array.
+fn deserialize_empty_object<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,
     T: DeserializeOwned,

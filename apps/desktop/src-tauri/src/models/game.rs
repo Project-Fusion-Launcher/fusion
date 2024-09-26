@@ -12,6 +12,21 @@ pub struct Game {
     pub developer: Option<String>,
 }
 
+impl Game {
+    pub fn select_from_id(
+        connection: &mut SqliteConnection,
+        game_source: &str,
+        game_id: &str,
+    ) -> Game {
+        use crate::schema::games::dsl::*;
+        games
+            .filter(source.eq(game_source))
+            .filter(id.eq(game_id))
+            .first(connection)
+            .expect("Error loading game")
+    }
+}
+
 /// This is a reduced version of the Game model used to avoid sending unnecessary data to the frontend.
 #[derive(Queryable, Selectable, Clone, Debug, Serialize)]
 #[diesel(table_name = crate::schema::games)]
@@ -21,4 +36,12 @@ pub struct ReducedGame {
     pub source: String,
     pub title: String,
     pub developer: Option<String>,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct GameVersion {
+    pub id: String,
+    pub game_id: String,
+    pub source: String,
+    pub name: String,
 }

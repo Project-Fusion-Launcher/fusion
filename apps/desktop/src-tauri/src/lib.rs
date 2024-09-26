@@ -18,7 +18,10 @@ pub async fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_single_instance::init(|_, _, _| {}))
-        .invoke_handler(tauri::generate_handler![storefronts::get_games,])
+        .invoke_handler(tauri::generate_handler![
+            storefronts::get_games,
+            storefronts::fetch_game_versions
+        ])
         .setup(|app| {
             APP.set(app.handle().clone())
                 .expect("Error setting up global app handle");

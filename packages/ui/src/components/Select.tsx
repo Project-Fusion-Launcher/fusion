@@ -5,7 +5,7 @@ import { tv } from "tailwind-variants";
 import "./styles.css";
 
 const triggerVariants = tv({
-  base: "min-w-136 max-w-192 flex h-40 items-center gap-8 rounded px-16",
+  base: "min-w-136 flex h-40 max-w-[400px] items-center gap-8 rounded px-16",
   variants: {
     variant: {
       primary: "bg-primary",
@@ -69,7 +69,7 @@ const Select = (props: SelectProps) => {
         aria-label={props.ariaLabel}
         class={triggerVariants({ variant: props.variant })}
       >
-        <KSelect.Value<string> class="flex-grow overflow-hidden text-ellipsis text-left">
+        <KSelect.Value<string> class="flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-left">
           {(state) => state.selectedOption()}
         </KSelect.Value>
         <KSelect.Icon class="ml-auto text-wrap">
