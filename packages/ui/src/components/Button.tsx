@@ -10,7 +10,7 @@ const variants = tv({
       primary: "bg-primary text-bg",
       secondary: "bg-secondary text-bg",
       accent: "bg-accent text-primary",
-      ghost: "bg-transparen p-0",
+      ghost: "bg-transparen",
       outline: "border-border border",
     },
     size: {
@@ -18,6 +18,7 @@ const variants = tv({
       md: "h-40 px-20",
     },
   },
+  compoundVariants: [{ variant: "ghost", class: "px-0" }],
   defaultVariants: {
     variant: "primary",
     size: "md",
