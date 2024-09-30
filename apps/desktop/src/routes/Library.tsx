@@ -1,4 +1,4 @@
-import { Badge, Button, Dialog, Select } from "@repo/ui";
+import { Badge, Button } from "@repo/ui";
 import Header from "../components/Header";
 import GameCard from "../components/GameCard";
 import { createEffect, createResource, createSignal, For } from "solid-js";
@@ -6,19 +6,13 @@ import { invoke } from "@tauri-apps/api/core";
 import { RefreshCcw } from "lucide-solid";
 import { Virtualizer } from "virtua/solid";
 import { groupArrayElements } from "../util/array";
+import InstallDialog from "../components/InstallDialog";
 
-interface Game {
+export interface Game {
   id: string;
   title: string;
   source: string;
   developer?: string;
-}
-
-interface GameVersion {
-  id: string;
-  gameId: string;
-  source: string;
-  name: string;
 }
 
 const Library = () => {
@@ -27,9 +21,6 @@ const Library = () => {
 
   const [isDialogOpen, setIsDialogOpen] = createSignal(false);
   const [selectedGame, setSelectedGame] = createSignal<Game | null>(null);
-  const [selectedGameVersions, setSelectedGameVersions] = createSignal<
-    GameVersion[]
-  >([]);
 
   let gameContainerRef: HTMLDivElement;
 
@@ -59,19 +50,12 @@ const Library = () => {
   const handleGameClick = (game: Game) => {
     setSelectedGame(game);
     setIsDialogOpen(true);
-    invoke("fetch_game_versions", {
-      gameId: game.id,
-      gameSource: game.source,
-    }).then((versions) => {
-      setSelectedGameVersions(versions as GameVersion[]);
-    });
   };
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setTimeout(() => {
       setSelectedGame(null);
-      setSelectedGameVersions([]);
     }, 300);
   };
 
@@ -129,20 +113,11 @@ const Library = () => {
           )}
         </Virtualizer>
       </div>
-      <Dialog
-        title={
-          "Install" + (selectedGame() ? ` ${selectedGame()?.title}` : "Game")
-        }
-        defaultOpen
+      <InstallDialog
+        selectedGame={selectedGame()}
         open={isDialogOpen()}
-        onOpenChange={handleDialogClose}
-      >
-        <Select
-          variant="outline"
-          placeholder="Choose a version"
-          options={selectedGameVersions().map((version) => version.name)}
-        />
-      </Dialog>
+        handleDialogClose={handleDialogClose}
+      />
     </>
   );
 };

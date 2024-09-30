@@ -1,8 +1,9 @@
 import { Select as KSelect } from "@kobalte/core/select";
-import { Check, ChevronsUpDown } from "lucide-solid";
+import { Check, ChevronsUpDown, LoaderCircle } from "lucide-solid";
 import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 import "./styles.css";
+import { Show } from "solid-js";
 
 const triggerVariants = tv({
   base: "min-w-136 flex h-40 max-w-[400px] items-center gap-8 rounded px-16",
@@ -39,7 +40,9 @@ interface SelectProps extends SelectVariants, PortalVariants {
   options?: string[];
   placeholder?: string;
   ariaLabel?: string;
-  value?: string;
+  value?: string | null;
+  loading?: boolean;
+  label?: string;
   onChange?: (value: string | null) => void;
 }
 
@@ -47,7 +50,14 @@ const Select = (props: SelectProps) => {
   return (
     <KSelect
       options={props.options || []}
-      placeholder={props.placeholder}
+      placeholder={
+        <div class="flex items-center gap-8">
+          <Show when={props.loading}>
+            <LoaderCircle class="size-16 animate-spin" />
+          </Show>
+          {props.placeholder}
+        </div>
+      }
       value={props.value}
       placement="bottom-start"
       gutter={8}
@@ -65,17 +75,24 @@ const Select = (props: SelectProps) => {
         </KSelect.Item>
       )}
     >
-      <KSelect.Trigger
-        aria-label={props.ariaLabel}
-        class={triggerVariants({ variant: props.variant })}
-      >
-        <KSelect.Value<string> class="flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-left">
-          {(state) => state.selectedOption()}
-        </KSelect.Value>
-        <KSelect.Icon class="ml-auto text-wrap">
-          <ChevronsUpDown class="size-16" />
-        </KSelect.Icon>
-      </KSelect.Trigger>
+      <div class="flex flex-col gap-8">
+        <Show when={props.label}>
+          <KSelect.Label class="text-secondary font-light">
+            {props.label}
+          </KSelect.Label>
+        </Show>
+        <KSelect.Trigger
+          aria-label={props.ariaLabel}
+          class={triggerVariants({ variant: props.variant })}
+        >
+          <KSelect.Value<string> class="flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-left">
+            {(state) => state.selectedOption()}
+          </KSelect.Value>
+          <KSelect.Icon class="ml-auto text-wrap">
+            <ChevronsUpDown class="size-16" />
+          </KSelect.Icon>
+        </KSelect.Trigger>
+      </div>
       <KSelect.Portal>
         <KSelect.Content class="select__content z-50">
           <KSelect.Listbox class={portalVariants({ variant: props.variant })} />

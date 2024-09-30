@@ -20,7 +20,10 @@ const Dialog = (props: DialogProps) => {
       <KDialog.Portal>
         <KDialog.Overlay class="dialog__overlay fixed inset-0 z-50 h-full w-full bg-black bg-opacity-55" />
         <div class="fixed inset-0 z-50 flex h-full w-full items-center justify-center">
-          <KDialog.Content class="dialog__content min-w-288 min-h-288 bg-background relative z-50 flex flex-col overflow-hidden rounded-lg p-40 font-medium">
+          <KDialog.Content
+            class="dialog__content min-h-288 bg-background relative z-50 flex flex-col overflow-hidden rounded-lg p-40 font-medium"
+            style={{ "min-width": `calc(${props.title.length}ch + 12rem)` }}
+          >
             <div class="text-primary mb-40 flex w-full items-center justify-center gap-48">
               <KDialog.Title class="h-min text-base font-bold">
                 {props.title.toUpperCase()}
