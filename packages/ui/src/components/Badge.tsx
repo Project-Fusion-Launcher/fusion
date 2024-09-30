@@ -24,7 +24,7 @@ const variants = tv({
 type BadgeVariants = VariantProps<typeof variants>;
 
 export interface BadgeProps extends BadgeVariants {
-  children?: string;
+  children?: string | number;
 }
 
 const Badge = (props: BadgeProps) => {

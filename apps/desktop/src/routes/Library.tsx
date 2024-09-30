@@ -82,15 +82,15 @@ const Library = () => {
         <div class="flex h-full w-min items-center gap-40">
           <Button variant="ghost">
             <span class="text-primary whitespace-nowrap">All Games</span>
-            <Badge variant="accent">100</Badge>
+            <Badge variant="accent">{games()?.length}</Badge>
           </Button>
           <Button variant="ghost">
             <span class="text-primary whitespace-nowrap">Installed</span>
-            <Badge variant="outline">69</Badge>
+            <Badge variant="outline">0</Badge>
           </Button>
           <Button variant="ghost">
             <span class="text-primary whitespace-nowrap">Not Installed</span>
-            <Badge variant="outline">31</Badge>
+            <Badge variant="outline">0</Badge>
           </Button>
           <Button variant="outline" onClick={() => refetch()}>
             <RefreshCcw class="text-primary" />
