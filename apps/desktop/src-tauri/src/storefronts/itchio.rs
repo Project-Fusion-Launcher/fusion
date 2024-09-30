@@ -40,6 +40,7 @@ pub async fn fetch_releases(api_key: &str, game_id: &str, game_key: &str) -> Vec
             game_id: game_id.to_string(),
             source: "itchio".to_string(),
             name: upload.display_name.unwrap_or(upload.filename),
+            download_size: upload.size.unwrap_or(0),
         })
         .collect()
 }

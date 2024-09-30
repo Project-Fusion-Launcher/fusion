@@ -24,6 +24,15 @@ pub fn upload(upload_id: u32, download_key_id: u32) -> String {
     url
 }
 
+/// Information about the scanned archive of an upload.
+pub fn upload_scanned_archive(upload_id: u32, download_key_id: u32) -> String {
+    let url = format!(
+        "{}/uploads/{}/scanned-archive?download_key_id={}",
+        BASE_URL, upload_id, download_key_id
+    );
+    url
+}
+
 /// The list of builds associated to an upload.
 pub fn builds(upload_id: u32, download_key_id: u32) -> String {
     let url = format!(
@@ -37,6 +46,15 @@ pub fn builds(upload_id: u32, download_key_id: u32) -> String {
 pub fn build(build_id: u32, download_key_id: u32) -> String {
     let url = format!(
         "{}/builds/{}?download_key_id={}",
+        BASE_URL, build_id, download_key_id
+    );
+    url
+}
+
+/// Information about the scanned archive of a build.
+pub fn build_scanned_archive(build_id: u32, download_key_id: u32) -> String {
+    let url = format!(
+        "{}/builds/{}/scanned-archive?download_key_id={}",
         BASE_URL, build_id, download_key_id
     );
     url

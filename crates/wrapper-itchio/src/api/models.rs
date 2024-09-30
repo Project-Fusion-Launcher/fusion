@@ -236,6 +236,22 @@ pub struct CollectionGame {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct ScannedArchiveResponse {
+    pub scanned_archive: ScannedArchive,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ScannedArchive {
+    pub object_id: u32,
+    pub extracted_size: Option<u32>,
+    #[serde(deserialize_with = "deserialize_date")]
+    pub created_at: NaiveDateTime,
+    #[serde(deserialize_with = "deserialize_date")]
+    pub updated_at: NaiveDateTime,
+    // TODO: manifest, launch_targets
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum KeySource {
     Desktop,

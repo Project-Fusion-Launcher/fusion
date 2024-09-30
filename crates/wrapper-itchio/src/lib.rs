@@ -3,7 +3,8 @@ mod tests;
 
 use api::models::{
     Build, BuildResponse, Builds, Collection, CollectionGames, CollectionsResponse, Login,
-    LoginParams, OwnedKeys, TOTPLoginParams, Upload, UploadResponse, Uploads,
+    LoginParams, OwnedKeys, ScannedArchive, ScannedArchiveResponse, TOTPLoginParams, Upload,
+    UploadResponse, Uploads,
 };
 use reqwest::header::CONTENT_TYPE;
 use serde::de::DeserializeOwned;
@@ -51,6 +52,21 @@ impl ItchioClient {
         Ok(response.upload)
     }
 
+    /// Fetches information about the scanned upload.
+    pub async fn fetch_upload_scanned_archive(
+        &self,
+        upload_id: u32,
+        download_key_id: u32,
+    ) -> Result<ScannedArchive, reqwest::Error> {
+        let response: ScannedArchiveResponse = self
+            .make_get_request(&api::endpoints::upload_scanned_archive(
+                upload_id,
+                download_key_id,
+            ))
+            .await?;
+        Ok(response.scanned_archive)
+    }
+
     /// Fetches the list of builds associated to an upload.
     pub async fn fetch_upload_builds(
         &self,
@@ -71,6 +87,21 @@ impl ItchioClient {
             .make_get_request(&api::endpoints::build(build_id, download_key_id))
             .await?;
         Ok(response.build)
+    }
+
+    /// Fetches information about the scanned build.
+    pub async fn fetch_build_scanned_archive(
+        &self,
+        build_id: u32,
+        download_key_id: u32,
+    ) -> Result<ScannedArchive, reqwest::Error> {
+        let response: ScannedArchiveResponse = self
+            .make_get_request(&api::endpoints::build_scanned_archive(
+                build_id,
+                download_key_id,
+            ))
+            .await?;
+        Ok(response.scanned_archive)
     }
 
     /// Fetches the list of collections that the user has created.

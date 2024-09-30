@@ -14,11 +14,13 @@ interface GameVersion {
   gameId: string;
   source: string;
   name: string;
+  downloadSize: number;
 }
 
 const InstallDialog = (props: InstallDialogProps) => {
   const [versions, { refetch }] = createResource<GameVersion[]>(fetchVersions);
-  const [selectedVersion, setSelectedVersion] = createSignal<string | null>();
+  const [selectedVersion, setSelectedVersion] =
+    createSignal<GameVersion | null>();
 
   async function fetchVersions(): Promise<GameVersion[]> {
     if (props.selectedGame === null) return [];
@@ -26,7 +28,7 @@ const InstallDialog = (props: InstallDialogProps) => {
       gameId: props.selectedGame?.id,
       gameSource: props.selectedGame?.source,
     }).catch(() => [])) as GameVersion[];
-    if (versions.length === 1) setSelectedVersion(versions[0].name);
+    if (versions.length === 1) setSelectedVersion(versions[0]);
     return versions;
   }
 
@@ -66,8 +68,12 @@ const InstallDialog = (props: InstallDialogProps) => {
             !versions.loading ? versions()?.map((version) => version.name) : []
           }
           label="Version to install"
-          value={selectedVersion()}
-          onChange={(value) => setSelectedVersion(value)}
+          value={selectedVersion()?.name}
+          onChange={(value) => {
+            setSelectedVersion(
+              versions()?.find((version) => version.name === value) || null,
+            );
+          }}
         />
       </div>
       <div class="flex flex-row-reverse gap-16">

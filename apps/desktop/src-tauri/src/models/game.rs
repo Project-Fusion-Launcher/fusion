@@ -45,4 +45,5 @@ pub struct GameVersion {
     pub game_id: String,
     pub source: String,
     pub name: String,
+    pub download_size: u32,
 }
