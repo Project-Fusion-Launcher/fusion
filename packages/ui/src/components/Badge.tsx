@@ -11,8 +11,8 @@ const variants = tv({
       outline: "border-border text-secondary border",
     },
     size: {
-      sm: "h-24 px-8 text-sm",
-      md: "h-28 px-12",
+      sm: "h-24 px-[6px] text-sm",
+      md: "h-28 px-8",
     },
   },
   defaultVariants: {

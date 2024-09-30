@@ -39,6 +39,7 @@ pub struct ReducedGame {
 }
 
 #[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct GameVersion {
     pub id: String,
     pub game_id: String,
