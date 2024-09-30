@@ -14,13 +14,22 @@ interface Game {
   developer?: string;
 }
 
+interface GameVersion {
+  id: string;
+  gameId: string;
+  source: string;
+  name: string;
+}
+
 const Library = () => {
   const [games, { refetch }] = createResource(fetchGames);
   const [columns, setColumns] = createSignal(4);
 
   const [isDialogOpen, setIsDialogOpen] = createSignal(false);
   const [selectedGame, setSelectedGame] = createSignal<Game | null>(null);
-  const [selectedGameVersions, setSelectedGameVersions] = createSignal([]);
+  const [selectedGameVersions, setSelectedGameVersions] = createSignal<
+    GameVersion[]
+  >([]);
 
   let gameContainerRef: HTMLDivElement;
 
@@ -54,8 +63,7 @@ const Library = () => {
       gameId: game.id,
       gameSource: game.source,
     }).then((versions) => {
-      setSelectedGameVersions(versions);
-      console.log(versions);
+      setSelectedGameVersions(versions as GameVersion[]);
     });
   };
 
