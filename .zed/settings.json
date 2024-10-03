@@ -1,0 +1,13 @@
+{
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        "linkedProjects": [
+          "crates/wrapper-itchio/Cargo.toml",
+          "crates/wrapper-legacygames/Cargo.toml",
+          "apps/desktop/src-tauri/Cargo.toml"
+        ]
+      }
+    }
+  }
+}
