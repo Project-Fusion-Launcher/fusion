@@ -91,6 +91,7 @@ const InstallDialog = (props: InstallDialogProps) => {
                 versions()?.find((version) => version.name === value) || null,
               );
             }}
+            disallowEmptySelection
           />
           <div class="flex items-end gap-8">
             <TextField

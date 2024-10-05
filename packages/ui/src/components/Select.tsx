@@ -43,6 +43,7 @@ interface SelectProps extends SelectVariants, PortalVariants {
   value?: string | null;
   loading?: boolean;
   label?: string;
+  disallowEmptySelection?: boolean;
   onChange?: (value: string | null) => void;
 }
 
@@ -61,7 +62,7 @@ const Select = (props: SelectProps) => {
       value={props.value}
       placement="bottom-start"
       gutter={8}
-      sameWidth={true}
+      disallowEmptySelection={props.disallowEmptySelection}
       onChange={props.onChange}
       itemComponent={(props) => (
         <KSelect.Item
