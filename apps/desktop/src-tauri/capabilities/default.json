@@ -12,6 +12,8 @@
     "core:window:allow-is-maximized",
     "core:window:allow-is-minimized",
 
-    "os:allow-os-type"
+    "os:allow-os-type",
+
+    "dialog:allow-open"
   ]
 }

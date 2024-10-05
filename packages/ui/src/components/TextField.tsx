@@ -16,7 +16,7 @@ const variants = tv({
     },
     size: {
       sm: "h-32 gap-8 px-8",
-      md: "h-40 gap-12 px-12",
+      md: "h-40 gap-12 px-16",
       lg: "h-48 gap-16 px-16",
     },
     width: {
@@ -52,6 +52,7 @@ export interface TextFieldProps extends TextFieldVariants {
   onChange?: (value: string) => void;
   icon?: Component;
   autocomplete?: string;
+  label?: string;
 }
 
 const TextField = (props: TextFieldProps) => {
@@ -68,40 +69,46 @@ const TextField = (props: TextFieldProps) => {
   };
 
   return (
-    <KTextField
-      class={variants({
-        width: props.width,
-        variant: props.variant,
-        size: props.size,
-      })}
-      onClick={handleClick}
-    >
-      <Dynamic
-        component={props.icon}
-        class={iconVariants({ size: props.size })}
-      />
-      <KTextField.Input
-        spellcheck={false}
-        value={props.value}
-        onInput={(e) => props.onInput?.(e.currentTarget.value)}
-        onChange={(e: { currentTarget: { value: string } }) =>
-          props.onChange?.(e.currentTarget.value)
-        }
-        autocomplete={props.autocomplete}
-        placeholder={props.placeholder}
-        class="placeholder-secondary text-primary h-full w-full rounded bg-transparent focus:outline-none"
-        ref={(el: HTMLInputElement) => {
-          inputRef = el;
-        }}
-      />
-      <Show when={props.value}>
-        <X
-          ref={(el) => {
-            clearButtonRef = el;
-          }}
-          class={iconVariants({ size: props.size }) + " cursor-pointer"}
-        />
+    <KTextField onClick={handleClick} class="flex w-full flex-col gap-8">
+      <Show when={props.label}>
+        <KTextField.Label class="text-secondary font-light">
+          {props.label}
+        </KTextField.Label>
       </Show>
+      <div
+        class={variants({
+          width: props.width,
+          variant: props.variant,
+          size: props.size,
+        })}
+      >
+        <Dynamic
+          component={props.icon}
+          class={iconVariants({ size: props.size })}
+        />
+        <KTextField.Input
+          spellcheck={false}
+          value={props.value}
+          onInput={(e) => props.onInput?.(e.currentTarget.value)}
+          onChange={(e: { currentTarget: { value: string } }) =>
+            props.onChange?.(e.currentTarget.value)
+          }
+          autocomplete={props.autocomplete}
+          placeholder={props.placeholder}
+          class="placeholder-secondary text-primary h-full w-full rounded bg-transparent focus:outline-none"
+          ref={(el: HTMLInputElement) => {
+            inputRef = el;
+          }}
+        />
+        <Show when={props.value}>
+          <X
+            ref={(el) => {
+              clearButtonRef = el;
+            }}
+            class={iconVariants({ size: props.size }) + " cursor-pointer"}
+          />
+        </Show>
+      </div>
     </KTextField>
   );
 };

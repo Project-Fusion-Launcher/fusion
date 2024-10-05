@@ -4,5 +4,6 @@ import Button from "./src/components/Button";
 import Badge from "./src/components/Badge";
 import Select from "./src/components/Select";
 import Dialog from "./src/components/Dialog";
+import IconButton from "./src/components/IconButton";
 
-export { TextField, Separator, Button, Badge, Select, Dialog };
+export { TextField, Separator, Button, Badge, Select, Dialog, IconButton };

@@ -6,7 +6,7 @@ import "./styles.css";
 import { Show } from "solid-js";
 
 const triggerVariants = tv({
-  base: "min-w-136 flex h-40 max-w-[400px] items-center gap-8 rounded px-16",
+  base: "min-w-136 flex h-40 items-center gap-8 rounded px-16",
   variants: {
     variant: {
       primary: "bg-primary",
@@ -25,7 +25,7 @@ const portalVariants = tv({
     variant: {
       primary: "bg-primary",
       secondary: "bg-secondary",
-      outline: "border-border text-primary border bg-transparent",
+      outline: "border-border text-primary bg-background border",
     },
   },
   defaultVariants: {

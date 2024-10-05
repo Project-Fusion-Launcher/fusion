@@ -4,7 +4,7 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const variants = tv({
-  base: "flex items-center justify-center gap-8 rounded",
+  base: "flex items-center justify-center rounded",
   variants: {
     variant: {
       primary: "bg-primary text-bg",
@@ -17,8 +17,8 @@ const variants = tv({
       true: "disabled cursor-not-allowed opacity-50",
     },
     size: {
-      sm: "h-32 px-32 text-sm",
-      md: "h-40 px-40",
+      sm: "size-32 flex-shrink-0 [&>*]:size-12",
+      md: "size-40 flex-shrink-0 [&>*]:size-16",
     },
   },
   compoundVariants: [{ variant: "ghost", class: "px-0" }],
@@ -28,14 +28,14 @@ const variants = tv({
   },
 });
 
-type ButtonVariants = VariantProps<typeof variants>;
+type IconButtonVariants = VariantProps<typeof variants>;
 
-export interface ButtonProps extends ButtonVariants {
+export interface IconButtonProps extends IconButtonVariants {
   children: JSX.Element;
   onClick?: () => void;
 }
 
-const Button = (props: ButtonProps) => {
+const IconButton = (props: IconButtonProps) => {
   return (
     <KButton
       class={variants({
@@ -50,4 +50,4 @@ const Button = (props: ButtonProps) => {
   );
 };
 
-export default Button;
+export default IconButton;
