@@ -9,7 +9,7 @@ const config: Omit<Config, "content"> = {
       transparent: "transparent",
       current: "currentColor",
       border: "#373737",
-      background: "#0A0A0A",
+      background: "black",
       primary: {
         DEFAULT: "#BAB6BE",
       },

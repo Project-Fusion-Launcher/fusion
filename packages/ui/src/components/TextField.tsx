@@ -100,14 +100,13 @@ const TextField = (props: TextFieldProps) => {
             inputRef = el;
           }}
         />
-        <Show when={props.value}>
-          <X
-            ref={(el) => {
-              clearButtonRef = el;
-            }}
-            class={iconVariants({ size: props.size }) + " cursor-pointer"}
-          />
-        </Show>
+        <X
+          ref={(el) => {
+            clearButtonRef = el;
+          }}
+          class={iconVariants({ size: props.size }) + " cursor-pointer"}
+          classList={{ invisible: !props.value }}
+        />
       </div>
     </KTextField>
   );
