@@ -62,7 +62,7 @@ const Library = () => {
   return (
     <>
       <Header title="Library" />
-      <div class="h-28 px-40">
+      <div class="mb-16 h-28 px-40">
         <div class="flex h-full w-min items-center gap-40">
           <Button variant="ghost">
             <span class="text-primary whitespace-nowrap">All Games</span>
@@ -83,12 +83,12 @@ const Library = () => {
       </div>
       <div
         ref={(el) => (gameContainerRef = el)}
-        class="mr-[14px] overflow-y-auto overflow-x-hidden pb-40"
+        class="mr-[14px] overflow-y-auto overflow-x-hidden pb-16"
         style={{ "scrollbar-gutter": "stable" }}
       >
         <Virtualizer data={groupArrayElements(games(), columns())} overscan={1}>
           {(gameRow) => (
-            <div class="ml-40 mt-40 flex justify-between gap-24 pr-[20px]">
+            <div class="my-24 ml-40 flex justify-between gap-24 pr-[20px]">
               <For each={gameRow}>
                 {(game, i) => (
                   <>
