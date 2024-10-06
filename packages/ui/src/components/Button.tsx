@@ -1,10 +1,11 @@
 import { Button as KButton } from "@kobalte/core/button";
-import type { JSX } from "solid-js";
+import { LoaderCircle } from "lucide-solid";
+import { Show, type JSX } from "solid-js";
 import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const variants = tv({
-  base: "flex items-center justify-center gap-8 rounded",
+  base: "flex items-center justify-center rounded",
   variants: {
     variant: {
       primary: "bg-primary text-bg",
@@ -33,6 +34,7 @@ type ButtonVariants = VariantProps<typeof variants>;
 export interface ButtonProps extends ButtonVariants {
   children: JSX.Element;
   onClick?: () => void;
+  loading?: boolean;
 }
 
 const Button = (props: ButtonProps) => {
@@ -51,7 +53,15 @@ const Button = (props: ButtonProps) => {
       })}
       onClick={handleClick}
     >
-      {props.children}
+      <Show when={props.loading}>
+        <LoaderCircle class="absolute size-16 animate-spin" />
+      </Show>
+      <div
+        class="flex items-center justify-center gap-8"
+        classList={{ "opacity-0": props.loading }}
+      >
+        {props.children}
+      </div>
     </KButton>
   );
 };

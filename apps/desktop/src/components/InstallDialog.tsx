@@ -26,6 +26,7 @@ const InstallDialog = (props: InstallDialogProps) => {
   const [installLocation, setInstallLocation] = createSignal<string>(
     "C:\\Users\\jorge\\Desktop",
   );
+  const [preparingToInstall, setPreparingToInstall] = createSignal(false);
 
   async function fetchVersions(): Promise<GameVersion[]> {
     if (props.selectedGame === null) return [];
@@ -53,8 +54,11 @@ const InstallDialog = (props: InstallDialogProps) => {
     });
   };
 
+  createEffect(() => {});
+
   const handleInstall = () => {
     if (selectedVersion() === null || !installLocation()) return;
+    setPreparingToInstall(true);
     invoke("download_game", {
       gameId: props.selectedGame?.id,
       gameSource: props.selectedGame?.source,
@@ -62,6 +66,10 @@ const InstallDialog = (props: InstallDialogProps) => {
       downloadOptions: {
         installLocation: installLocation(),
       },
+      // eslint-disable-next-line solid/reactivity
+    }).then(() => {
+      props.handleDialogClose();
+      setPreparingToInstall(false);
     });
   };
 
@@ -124,10 +132,15 @@ const InstallDialog = (props: InstallDialogProps) => {
           variant="accent"
           disabled={selectedVersion() === null || !installLocation()}
           onClick={handleInstall}
+          loading={preparingToInstall()}
         >
           Install
         </Button>
-        <Button variant="outline" onClick={props.handleDialogClose}>
+        <Button
+          variant="outline"
+          onClick={props.handleDialogClose}
+          disabled={preparingToInstall()}
+        >
           Cancel
         </Button>
       </div>
