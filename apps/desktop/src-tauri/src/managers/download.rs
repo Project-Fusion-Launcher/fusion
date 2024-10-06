@@ -5,7 +5,12 @@ use std::{
     path::PathBuf,
     sync::{Arc, Mutex},
 };
-use tokio::{fs, sync::Notify};
+use tokio::{
+    fs::{self, OpenOptions},
+    io::AsyncWriteExt,
+    sync::{mpsc, Notify},
+    task,
+};
 
 pub struct Download {
     pub request: RequestBuilder,
@@ -54,29 +59,52 @@ impl DownloadManager {
                 if let Some(download) = download {
                     Self::download(download).await;
                 } else {
+                    println!("Waiting for downloads...");
                     queue_notifier.notified().await;
+                    println!("Processing downloads...");
                 }
             }
         });
     }
 
     async fn download(download: Download) {
-        let response = download.request.send().await.unwrap();
-        let bytes = response.bytes().await.unwrap();
+        let (tx, mut rx) = mpsc::channel(16);
+
+        let downloader = task::spawn(async move {
+            let mut response = download.request.send().await.unwrap();
+
+            while let Some(chunk) = response.chunk().await.unwrap() {
+                if (tx.send(chunk).await).is_err() {
+                    break; // Receiver dropped
+                }
+            }
+        });
 
         fs::create_dir_all(&download.download_options.install_location)
             .await
             .unwrap();
 
-        fs::write(
-            download
-                .download_options
-                .install_location
-                .join(&download.filename),
-            &bytes,
-        )
-        .await
-        .unwrap();
+        let file_path = download
+            .download_options
+            .install_location
+            .join(&download.filename);
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .truncate(true)
+            .write(true)
+            .open(&file_path)
+            .await
+            .unwrap();
+
+        let writer = task::spawn(async move {
+            while let Some(chunk) = rx.recv().await {
+                file.write_all(&chunk).await.unwrap();
+            }
+        });
+
+        downloader.await.unwrap();
+        writer.await.unwrap();
 
         println!("Downloaded: {}", download.filename);
     }
