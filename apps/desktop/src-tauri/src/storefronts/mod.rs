@@ -1,5 +1,9 @@
 use crate::{
-    managers::{config::ConfigManager, database::DatabaseManager, download::DownloadManager},
+    managers::{
+        config::ConfigManager,
+        database::DatabaseManager,
+        download::{DownloadManager, DownloadOptions},
+    },
     models::game::{Game, GameVersion, ReducedGame},
     schema::games::dsl::games,
 };
@@ -66,6 +70,7 @@ pub async fn download_game(
     game_id: String,
     game_source: String,
     version_id: String,
+    download_options: DownloadOptions,
 ) -> Result<(), String> {
     let mut connection = database_manager.create_connection();
 
@@ -74,7 +79,9 @@ pub async fn download_game(
     if game_source == "itchio" {
         let itchio_api_key = config_manager.itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
-            let download = itchio::fetch_download_info(itchio_api_key, &version_id, game).await;
+            let download =
+                itchio::fetch_download_info(itchio_api_key, &version_id, game, download_options)
+                    .await;
 
             download_manager.enqueue_download(download);
         }

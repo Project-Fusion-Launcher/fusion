@@ -59,6 +59,9 @@ const InstallDialog = (props: InstallDialogProps) => {
       gameId: props.selectedGame?.id,
       gameSource: props.selectedGame?.source,
       versionId: selectedVersion()?.id,
+      downloadOptions: {
+        installLocation: installLocation(),
+      },
     });
   };
 

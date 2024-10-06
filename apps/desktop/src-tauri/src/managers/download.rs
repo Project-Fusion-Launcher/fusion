@@ -1,16 +1,22 @@
+use reqwest::RequestBuilder;
+use serde::Deserialize;
 use std::{
     collections::VecDeque,
+    path::PathBuf,
     sync::{Arc, Mutex},
 };
-
-use reqwest::RequestBuilder;
-use tokio::sync::Notify;
-
-use crate::models::game::Game;
+use tokio::{fs, sync::Notify};
 
 pub struct Download {
     pub request: RequestBuilder,
-    pub game: Game,
+    pub filename: String,
+    pub download_options: DownloadOptions,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DownloadOptions {
+    pub install_location: PathBuf,
 }
 
 pub struct DownloadManager {
@@ -58,12 +64,21 @@ impl DownloadManager {
         let response = download.request.send().await.unwrap();
         let bytes = response.bytes().await.unwrap();
 
-        std::fs::write(
-            format!("C:\\Users\\jorge\\Desktop\\{}.zip", download.game.title),
+        fs::create_dir_all(&download.download_options.install_location)
+            .await
+            .unwrap();
+
+        fs::write(
+            download
+                .download_options
+                .install_location
+                .join(&download.filename),
             &bytes,
         )
+        .await
         .unwrap();
-        println!("Downloaded: {}", download.game.title);
+
+        println!("Downloaded: {}", download.filename);
     }
 }
 
