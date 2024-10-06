@@ -7,6 +7,7 @@ use api::models::{
     UploadResponse, Uploads,
 };
 use reqwest::header::CONTENT_TYPE;
+use reqwest::RequestBuilder;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -65,6 +66,19 @@ impl ItchioClient {
             ))
             .await?;
         Ok(response.scanned_archive)
+    }
+
+    /// Fetches the download URL for an upload.
+    pub async fn fetch_upload_download_url(
+        &self,
+        upload_id: u32,
+        download_key_id: u32,
+    ) -> Result<RequestBuilder, reqwest::Error> {
+        let request = self
+            .http
+            .get(api::endpoints::upload_download(upload_id, download_key_id))
+            .header("Authorization", &self.api_key);
+        Ok(request)
     }
 
     /// Fetches the list of builds associated to an upload.

@@ -1,6 +1,9 @@
 use wrapper_itchio::ItchioClient;
 
-use crate::models::game::{Game, GameVersion};
+use crate::{
+    managers::download::Download,
+    models::game::{Game, GameVersion},
+};
 
 pub async fn fetch_games(api_key: &str) -> Vec<Game> {
     let client = ItchioClient::new(api_key);
@@ -43,4 +46,20 @@ pub async fn fetch_releases(api_key: &str, game_id: &str, game_key: &str) -> Vec
             download_size: upload.size.unwrap_or(0),
         })
         .collect()
+}
+
+pub async fn fetch_download_info(api_key: &str, upload_id: &str, game: Game) -> Download {
+    let client = ItchioClient::new(api_key);
+
+    let upload_id: u32 = upload_id.parse().unwrap();
+    let game_key: u32 = game.key.clone().unwrap().parse().unwrap();
+    let download_request = client
+        .fetch_upload_download_url(upload_id, game_key)
+        .await
+        .unwrap();
+
+    Download {
+        request: download_request,
+        game,
+    }
 }

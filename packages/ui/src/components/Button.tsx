@@ -36,6 +36,12 @@ export interface ButtonProps extends ButtonVariants {
 }
 
 const Button = (props: ButtonProps) => {
+  const handleClick = () => {
+    if (!props.disabled && props.onClick) {
+      props.onClick();
+    }
+  };
+
   return (
     <KButton
       class={variants({
@@ -43,7 +49,7 @@ const Button = (props: ButtonProps) => {
         size: props.size,
         disabled: props.disabled,
       })}
-      onClick={props.onClick}
+      onClick={handleClick}
     >
       {props.children}
     </KButton>

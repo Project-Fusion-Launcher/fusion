@@ -1,5 +1,5 @@
 use crate::{
-    managers::{config::ConfigManager, database::DatabaseManager},
+    managers::{config::ConfigManager, database::DatabaseManager, download::DownloadManager},
     models::game::{Game, GameVersion, ReducedGame},
     schema::games::dsl::games,
 };
@@ -56,4 +56,29 @@ pub async fn fetch_game_versions(
     }
 
     unreachable!()
+}
+
+#[tauri::command]
+pub async fn download_game(
+    config_manager: State<'_, ConfigManager>,
+    database_manager: State<'_, DatabaseManager>,
+    download_manager: State<'_, DownloadManager>,
+    game_id: String,
+    game_source: String,
+    version_id: String,
+) -> Result<(), String> {
+    let mut connection = database_manager.create_connection();
+
+    let game = Game::select_from_id(&mut connection, &game_source, &game_id);
+
+    if game_source == "itchio" {
+        let itchio_api_key = config_manager.itchio_api_key();
+        if let Some(itchio_api_key) = itchio_api_key {
+            let download = itchio::fetch_download_info(itchio_api_key, &version_id, game).await;
+
+            download_manager.enqueue_download(download);
+        }
+    }
+
+    Ok(())
 }

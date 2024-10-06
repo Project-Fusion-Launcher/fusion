@@ -1,4 +1,4 @@
-use managers::{config::ConfigManager, database::DatabaseManager};
+use managers::{config::ConfigManager, database::DatabaseManager, download::DownloadManager};
 use std::sync::OnceLock;
 use tauri::{AppHandle, Manager};
 
@@ -21,7 +21,8 @@ pub async fn run() {
         .plugin(tauri_plugin_single_instance::init(|_, _, _| {}))
         .invoke_handler(tauri::generate_handler![
             storefronts::get_games,
-            storefronts::fetch_game_versions
+            storefronts::fetch_game_versions,
+            storefronts::download_game
         ])
         .setup(|app| {
             APP.set(app.handle().clone())
@@ -29,6 +30,7 @@ pub async fn run() {
 
             app.manage(DatabaseManager::new());
             app.manage(ConfigManager::new());
+            app.manage(DownloadManager::new());
 
             Ok(())
         })

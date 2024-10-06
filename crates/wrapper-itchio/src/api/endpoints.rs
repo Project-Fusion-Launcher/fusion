@@ -33,6 +33,15 @@ pub fn upload_scanned_archive(upload_id: u32, download_key_id: u32) -> String {
     url
 }
 
+/// The download URL for an upload.
+pub fn upload_download(upload_id: u32, download_key_id: u32) -> String {
+    let url = format!(
+        "{}/uploads/{}/download?download_key_id={}",
+        BASE_URL, upload_id, download_key_id
+    );
+    url
+}
+
 /// The list of builds associated to an upload.
 pub fn builds(upload_id: u32, download_key_id: u32) -> String {
     let url = format!(

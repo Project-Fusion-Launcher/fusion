@@ -53,6 +53,15 @@ const InstallDialog = (props: InstallDialogProps) => {
     });
   };
 
+  const handleInstall = () => {
+    if (selectedVersion() === null || !installLocation()) return;
+    invoke("download_game", {
+      gameId: props.selectedGame?.id,
+      gameSource: props.selectedGame?.source,
+      versionId: selectedVersion()?.id,
+    });
+  };
+
   return (
     <Dialog
       title={
@@ -111,6 +120,7 @@ const InstallDialog = (props: InstallDialogProps) => {
         <Button
           variant="accent"
           disabled={selectedVersion() === null || !installLocation()}
+          onClick={handleInstall}
         >
           Install
         </Button>
