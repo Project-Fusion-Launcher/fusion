@@ -71,7 +71,7 @@ const TextField = (props: TextFieldProps) => {
   return (
     <KTextField onClick={handleClick} class="flex w-full flex-col gap-8">
       <Show when={props.label}>
-        <KTextField.Label class="text-secondary font-light">
+        <KTextField.Label class="text-secondary font-light leading-none">
           {props.label}
         </KTextField.Label>
       </Show>

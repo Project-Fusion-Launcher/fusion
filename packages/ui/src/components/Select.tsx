@@ -78,7 +78,7 @@ const Select = (props: SelectProps) => {
     >
       <div class="flex flex-col gap-8">
         <Show when={props.label}>
-          <KSelect.Label class="text-secondary font-light">
+          <KSelect.Label class="text-secondary font-light leading-none">
             {props.label}
           </KSelect.Label>
         </Show>
