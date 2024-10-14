@@ -4,7 +4,7 @@ use crate::{
         database::DatabaseManager,
         download::{DownloadManager, DownloadOptions},
     },
-    models::game::{Game, GameVersion, ReducedGame},
+    models::game::{Game, GameVersion, ReducedGame, VersionDownloadInfo},
     schema::games::dsl::games,
 };
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
@@ -56,6 +56,28 @@ pub async fn fetch_game_versions(
         let itchio_api_key = config_manager.itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
             return Ok(itchio::fetch_releases(itchio_api_key, &game_id, &game.key.unwrap()).await);
+        }
+    }
+
+    unreachable!()
+}
+
+#[tauri::command]
+pub async fn fetch_version_info(
+    config_manager: State<'_, ConfigManager>,
+    database_manager: State<'_, DatabaseManager>,
+    game_id: String,
+    game_source: String,
+    version_id: String,
+) -> Result<VersionDownloadInfo, String> {
+    let mut connection = database_manager.create_connection();
+
+    let game = Game::select_from_id(&mut connection, &game_source, &game_id);
+
+    if game_source == "itchio" {
+        let itchio_api_key = config_manager.itchio_api_key();
+        if let Some(itchio_api_key) = itchio_api_key {
+            return Ok(itchio::fetch_release_info(itchio_api_key, &version_id, game).await);
         }
     }
 

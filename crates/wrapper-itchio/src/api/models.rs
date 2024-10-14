@@ -184,7 +184,7 @@ pub struct Build {
     pub parent_build_id: u32,
     pub state: Option<BuildState>,
     pub version: u32,
-    pub user_version: String,
+    pub user_version: Option<String>,
     pub user: Option<User>,
     pub files: Option<Vec<BuildFile>>,
     #[serde(deserialize_with = "deserialize_date")]

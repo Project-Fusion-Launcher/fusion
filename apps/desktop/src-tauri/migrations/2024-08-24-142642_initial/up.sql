@@ -10,5 +10,7 @@ CREATE TABLE `games` (
   `title` TEXT NOT NULL,
   `key` TEXT,
   `developer` TEXT,
+  `launch_target` TEXT,
+  `path` TEXT,
   PRIMARY KEY (`id`, `source`)
 );

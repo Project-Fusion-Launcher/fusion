@@ -2,7 +2,7 @@ use wrapper_itchio::ItchioClient;
 
 use crate::{
     managers::download::{Download, DownloadOptions},
-    models::game::{Game, GameVersion},
+    models::game::{Game, GameVersion, VersionDownloadInfo},
 };
 
 pub async fn fetch_games(api_key: &str) -> Vec<Game> {
@@ -23,6 +23,8 @@ pub async fn fetch_games(api_key: &str) -> Vec<Game> {
             source: "itchio".to_string(),
             key: Some(key.id.to_string()),
             developer,
+            launch_target: None,
+            path: None,
         });
     }
 
@@ -46,6 +48,35 @@ pub async fn fetch_releases(api_key: &str, game_id: &str, game_key: &str) -> Vec
             download_size: upload.size.unwrap_or(0),
         })
         .collect()
+}
+
+pub async fn fetch_release_info(api_key: &str, upload_id: &str, game: Game) -> VersionDownloadInfo {
+    let client = ItchioClient::new(api_key);
+
+    let upload_id: u32 = upload_id.parse().unwrap();
+    let game_key: u32 = game.key.clone().unwrap().parse().unwrap();
+
+    let mut retries = 5;
+
+    while retries > 0 {
+        let scanned_archive = client
+            .fetch_upload_scanned_archive(upload_id, game_key)
+            .await;
+
+        if let Ok(scanned_archive) = scanned_archive {
+            if scanned_archive.extracted_size.is_some() {
+                return VersionDownloadInfo {
+                    install_size: scanned_archive.extracted_size.unwrap(),
+                };
+            }
+        }
+
+        retries -= 1;
+
+        tokio::time::sleep(std::time::Duration::from_secs(2_u64.pow(5 - retries))).await;
+    }
+
+    unimplemented!()
 }
 
 pub async fn fetch_download_info(

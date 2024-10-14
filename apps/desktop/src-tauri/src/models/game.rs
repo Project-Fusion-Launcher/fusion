@@ -10,6 +10,8 @@ pub struct Game {
     pub title: String,
     pub key: Option<String>,
     pub developer: Option<String>,
+    pub launch_target: Option<String>,
+    pub path: Option<String>,
 }
 
 impl Game {
@@ -46,4 +48,10 @@ pub struct GameVersion {
     pub source: String,
     pub name: String,
     pub download_size: u32,
+}
+
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct VersionDownloadInfo {
+    pub install_size: u32,
 }

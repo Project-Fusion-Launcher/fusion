@@ -1,9 +1,16 @@
 import { Button, Dialog, IconButton, Select, TextField } from "@repo/ui";
 import type { Game } from "../routes/Library";
-import { createResource, createEffect, createSignal } from "solid-js";
+import {
+  createResource,
+  createEffect,
+  createSignal,
+  Match,
+  Switch,
+} from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
-import { Folder } from "lucide-solid";
+import { Folder, LoaderCircle } from "lucide-solid";
 import { open } from "@tauri-apps/plugin-dialog";
+import { bytesToSize } from "../util/string";
 
 interface InstallDialogProps {
   selectedGame: Game | null;
@@ -19,10 +26,18 @@ interface GameVersion {
   downloadSize: number;
 }
 
+interface VersionDownloadInfo {
+  installSize: number;
+}
+
 const InstallDialog = (props: InstallDialogProps) => {
-  const [versions, { refetch }] = createResource<GameVersion[]>(fetchVersions);
+  const [versions, { refetch: refetchVersions }] =
+    createResource<GameVersion[]>(fetchVersions);
+
   const [selectedVersion, setSelectedVersion] =
     createSignal<GameVersion | null>();
+  const [versionDownloadInfo, { refetch: refetchVersionDownloadInfo }] =
+    createResource<VersionDownloadInfo | null>(fetchVersionDownloadInfo);
   const [installLocation, setInstallLocation] = createSignal<string>(
     "C:\\Users\\jorge\\Desktop",
   );
@@ -38,12 +53,30 @@ const InstallDialog = (props: InstallDialogProps) => {
     return versions;
   }
 
+  async function fetchVersionDownloadInfo(): Promise<VersionDownloadInfo | null> {
+    if (selectedVersion() === null) return null;
+    return (await invoke("fetch_version_info", {
+      gameId: props.selectedGame?.id,
+      gameSource: props.selectedGame?.source,
+      versionId: selectedVersion()?.id,
+    }).catch(() => ({ installSize: 0 }))) as VersionDownloadInfo;
+  }
+
   createEffect(() => {
     if (props.selectedGame) {
       setSelectedVersion(null);
-      refetch();
+      refetchVersions();
     }
   });
+
+  const handleVersionSelect = (value: string | null) => {
+    const version =
+      versions()?.find((version) => version.name === value) || null;
+    setSelectedVersion(version);
+    if (version) {
+      refetchVersionDownloadInfo();
+    }
+  };
 
   const handleDirectorySelect = () => {
     open({
@@ -53,8 +86,6 @@ const InstallDialog = (props: InstallDialogProps) => {
       if (result) setInstallLocation(result);
     });
   };
-
-  createEffect(() => {});
 
   const handleInstall = () => {
     if (selectedVersion() === null || !installLocation()) return;
@@ -106,11 +137,7 @@ const InstallDialog = (props: InstallDialogProps) => {
             }
             label="Version to install"
             value={selectedVersion()?.name}
-            onChange={(value) => {
-              setSelectedVersion(
-                versions()?.find((version) => version.name === value) || null,
-              );
-            }}
+            onChange={handleVersionSelect}
             disallowEmptySelection
           />
           <div class="flex items-end gap-8">
@@ -124,6 +151,32 @@ const InstallDialog = (props: InstallDialogProps) => {
             <IconButton variant="outline" onClick={handleDirectorySelect}>
               <Folder class="size-16" />
             </IconButton>
+          </div>
+          <div
+            class="text-secondary flex-cole text-md flex"
+            classList={{ "opacity-0": !selectedVersion() }}
+          >
+            <table>
+              <tbody>
+                <tr>
+                  <td class="pr-16 font-light">Download size:</td>
+                  <td>{bytesToSize(selectedVersion()?.downloadSize)}</td>
+                </tr>
+                <tr>
+                  <td class="font-light">Install size:</td>
+                  <td>
+                    <Switch>
+                      <Match when={versionDownloadInfo.loading}>
+                        <LoaderCircle class="size-16 animate-spin" />
+                      </Match>
+                      <Match when={!versionDownloadInfo.loading}>
+                        {bytesToSize(versionDownloadInfo()?.installSize)}
+                      </Match>
+                    </Switch>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

@@ -12,5 +12,7 @@ diesel::table! {
         title -> Text,
         key -> Nullable<Text>,
         developer -> Nullable<Text>,
+        launch_target -> Nullable<Text>,
+        path -> Nullable<Text>,
     }
 }

@@ -22,7 +22,8 @@ pub async fn run() {
         .invoke_handler(tauri::generate_handler![
             storefronts::get_games,
             storefronts::fetch_game_versions,
-            storefronts::download_game
+            storefronts::download_game,
+            storefronts::fetch_version_info,
         ])
         .setup(|app| {
             APP.set(app.handle().clone())
