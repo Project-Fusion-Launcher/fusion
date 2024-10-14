@@ -8,7 +8,7 @@ import {
   Switch,
 } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
-import { Folder, LoaderCircle } from "lucide-solid";
+import { Download, Folder, HardDrive, LoaderCircle } from "lucide-solid";
 import { open } from "@tauri-apps/plugin-dialog";
 import { bytesToSize } from "../util/string";
 
@@ -159,11 +159,16 @@ const InstallDialog = (props: InstallDialogProps) => {
           >
             <tbody>
               <tr>
-                <td class="pr-16 font-light">Download size:</td>
+                <td class="flex items-center gap-8 pr-16 font-light">
+                  <Download class="size-16" /> Download size:
+                </td>
                 <td>{bytesToSize(selectedVersion()?.downloadSize)}</td>
               </tr>
               <tr>
-                <td class="pr-16 font-light">Install size:</td>
+                <td class="flex items-center gap-8 pr-16 font-light">
+                  <HardDrive class="size-16" />
+                  Install size:
+                </td>
                 <td>
                   <Switch>
                     <Match when={versionDownloadInfo.loading}>
