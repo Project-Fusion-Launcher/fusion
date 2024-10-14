@@ -44,6 +44,7 @@ interface SelectProps extends SelectVariants, PortalVariants {
   loading?: boolean;
   label?: string;
   disallowEmptySelection?: boolean;
+  allowDuplicateSelectionEvents?: boolean;
   onChange?: (value: string | null) => void;
 }
 
@@ -63,6 +64,7 @@ const Select = (props: SelectProps) => {
       placement="bottom-start"
       gutter={8}
       disallowEmptySelection={props.disallowEmptySelection}
+      allowDuplicateSelectionEvents={props.allowDuplicateSelectionEvents}
       onChange={props.onChange}
       itemComponent={(props) => (
         <KSelect.Item
@@ -78,7 +80,7 @@ const Select = (props: SelectProps) => {
     >
       <div class="flex flex-col gap-8">
         <Show when={props.label}>
-          <KSelect.Label class="text-secondary font-light leading-none">
+          <KSelect.Label class="text-secondary text-base font-light">
             {props.label}
           </KSelect.Label>
         </Show>

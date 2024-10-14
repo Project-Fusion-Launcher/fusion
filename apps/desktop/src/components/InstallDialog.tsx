@@ -152,35 +152,34 @@ const InstallDialog = (props: InstallDialogProps) => {
               <Folder class="size-16" />
             </IconButton>
           </div>
-          <div
+
+          <table
             class="text-secondary flex-cole text-md flex"
             classList={{ "opacity-0": !selectedVersion() }}
           >
-            <table>
-              <tbody>
-                <tr>
-                  <td class="pr-16 font-light">Download size:</td>
-                  <td>{bytesToSize(selectedVersion()?.downloadSize)}</td>
-                </tr>
-                <tr>
-                  <td class="font-light">Install size:</td>
-                  <td>
-                    <Switch>
-                      <Match when={versionDownloadInfo.loading}>
-                        <LoaderCircle class="size-16 animate-spin" />
-                      </Match>
-                      <Match when={!versionDownloadInfo.loading}>
-                        {bytesToSize(versionDownloadInfo()?.installSize)}
-                      </Match>
-                    </Switch>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <tbody>
+              <tr>
+                <td class="pr-16 font-light">Download size:</td>
+                <td>{bytesToSize(selectedVersion()?.downloadSize)}</td>
+              </tr>
+              <tr>
+                <td class="pr-16 font-light">Install size:</td>
+                <td>
+                  <Switch>
+                    <Match when={versionDownloadInfo.loading}>
+                      <LoaderCircle class="size-16 animate-spin" />
+                    </Match>
+                    <Match when={!versionDownloadInfo.loading}>
+                      {bytesToSize(versionDownloadInfo()?.installSize)}
+                    </Match>
+                  </Switch>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-      <div class="flex flex-row-reverse gap-16">
+      <div class="flex flex-row-reverse gap-8">
         <Button
           variant="accent"
           disabled={selectedVersion() === null || !installLocation()}
