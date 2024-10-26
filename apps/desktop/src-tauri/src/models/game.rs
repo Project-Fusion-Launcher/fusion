@@ -13,6 +13,7 @@ pub struct Game {
     pub developer: Option<String>,
     pub launch_target: Option<String>,
     pub path: Option<String>,
+    pub version: Option<String>,
 }
 
 impl Game {
@@ -23,9 +24,10 @@ impl Game {
             .first(connection)
             .expect("Error loading game")
     }
-
     pub fn update(&self, connection: &mut SqliteConnection) -> Result<(), diesel::result::Error> {
-        diesel::update(games).set(self).execute(connection)?;
+        diesel::update(games.filter(id.eq(&self.id)))
+            .set(self)
+            .execute(connection)?;
         Ok(())
     }
 }

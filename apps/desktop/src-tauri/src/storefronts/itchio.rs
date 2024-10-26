@@ -25,6 +25,7 @@ pub async fn fetch_games(api_key: &str) -> Vec<Game> {
             developer,
             launch_target: None,
             path: None,
+            version: None,
         });
     }
 
@@ -82,7 +83,7 @@ pub async fn fetch_release_info(api_key: &str, upload_id: &str, game: Game) -> V
 pub async fn fetch_download_info(
     api_key: &str,
     upload_id: &str,
-    game: Game,
+    game: &mut Game,
     download_options: DownloadOptions,
 ) -> Download {
     let client = ItchioClient::new(api_key);
@@ -96,6 +97,19 @@ pub async fn fetch_download_info(
         .fetch_upload_download_url(upload_id, game_key)
         .await
         .unwrap();
+
+    game.version = upload
+        .build
+        .as_ref()
+        .map(|build| build.version.to_string())
+        .or(upload.md5_hash.clone());
+
+    game.path = Some(
+        download_options
+            .install_location
+            .to_string_lossy()
+            .into_owned(),
+    );
 
     Download {
         request: download_request,

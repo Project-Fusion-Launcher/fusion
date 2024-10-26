@@ -92,18 +92,30 @@ pub async fn download_game(
     game_id: String,
     game_source: String,
     version_id: String,
-    download_options: DownloadOptions,
+    mut download_options: DownloadOptions,
 ) -> Result<(), String> {
     let mut connection = database_manager.create_connection();
 
-    let game = Game::select(&mut connection, &game_source, &game_id);
+    let mut game = Game::select(&mut connection, &game_source, &game_id);
+
+    let complete_install_location = download_options
+        .install_location
+        .join(game.title.replace(" ", ""));
+
+    download_options.install_location = complete_install_location;
 
     if game_source == "itchio" {
         let itchio_api_key = config_manager.itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
-            let download =
-                itchio::fetch_download_info(itchio_api_key, &version_id, game, download_options)
-                    .await;
+            let download = itchio::fetch_download_info(
+                itchio_api_key,
+                &version_id,
+                &mut game,
+                download_options,
+            )
+            .await;
+
+            game.update(&mut connection).unwrap();
 
             download_manager.enqueue_download(download);
         }

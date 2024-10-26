@@ -14,5 +14,6 @@ diesel::table! {
         developer -> Nullable<Text>,
         launch_target -> Nullable<Text>,
         path -> Nullable<Text>,
+        version -> Nullable<Text>,
     }
 }
