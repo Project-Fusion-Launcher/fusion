@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 
-#[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug)]
+#[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug, Default)]
 #[diesel(table_name = crate::schema::configs)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Config {
