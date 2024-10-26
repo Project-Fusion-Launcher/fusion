@@ -1,7 +1,9 @@
-use managers::{config::ConfigManager, database::DatabaseManager, download::DownloadManager};
+use common::database;
+use managers::{config::ConfigManager, download::DownloadManager};
 use std::sync::OnceLock;
 use tauri::{AppHandle, Manager};
 
+pub mod common;
 pub mod managers;
 pub mod models;
 pub mod schema;
@@ -11,7 +13,7 @@ pub mod storefronts;
 static APP: OnceLock<AppHandle> = OnceLock::new();
 
 pub async fn run() {
-    // Shares the current tokio runtime with tauri.
+    // Share the current tokio runtime with tauri.
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
     tauri::Builder::default()
@@ -29,9 +31,11 @@ pub async fn run() {
             APP.set(app.handle().clone())
                 .expect("Error setting up global app handle");
 
-            app.manage(DatabaseManager::new());
-            app.manage(ConfigManager::new());
-            app.manage(DownloadManager::new());
+            database::init();
+
+            // Initialize states/managers. The order is important, as one may depend on another.
+            app.manage(ConfigManager::init());
+            app.manage(DownloadManager::init());
 
             Ok(())
         })

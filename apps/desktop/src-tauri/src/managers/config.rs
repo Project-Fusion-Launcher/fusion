@@ -1,33 +1,32 @@
-use crate::{models::config::Config, schema::configs::dsl::configs, APP};
+use crate::{common::database, models::config::Config, schema::configs::dsl::configs};
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
-use tauri::Manager;
+use std::sync::RwLock;
 
-use super::database::DatabaseManager;
-
+/// A manager for handling the application configuration.
 pub struct ConfigManager {
-    config: Config,
+    config: RwLock<Config>,
 }
 
 impl ConfigManager {
-    pub fn new() -> Self {
+    pub fn init() -> Self {
         let config = Self::load();
 
-        Self { config }
+        Self {
+            config: RwLock::new(config),
+        }
     }
 
-    fn save(&self) {
-        let database_manager = APP.get().unwrap().state::<DatabaseManager>();
-        let mut connection = database_manager.create_connection();
+    fn _save(&self) {
+        let mut connection = database::create_connection();
 
         diesel::update(configs)
-            .set(self.config.clone())
+            .set(self.config.read().unwrap().clone())
             .execute(&mut connection)
             .unwrap();
     }
 
     fn load() -> Config {
-        let database_manager = APP.get().unwrap().state::<DatabaseManager>();
-        let mut connection = database_manager.create_connection();
+        let mut connection = database::create_connection();
 
         let config = configs
             .limit(1)
@@ -43,8 +42,7 @@ impl ConfigManager {
     }
 
     fn create_default_config() -> Config {
-        let database_manager = APP.get().unwrap().state::<DatabaseManager>();
-        let mut connection = database_manager.create_connection();
+        let mut connection = database::create_connection();
 
         let config = Config {
             id: 0,
@@ -61,17 +59,13 @@ impl ConfigManager {
 
     // Getters and setters
 
-    pub fn itchio_api_key(&self) -> Option<&str> {
-        self.config.itchio_api_key.as_deref()
+    pub fn itchio_api_key(&self) -> Option<String> {
+        let config = self.config.read().unwrap();
+        config.itchio_api_key.clone()
     }
 
     pub fn set_itchio_api_key(&mut self, itchio_api_key: Option<String>) {
-        self.config.itchio_api_key = itchio_api_key;
-    }
-}
-
-impl Default for ConfigManager {
-    fn default() -> Self {
-        Self::new()
+        let mut config = self.config.write().unwrap();
+        config.itchio_api_key = itchio_api_key;
     }
 }

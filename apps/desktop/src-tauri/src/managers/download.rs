@@ -30,7 +30,7 @@ pub struct DownloadManager {
 }
 
 impl DownloadManager {
-    pub fn new() -> Self {
+    pub fn init() -> Self {
         let manager = Self {
             queue: Arc::new(Mutex::new(VecDeque::new())),
             queue_notifier: Arc::new(Notify::new()),
@@ -107,11 +107,5 @@ impl DownloadManager {
         writer.await.unwrap();
 
         println!("Downloaded: {}", download.filename);
-    }
-}
-
-impl Default for DownloadManager {
-    fn default() -> Self {
-        Self::new()
     }
 }
