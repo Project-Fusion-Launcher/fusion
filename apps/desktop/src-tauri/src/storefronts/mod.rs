@@ -50,7 +50,7 @@ pub async fn fetch_game_versions(
 ) -> Result<Vec<GameVersion>, String> {
     let mut connection = database_manager.create_connection();
 
-    let game = Game::select_from_id(&mut connection, &game_source, &game_id);
+    let game = Game::select(&mut connection, &game_source, &game_id);
 
     if game_source == "itchio" {
         let itchio_api_key = config_manager.itchio_api_key();
@@ -72,7 +72,7 @@ pub async fn fetch_version_info(
 ) -> Result<VersionDownloadInfo, String> {
     let mut connection = database_manager.create_connection();
 
-    let game = Game::select_from_id(&mut connection, &game_source, &game_id);
+    let game = Game::select(&mut connection, &game_source, &game_id);
 
     if game_source == "itchio" {
         let itchio_api_key = config_manager.itchio_api_key();
@@ -96,7 +96,7 @@ pub async fn download_game(
 ) -> Result<(), String> {
     let mut connection = database_manager.create_connection();
 
-    let game = Game::select_from_id(&mut connection, &game_source, &game_id);
+    let game = Game::select(&mut connection, &game_source, &game_id);
 
     if game_source == "itchio" {
         let itchio_api_key = config_manager.itchio_api_key();

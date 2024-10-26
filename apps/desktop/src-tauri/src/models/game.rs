@@ -1,3 +1,4 @@
+use crate::schema::games::dsl::*;
 use diesel::prelude::*;
 use serde::Serialize;
 
@@ -15,17 +16,17 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn select_from_id(
-        connection: &mut SqliteConnection,
-        game_source: &str,
-        game_id: &str,
-    ) -> Game {
-        use crate::schema::games::dsl::*;
+    pub fn select(connection: &mut SqliteConnection, game_source: &str, game_id: &str) -> Game {
         games
             .filter(source.eq(game_source))
             .filter(id.eq(game_id))
             .first(connection)
             .expect("Error loading game")
+    }
+
+    pub fn update(&self, connection: &mut SqliteConnection) -> Result<(), diesel::result::Error> {
+        diesel::update(games).set(self).execute(connection)?;
+        Ok(())
     }
 }
 
