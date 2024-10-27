@@ -1,3 +1,4 @@
+use crate::{models::game::GameSource, storefronts::itchio};
 use reqwest::RequestBuilder;
 use serde::Deserialize;
 use std::{
@@ -14,7 +15,8 @@ use tokio::{
 
 pub struct Download {
     pub request: RequestBuilder,
-    pub filename: String,
+    pub file_name: String,
+    pub source: GameSource,
     pub download_options: DownloadOptions,
 }
 
@@ -57,7 +59,14 @@ impl DownloadManager {
                 };
 
                 if let Some(download) = download {
+                    let path = download.download_options.install_location.clone();
+                    let file_name = download.file_name.clone();
+
                     Self::download(download).await;
+
+                    match download.source {
+                        GameSource::Itchio => itchio::post_download(path, file_name).await,
+                    }
                 } else {
                     println!("Waiting for downloads...");
                     queue_notifier.notified().await;
@@ -87,7 +96,7 @@ impl DownloadManager {
         let file_path = download
             .download_options
             .install_location
-            .join(&download.filename);
+            .join(&download.file_name);
 
         let mut file = OpenOptions::new()
             .create(true)
@@ -106,6 +115,6 @@ impl DownloadManager {
         downloader.await.unwrap();
         writer.await.unwrap();
 
-        println!("Downloaded: {}", download.filename);
+        println!("Downloaded: {}", download.file_name);
     }
 }

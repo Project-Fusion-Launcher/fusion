@@ -1,9 +1,10 @@
-use wrapper_itchio::ItchioClient;
-
 use crate::{
     managers::download::{Download, DownloadOptions},
-    models::game::{Game, GameVersion, VersionDownloadInfo},
+    models::game::{Game, GameSource, GameVersion, VersionDownloadInfo},
 };
+use std::{fs, io, path::PathBuf};
+use wrapper_itchio::ItchioClient;
+use zip::ZipArchive;
 
 pub async fn fetch_games(api_key: &str) -> Vec<Game> {
     let client = ItchioClient::new(api_key);
@@ -20,7 +21,7 @@ pub async fn fetch_games(api_key: &str) -> Vec<Game> {
         games.push(Game {
             id: key.game.id.to_string(),
             title: key.game.title,
-            source: "itchio".to_string(),
+            source: GameSource::Itchio,
             key: Some(key.id.to_string()),
             developer,
             launch_target: None,
@@ -44,7 +45,7 @@ pub async fn fetch_releases(api_key: &str, game_id: &str, game_key: &str) -> Vec
         .map(|upload| GameVersion {
             id: upload.id.to_string(),
             game_id: game_id.to_string(),
-            source: "itchio".to_string(),
+            source: GameSource::Itchio,
             name: upload.display_name.unwrap_or(upload.filename),
             download_size: upload.size.unwrap_or(0),
         })
@@ -113,7 +114,41 @@ pub async fn fetch_download_info(
 
     Download {
         request: download_request,
-        filename: upload.filename,
+        file_name: upload.filename,
         download_options,
+        source: GameSource::Itchio,
+    }
+}
+
+pub async fn post_download(path: PathBuf, file_name: String) {
+    let file_path = path.join(file_name);
+
+    if file_path.extension().unwrap() == "zip" {
+        let file = fs::File::open(&file_path).unwrap();
+        let mut archive = ZipArchive::new(file).unwrap();
+
+        for i in 0..archive.len() {
+            let mut file = archive.by_index(i).unwrap();
+            let outpath = match file.enclosed_name() {
+                Some(outpath) => path.join(outpath),
+                None => continue,
+            };
+
+            if file.is_dir() {
+                fs::create_dir_all(&outpath).unwrap();
+            } else {
+                if let Some(p) = outpath.parent() {
+                    if !p.exists() {
+                        fs::create_dir_all(p).unwrap();
+                    }
+                }
+
+                let mut outfile = fs::File::create(&outpath).unwrap();
+                io::copy(&mut file, &mut outfile).unwrap();
+            }
+        }
+
+        fs::remove_file(&file_path).unwrap();
+        println!("Finished extracting");
     }
 }

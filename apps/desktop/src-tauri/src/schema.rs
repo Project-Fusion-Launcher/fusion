@@ -8,7 +8,7 @@ diesel::table! {
 diesel::table! {
     games (id, source) {
         id -> Text,
-        source -> Text,
+        source -> crate::models::game::GameSourceMapping,
         title -> Text,
         key -> Nullable<Text>,
         developer -> Nullable<Text>,

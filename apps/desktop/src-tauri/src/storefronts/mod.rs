@@ -4,7 +4,7 @@ use crate::{
         config::ConfigManager,
         download::{DownloadManager, DownloadOptions},
     },
-    models::game::{Game, GameVersion, ReducedGame, VersionDownloadInfo},
+    models::game::{Game, GameSource, GameVersion, ReducedGame, VersionDownloadInfo},
     schema::games::dsl::games,
 };
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
@@ -44,13 +44,13 @@ pub async fn get_games(
 pub async fn fetch_game_versions(
     config_manager: State<'_, ConfigManager>,
     game_id: String,
-    game_source: String,
+    game_source: GameSource,
 ) -> Result<Vec<GameVersion>, String> {
     let mut connection = database::create_connection();
 
     let game = Game::select(&mut connection, &game_source, &game_id);
 
-    if game_source == "itchio" {
+    if game_source == GameSource::Itchio {
         let itchio_api_key = config_manager.itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
             return Ok(itchio::fetch_releases(&itchio_api_key, &game_id, &game.key.unwrap()).await);
@@ -64,14 +64,14 @@ pub async fn fetch_game_versions(
 pub async fn fetch_version_info(
     config_manager: State<'_, ConfigManager>,
     game_id: String,
-    game_source: String,
+    game_source: GameSource,
     version_id: String,
 ) -> Result<VersionDownloadInfo, String> {
     let mut connection = database::create_connection();
 
     let game = Game::select(&mut connection, &game_source, &game_id);
 
-    if game_source == "itchio" {
+    if game_source == GameSource::Itchio {
         let itchio_api_key = config_manager.itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
             return Ok(itchio::fetch_release_info(&itchio_api_key, &version_id, game).await);
@@ -86,7 +86,7 @@ pub async fn download_game(
     config_manager: State<'_, ConfigManager>,
     download_manager: State<'_, DownloadManager>,
     game_id: String,
-    game_source: String,
+    game_source: GameSource,
     version_id: String,
     mut download_options: DownloadOptions,
 ) -> Result<(), String> {
@@ -100,7 +100,7 @@ pub async fn download_game(
 
     download_options.install_location = complete_install_location;
 
-    if game_source == "itchio" {
+    if game_source == GameSource::Itchio {
         let itchio_api_key = config_manager.itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
             let download = itchio::fetch_download_info(

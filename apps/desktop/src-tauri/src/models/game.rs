@@ -1,13 +1,14 @@
 use crate::schema::games::dsl::*;
 use diesel::prelude::*;
-use serde::Serialize;
+use diesel_derive_enum::DbEnum;
+use serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug, Serialize)]
 #[diesel(table_name = crate::schema::games)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Game {
     pub id: String,
-    pub source: String,
+    pub source: GameSource,
     pub title: String,
     pub key: Option<String>,
     pub developer: Option<String>,
@@ -17,7 +18,11 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn select(connection: &mut SqliteConnection, game_source: &str, game_id: &str) -> Game {
+    pub fn select(
+        connection: &mut SqliteConnection,
+        game_source: &GameSource,
+        game_id: &str,
+    ) -> Game {
         games
             .filter(source.eq(game_source))
             .filter(id.eq(game_id))
@@ -38,7 +43,7 @@ impl Game {
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct ReducedGame {
     pub id: String,
-    pub source: String,
+    pub source: GameSource,
     pub title: String,
     pub developer: Option<String>,
 }
@@ -48,7 +53,7 @@ pub struct ReducedGame {
 pub struct GameVersion {
     pub id: String,
     pub game_id: String,
-    pub source: String,
+    pub source: GameSource,
     pub name: String,
     pub download_size: u32,
 }
@@ -57,4 +62,10 @@ pub struct GameVersion {
 #[serde(rename_all = "camelCase")]
 pub struct VersionDownloadInfo {
     pub install_size: u32,
+}
+
+#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum GameSource {
+    Itchio,
 }
