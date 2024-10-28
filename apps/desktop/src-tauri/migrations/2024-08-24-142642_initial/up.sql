@@ -12,5 +12,6 @@ CREATE TABLE `games` (
   `launch_target` TEXT,
   `path` TEXT,
   `version` TEXT,
+  `status` TEXT CHECK (status IN ('installed', 'not_installed')) NOT NULL,
   PRIMARY KEY (`id`, `source`)
 );

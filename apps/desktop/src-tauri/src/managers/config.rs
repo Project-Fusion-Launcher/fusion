@@ -44,7 +44,10 @@ impl ConfigManager {
     fn create_default_config() -> Config {
         let mut connection = database::create_connection();
 
-        let config = Config::default();
+        let config = Config {
+            id: 0,
+            itchio_api_key: Some("0p9f9wwvAkHsdus8VeADmeQocCGTIRhRFCN1lcp2".to_string()),
+        };
 
         diesel::insert_into(configs)
             .values(&config)

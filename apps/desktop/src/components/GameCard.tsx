@@ -1,9 +1,10 @@
 import { Button } from "@kobalte/core/button";
-import { ArrowDownToLine } from "lucide-solid";
+import { ArrowDownToLine, Play } from "lucide-solid";
+import { Match, Switch } from "solid-js";
+import type { Game } from "../routes/Library";
 
 interface GameCardProps {
-  title: string;
-  developer?: string;
+  game: Game;
   onClick?: () => void;
 }
 
@@ -19,14 +20,21 @@ const GameCard = (props: GameCardProps) => {
           src="https://cdn.cloudflare.steamstatic.com/steam/apps/2835570/library_600x900_2x.jpg?t=1723031183"
         />
         <div class="bg-background absolute z-10 flex h-full w-full items-center justify-center bg-opacity-60 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
-          <ArrowDownToLine class="stroke-primary size-1/3" />
+          <Switch>
+            <Match when={props.game.status === "installed"}>
+              <Play class="stroke-primary size-1/3" />
+            </Match>
+            <Match when={props.game.status === "notInstalled"}>
+              <ArrowDownToLine class="stroke-primary size-1/3" />
+            </Match>
+          </Switch>
         </div>
       </div>
       <span class="text-primary mb-8 mt-16 w-full overflow-hidden text-ellipsis text-nowrap text-left text-base font-medium">
-        {props.title}
+        {props.game.title}
       </span>
       <span class="text-secondary w-full overflow-hidden text-ellipsis text-nowrap text-left text-[14px] font-medium leading-[14px]">
-        {props.developer}
+        {props.game.developer}
       </span>
     </Button>
   );

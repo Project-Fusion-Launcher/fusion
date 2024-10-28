@@ -15,6 +15,7 @@ pub struct Game {
     pub launch_target: Option<String>,
     pub path: Option<String>,
     pub version: Option<String>,
+    pub status: GameStatus,
 }
 
 impl Game {
@@ -46,6 +47,7 @@ pub struct ReducedGame {
     pub source: GameSource,
     pub title: String,
     pub developer: Option<String>,
+    pub status: GameStatus,
 }
 
 #[derive(Serialize, Clone, Debug)]
@@ -68,4 +70,11 @@ pub struct VersionDownloadInfo {
 #[serde(rename_all = "camelCase")]
 pub enum GameSource {
     Itchio,
+}
+
+#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum GameStatus {
+    Installed,
+    NotInstalled,
 }

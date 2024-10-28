@@ -15,5 +15,6 @@ diesel::table! {
         launch_target -> Nullable<Text>,
         path -> Nullable<Text>,
         version -> Nullable<Text>,
+        status -> crate::models::game::GameStatusMapping,
     }
 }

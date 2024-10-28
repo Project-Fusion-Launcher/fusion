@@ -1,10 +1,12 @@
 use crate::{
+    common::database,
     managers::download::{Download, DownloadOptions},
-    models::game::{Game, GameSource, GameVersion, VersionDownloadInfo},
+    models::game::{self, Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
 };
-use std::{fs, io, path::PathBuf};
+use diesel::connection;
+use std::path::PathBuf;
+use tokio::fs;
 use wrapper_itchio::ItchioClient;
-use zip::ZipArchive;
 
 pub async fn fetch_games(api_key: &str) -> Vec<Game> {
     let client = ItchioClient::new(api_key);
@@ -27,6 +29,7 @@ pub async fn fetch_games(api_key: &str) -> Vec<Game> {
             launch_target: None,
             path: None,
             version: None,
+            status: GameStatus::NotInstalled,
         });
     }
 
@@ -117,38 +120,37 @@ pub async fn fetch_download_info(
         file_name: upload.filename,
         download_options,
         source: GameSource::Itchio,
+        game_id: game.id.clone(),
     }
 }
 
-pub async fn post_download(path: PathBuf, file_name: String) {
+pub async fn post_download(game_id: String, path: PathBuf, file_name: String) {
     let file_path = path.join(file_name);
 
-    if file_path.extension().unwrap() == "zip" {
-        let file = fs::File::open(&file_path).unwrap();
-        let mut archive = ZipArchive::new(file).unwrap();
+    let mut connection = database::create_connection();
+    let mut game = Game::select(&mut connection, &GameSource::Itchio, &game_id);
 
-        for i in 0..archive.len() {
-            let mut file = archive.by_index(i).unwrap();
-            let outpath = match file.enclosed_name() {
-                Some(outpath) => path.join(outpath),
-                None => continue,
-            };
+    if file_path.extension().unwrap() == "zip"
+        || file_path.extension().unwrap() == "7z"
+        || file_path.extension().unwrap() == "rar"
+    {
+        println!("Extracting archive: {:?}", file_path);
+        let exe_path = std::env::current_exe().unwrap();
+        let seven_zip = exe_path.parent().unwrap().join("thirdparty/7-Zip/7z.exe");
 
-            if file.is_dir() {
-                fs::create_dir_all(&outpath).unwrap();
-            } else {
-                if let Some(p) = outpath.parent() {
-                    if !p.exists() {
-                        fs::create_dir_all(p).unwrap();
-                    }
-                }
+        let result = tokio::process::Command::new(seven_zip)
+            .arg("x")
+            .arg(&file_path)
+            .arg(format!("-o{}", path.to_string_lossy()))
+            .arg("-aoa")
+            .output()
+            .await;
 
-                let mut outfile = fs::File::create(&outpath).unwrap();
-                io::copy(&mut file, &mut outfile).unwrap();
-            }
-        }
+        println!("{:?}", result);
 
-        fs::remove_file(&file_path).unwrap();
-        println!("Finished extracting");
+        fs::remove_file(file_path).await.unwrap();
     }
+
+    game.status = GameStatus::Installed;
+    game.update(&mut connection).unwrap();
 }

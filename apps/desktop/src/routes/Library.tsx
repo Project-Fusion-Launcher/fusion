@@ -13,6 +13,7 @@ export interface Game {
   title: string;
   source: string;
   developer?: string;
+  status: "installed" | "notInstalled";
 }
 
 const Library = () => {
@@ -93,8 +94,7 @@ const Library = () => {
                 {(game, i) => (
                   <>
                     <GameCard
-                      title={game.title}
-                      developer={game.developer}
+                      game={game}
                       onClick={() => handleGameClick(game)}
                     />
                     {i() === gameRow.length - 1 && i() < columns() - 1 && (
