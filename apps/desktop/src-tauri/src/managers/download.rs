@@ -1,7 +1,4 @@
-use crate::{
-    models::game::{self, GameSource},
-    storefronts::itchio,
-};
+use crate::{models::game::GameSource, storefronts::itchio};
 use reqwest::RequestBuilder;
 use serde::Deserialize;
 use std::{

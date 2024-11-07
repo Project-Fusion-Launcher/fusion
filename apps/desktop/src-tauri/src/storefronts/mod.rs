@@ -1,3 +1,5 @@
+use std::sync::RwLock;
+
 use crate::{
     common::database,
     managers::download::{DownloadManager, DownloadOptions},
@@ -13,7 +15,7 @@ pub mod itchio;
 
 #[tauri::command]
 pub async fn get_games(
-    config: State<'_, Config>,
+    config: State<'_, RwLock<Config>>,
     refetch: bool,
 ) -> Result<Vec<ReducedGame>, String> {
     let mut connection = database::create_connection();
@@ -21,7 +23,7 @@ pub async fn get_games(
     if refetch {
         let mut games_to_return = Vec::new();
 
-        let itchio_api_key = config.itchio_api_key();
+        let itchio_api_key = config.read().unwrap().itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
             games_to_return.append(&mut itchio::fetch_games(&itchio_api_key).await);
         }
@@ -42,7 +44,7 @@ pub async fn get_games(
 
 #[tauri::command]
 pub async fn fetch_game_versions(
-    config: State<'_, Config>,
+    config: State<'_, RwLock<Config>>,
     game_id: String,
     game_source: GameSource,
 ) -> Result<Vec<GameVersion>, String> {
@@ -51,7 +53,7 @@ pub async fn fetch_game_versions(
     let game = Game::select(&mut connection, &game_source, &game_id);
 
     if game_source == GameSource::Itchio {
-        let itchio_api_key = config.itchio_api_key();
+        let itchio_api_key = config.read().unwrap().itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
             return Ok(itchio::fetch_releases(&itchio_api_key, &game_id, &game.key.unwrap()).await);
         }
@@ -62,7 +64,7 @@ pub async fn fetch_game_versions(
 
 #[tauri::command]
 pub async fn fetch_version_info(
-    config: State<'_, Config>,
+    config: State<'_, RwLock<Config>>,
     game_id: String,
     game_source: GameSource,
     version_id: String,
@@ -72,7 +74,7 @@ pub async fn fetch_version_info(
     let game = Game::select(&mut connection, &game_source, &game_id);
 
     if game_source == GameSource::Itchio {
-        let itchio_api_key = config.itchio_api_key();
+        let itchio_api_key = config.read().unwrap().itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
             return Ok(itchio::fetch_release_info(&itchio_api_key, &version_id, game).await);
         }
@@ -83,7 +85,7 @@ pub async fn fetch_version_info(
 
 #[tauri::command]
 pub async fn download_game(
-    config: State<'_, Config>,
+    config: State<'_, RwLock<Config>>,
     download_manager: State<'_, DownloadManager>,
     game_id: String,
     game_source: GameSource,
@@ -101,7 +103,7 @@ pub async fn download_game(
     download_options.install_location = complete_install_location;
 
     if game_source == GameSource::Itchio {
-        let itchio_api_key = config.itchio_api_key();
+        let itchio_api_key = config.read().unwrap().itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
             let download = itchio::fetch_download_info(
                 &itchio_api_key,

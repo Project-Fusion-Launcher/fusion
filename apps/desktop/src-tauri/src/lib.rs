@@ -1,7 +1,7 @@
 use common::database;
 use managers::download::DownloadManager;
 use models::config::Config;
-use std::sync::OnceLock;
+use std::sync::{OnceLock, RwLock};
 use tauri::{AppHandle, Manager};
 
 pub mod common;
@@ -36,7 +36,7 @@ pub async fn run() {
             let mut connection = database::create_connection();
 
             // Initialize states/managers. The order is important, as one may depend on another.
-            app.manage(Config::select(&mut connection));
+            app.manage(RwLock::new(Config::select(&mut connection)));
             app.manage(DownloadManager::init());
 
             Ok(())

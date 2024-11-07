@@ -1,9 +1,8 @@
 use crate::{
     common::database,
     managers::download::{Download, DownloadOptions},
-    models::game::{self, Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
+    models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
 };
-use diesel::connection;
 use std::path::PathBuf;
 use tokio::fs;
 use wrapper_itchio::ItchioClient;

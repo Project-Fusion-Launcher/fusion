@@ -6,8 +6,8 @@ use diesel::prelude::*;
 #[diesel(table_name = crate::schema::configs)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Config {
-    pub id: i32,
-    pub itchio_api_key: Option<String>,
+    id: i32,
+    itchio_api_key: Option<String>,
 }
 
 impl Config {
