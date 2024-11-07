@@ -1,5 +1,6 @@
 use common::database;
-use managers::{config::ConfigManager, download::DownloadManager};
+use managers::download::DownloadManager;
+use models::config::Config;
 use std::sync::OnceLock;
 use tauri::{AppHandle, Manager};
 
@@ -32,9 +33,10 @@ pub async fn run() {
                 .expect("Error setting up global app handle");
 
             database::init();
+            let mut connection = database::create_connection();
 
             // Initialize states/managers. The order is important, as one may depend on another.
-            app.manage(ConfigManager::init());
+            app.manage(Config::select(&mut connection));
             app.manage(DownloadManager::init());
 
             Ok(())
