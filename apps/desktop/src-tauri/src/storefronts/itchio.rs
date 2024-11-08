@@ -7,10 +7,10 @@ use std::path::PathBuf;
 use tokio::fs;
 use wrapper_itchio::ItchioClient;
 
-pub async fn fetch_games(api_key: &str) -> Vec<Game> {
+pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
     let client = ItchioClient::new(api_key);
 
-    let owned_keys = client.fetch_owned_keys(1).await.unwrap();
+    let owned_keys = client.fetch_owned_keys(1).await?;
 
     let mut games = Vec::new();
     for key in owned_keys.owned_keys {
@@ -32,17 +32,22 @@ pub async fn fetch_games(api_key: &str) -> Vec<Game> {
         });
     }
 
-    games
+    Ok(games)
 }
 
-pub async fn fetch_releases(api_key: &str, game_id: &str, game_key: &str) -> Vec<GameVersion> {
+pub async fn fetch_releases(
+    api_key: &str,
+    game_id: &str,
+    game_key: &str,
+) -> Result<Vec<GameVersion>> {
     let client = ItchioClient::new(api_key);
 
-    let game_id: u32 = game_id.parse().unwrap();
-    let game_key: u32 = game_key.parse().unwrap();
-    let game = client.fetch_game_uploads(game_id, game_key).await.unwrap();
+    let game_id: u32 = game_id.parse()?;
+    let game_key: u32 = game_key.parse()?;
+    let game = client.fetch_game_uploads(game_id, game_key).await?;
 
-    game.uploads
+    let uploads = game
+        .uploads
         .into_iter()
         .map(|upload| GameVersion {
             id: upload.id.to_string(),
@@ -51,14 +56,20 @@ pub async fn fetch_releases(api_key: &str, game_id: &str, game_key: &str) -> Vec
             name: upload.display_name.unwrap_or(upload.filename),
             download_size: upload.size.unwrap_or(0),
         })
-        .collect()
+        .collect();
+
+    Ok(uploads)
 }
 
-pub async fn fetch_release_info(api_key: &str, upload_id: &str, game: Game) -> VersionDownloadInfo {
+pub async fn fetch_release_info(
+    api_key: &str,
+    upload_id: &str,
+    game: Game,
+) -> Result<VersionDownloadInfo> {
     let client = ItchioClient::new(api_key);
 
-    let upload_id: u32 = upload_id.parse().unwrap();
-    let game_key: u32 = game.key.clone().unwrap().parse().unwrap();
+    let upload_id: u32 = upload_id.parse()?;
+    let game_key: u32 = game.key.clone().unwrap().parse()?;
 
     let mut retries = 5;
 
@@ -69,9 +80,9 @@ pub async fn fetch_release_info(api_key: &str, upload_id: &str, game: Game) -> V
 
         if let Ok(scanned_archive) = scanned_archive {
             if scanned_archive.extracted_size.is_some() {
-                return VersionDownloadInfo {
+                return Ok(VersionDownloadInfo {
                     install_size: scanned_archive.extracted_size.unwrap(),
-                };
+                });
             }
         }
 
@@ -88,18 +99,17 @@ pub async fn fetch_download_info(
     upload_id: &str,
     game: &mut Game,
     download_options: DownloadOptions,
-) -> Download {
+) -> Result<Download> {
     let client = ItchioClient::new(api_key);
 
-    let upload_id: u32 = upload_id.parse().unwrap();
-    let game_key: u32 = game.key.clone().unwrap().parse().unwrap();
+    let upload_id: u32 = upload_id.parse()?;
+    let game_key: u32 = game.key.clone().unwrap().parse()?;
 
-    let upload = client.fetch_game_upload(upload_id, game_key).await.unwrap();
+    let upload = client.fetch_game_upload(upload_id, game_key).await?;
 
     let download_request = client
         .fetch_upload_download_url(upload_id, game_key)
-        .await
-        .unwrap();
+        .await?;
 
     game.version = upload
         .build
@@ -114,13 +124,13 @@ pub async fn fetch_download_info(
             .into_owned(),
     );
 
-    Download {
+    Ok(Download {
         request: download_request,
         file_name: upload.filename,
         download_options,
         source: GameSource::Itchio,
         game_id: game.id.clone(),
-    }
+    })
 }
 
 pub async fn post_download(game_id: String, path: PathBuf, file_name: String) -> Result<()> {

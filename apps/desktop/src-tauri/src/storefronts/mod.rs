@@ -25,7 +25,7 @@ pub async fn get_games(
 
         let itchio_api_key = config.read().unwrap().itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
-            games_to_return.append(&mut itchio::fetch_games(&itchio_api_key).await);
+            games_to_return.append(&mut itchio::fetch_games(&itchio_api_key).await?);
         }
 
         diesel::insert_or_ignore_into(games)
@@ -55,7 +55,9 @@ pub async fn fetch_game_versions(
     if game_source == GameSource::Itchio {
         let itchio_api_key = config.read().unwrap().itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
-            return Ok(itchio::fetch_releases(&itchio_api_key, &game_id, &game.key.unwrap()).await);
+            return Ok(
+                itchio::fetch_releases(&itchio_api_key, &game_id, &game.key.unwrap()).await?,
+            );
         }
     }
 
@@ -76,7 +78,7 @@ pub async fn fetch_version_info(
     if game_source == GameSource::Itchio {
         let itchio_api_key = config.read().unwrap().itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
-            return Ok(itchio::fetch_release_info(&itchio_api_key, &version_id, game).await);
+            return Ok(itchio::fetch_release_info(&itchio_api_key, &version_id, game).await?);
         }
     }
 
@@ -111,7 +113,7 @@ pub async fn download_game(
                 &mut game,
                 download_options,
             )
-            .await;
+            .await?;
 
             game.update(&mut connection).unwrap();
 

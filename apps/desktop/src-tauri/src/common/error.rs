@@ -11,6 +11,8 @@ pub enum Error {
     Diesel(diesel::result::Error),
     DieselConnection(diesel::ConnectionError),
     Io(io::Error),
+    ParseInt(std::num::ParseIntError),
+    Reqwest(reqwest::Error),
     Tauri(tauri::Error),
     Other(String),
 }
@@ -32,6 +34,18 @@ impl From<diesel::ConnectionError> for Error {
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
         Self::Io(e)
+    }
+}
+
+impl From<std::num::ParseIntError> for Error {
+    fn from(e: std::num::ParseIntError) -> Self {
+        Self::ParseInt(e)
+    }
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(e: reqwest::Error) -> Self {
+        Self::Reqwest(e)
     }
 }
 
@@ -65,8 +79,10 @@ impl Display for Error {
             Self::Diesel(e) => write!(f, "Diesel error: {}", e),
             Self::DieselConnection(e) => write!(f, "Diesel connection error: {}", e),
             Self::Io(e) => write!(f, "IO error: {}", e),
+            Self::ParseInt(e) => write!(f, "Parse int error: {}", e),
+            Self::Reqwest(e) => write!(f, "Reqwest error: {}", e),
             Self::Tauri(e) => write!(f, "Tauri error: {}", e),
-            Self::Other(e) => write!(f, "Error: {}", e),
+            Self::Other(e) => write!(f, "Other error: {}", e),
         }
     }
 }
