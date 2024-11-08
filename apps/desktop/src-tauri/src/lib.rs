@@ -32,11 +32,13 @@ pub async fn run() {
             APP.set(app.handle().clone())
                 .expect("Error setting up global app handle");
 
-            database::init();
-            let mut connection = database::create_connection();
+            database::init().expect("Error initializing database");
+            let mut connection = database::create_connection().expect("Error creating connection");
 
             // Initialize states/managers. The order is important, as one may depend on another.
-            app.manage(RwLock::new(Config::select(&mut connection)));
+            app.manage(RwLock::new(
+                Config::select(&mut connection).expect("Error selecting config"),
+            ));
             app.manage(DownloadManager::init());
 
             Ok(())

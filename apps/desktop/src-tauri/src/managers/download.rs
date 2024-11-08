@@ -66,8 +66,12 @@ impl DownloadManager {
 
                     Self::download(download).await;
 
-                    match download.source {
+                    let result = match download.source {
                         GameSource::Itchio => itchio::post_download(game_id, path, file_name).await,
+                    };
+
+                    if let Err(e) = result {
+                        println!("Error post-download: {}", e);
                     }
                 } else {
                     println!("Waiting for downloads...");

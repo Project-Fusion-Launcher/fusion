@@ -1,5 +1,5 @@
 use crate::{
-    common::database,
+    common::{database, error::Result},
     managers::download::{Download, DownloadOptions},
     models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
 };
@@ -123,10 +123,10 @@ pub async fn fetch_download_info(
     }
 }
 
-pub async fn post_download(game_id: String, path: PathBuf, file_name: String) {
+pub async fn post_download(game_id: String, path: PathBuf, file_name: String) -> Result<()> {
     let file_path = path.join(file_name);
 
-    let mut connection = database::create_connection();
+    let mut connection = database::create_connection()?;
     let mut game = Game::select(&mut connection, &GameSource::Itchio, &game_id);
 
     if file_path.extension().unwrap() == "zip"
@@ -152,4 +152,6 @@ pub async fn post_download(game_id: String, path: PathBuf, file_name: String) {
 
     game.status = GameStatus::Installed;
     game.update(&mut connection).unwrap();
+
+    Ok(())
 }
