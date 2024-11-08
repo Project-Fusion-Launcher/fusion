@@ -28,6 +28,7 @@ impl Config {
         diesel::update(configs.filter(id.eq(&self.id)))
             .set(self)
             .execute(connection)?;
+
         Ok(())
     }
 

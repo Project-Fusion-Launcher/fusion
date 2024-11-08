@@ -1,4 +1,4 @@
-use crate::schema::games::dsl::*;
+use crate::{common::error::Result, schema::games::dsl::*};
 use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use serde::{Deserialize, Serialize};
@@ -23,17 +23,20 @@ impl Game {
         connection: &mut SqliteConnection,
         game_source: &GameSource,
         game_id: &str,
-    ) -> Game {
-        games
+    ) -> Result<Game> {
+        let game = games
             .filter(source.eq(game_source))
             .filter(id.eq(game_id))
-            .first(connection)
-            .expect("Error loading game")
+            .first(connection)?;
+
+        Ok(game)
     }
-    pub fn update(&self, connection: &mut SqliteConnection) -> Result<(), diesel::result::Error> {
+
+    pub fn update(&self, connection: &mut SqliteConnection) -> Result<()> {
         diesel::update(games.filter(id.eq(&self.id)))
             .set(self)
             .execute(connection)?;
+
         Ok(())
     }
 }

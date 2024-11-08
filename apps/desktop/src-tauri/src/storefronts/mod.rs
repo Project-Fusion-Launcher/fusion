@@ -18,7 +18,7 @@ pub async fn get_games(
     config: State<'_, RwLock<Config>>,
     refetch: bool,
 ) -> Result<Vec<ReducedGame>, String> {
-    let mut connection = database::create_connection().map_err(|e| e.to_string())?;
+    let mut connection = database::create_connection()?;
 
     if refetch {
         let mut games_to_return = Vec::new();
@@ -48,9 +48,9 @@ pub async fn fetch_game_versions(
     game_id: String,
     game_source: GameSource,
 ) -> Result<Vec<GameVersion>, String> {
-    let mut connection = database::create_connection().map_err(|e| e.to_string())?;
+    let mut connection = database::create_connection()?;
 
-    let game = Game::select(&mut connection, &game_source, &game_id);
+    let game = Game::select(&mut connection, &game_source, &game_id)?;
 
     if game_source == GameSource::Itchio {
         let itchio_api_key = config.read().unwrap().itchio_api_key();
@@ -69,9 +69,9 @@ pub async fn fetch_version_info(
     game_source: GameSource,
     version_id: String,
 ) -> Result<VersionDownloadInfo, String> {
-    let mut connection = database::create_connection().map_err(|e| e.to_string())?;
+    let mut connection = database::create_connection()?;
 
-    let game = Game::select(&mut connection, &game_source, &game_id);
+    let game = Game::select(&mut connection, &game_source, &game_id)?;
 
     if game_source == GameSource::Itchio {
         let itchio_api_key = config.read().unwrap().itchio_api_key();
@@ -92,9 +92,9 @@ pub async fn download_game(
     version_id: String,
     mut download_options: DownloadOptions,
 ) -> Result<(), String> {
-    let mut connection = database::create_connection().map_err(|e| e.to_string())?;
+    let mut connection = database::create_connection()?;
 
-    let mut game = Game::select(&mut connection, &game_source, &game_id);
+    let mut game = Game::select(&mut connection, &game_source, &game_id)?;
 
     let complete_install_location = download_options
         .install_location

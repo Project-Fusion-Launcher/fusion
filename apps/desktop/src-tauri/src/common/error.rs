@@ -70,3 +70,9 @@ impl Display for Error {
         }
     }
 }
+
+impl From<Error> for String {
+    fn from(e: Error) -> Self {
+        e.to_string()
+    }
+}
