@@ -5,7 +5,15 @@ use crate::{
 };
 use std::path::PathBuf;
 use tokio::fs;
-use wrapper_itchio::ItchioClient;
+use wrapper_itchio::{api::models::LaunchTarget, ItchioClient};
+
+const BLACKLISTED_LAUNCH_TARGETS: [&str; 5] = [
+    "UnityCrashHandler64.exe",
+    "UnityCrashHandler32.exe",
+    "UnrealGame-Win64-Shipping.exe",
+    "UEPrereqSetup_x64.exe",
+    "dxwebsetup.exe",
+];
 
 pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
     let client = ItchioClient::new(api_key);
@@ -64,7 +72,7 @@ pub async fn fetch_releases(
 pub async fn fetch_release_info(
     api_key: &str,
     upload_id: &str,
-    game: Game,
+    mut game: Game,
 ) -> Result<VersionDownloadInfo> {
     let client = ItchioClient::new(api_key);
 
@@ -80,6 +88,14 @@ pub async fn fetch_release_info(
 
         if let Ok(scanned_archive) = scanned_archive {
             if scanned_archive.extracted_size.is_some() {
+                let target = get_launch_target(&scanned_archive.launch_targets).await;
+                println!("Launch target: {}", target);
+
+                let mut connection = database::create_connection()?;
+
+                game.launch_target = Some(target);
+                game.update(&mut connection)?;
+
                 return Ok(VersionDownloadInfo {
                     install_size: scanned_archive.extracted_size.unwrap(),
                 });
@@ -164,4 +180,20 @@ pub async fn post_download(game_id: String, path: PathBuf, file_name: String) ->
     game.update(&mut connection).unwrap();
 
     Ok(())
+}
+
+pub async fn get_launch_target(launch_targets: &[LaunchTarget]) -> String {
+    if launch_targets.len() == 1 {
+        return launch_targets[0].path.clone();
+    }
+
+    launch_targets
+        .iter()
+        .filter(|target| {
+            !BLACKLISTED_LAUNCH_TARGETS
+                .iter()
+                .any(|&blacklisted| target.path.contains(blacklisted))
+        })
+        .min_by_key(|target| PathBuf::from(&target.path).components().count())
+        .map_or_else(String::new, |target| target.path.clone())
 }

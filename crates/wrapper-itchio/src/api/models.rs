@@ -7,12 +7,12 @@ use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
 pub struct Login {
-    #[serde(default = "default_false")]
+    #[serde(default)]
     pub success: bool,
-    #[serde(default = "default_false")]
+    #[serde(default)]
     pub totp_needed: bool,
     pub token: Option<String>,
-    #[serde(default = "default_false")]
+    #[serde(default)]
     pub recaptcha_needed: bool,
     pub recaptcha_url: Option<String>,
     pub cookie: Option<Cookie>,
@@ -35,7 +35,7 @@ pub struct Key {
     pub last_used_at: NaiveDateTime,
     pub source: KeySource,
     pub source_version: String,
-    #[serde(default = "default_false")]
+    #[serde(default)]
     pub revoked: bool,
     pub user_id: u32,
     pub id: u32,
@@ -108,9 +108,9 @@ pub struct User {
     pub cover_url: Option<String>,
     pub still_cover_url: Option<String>,
     pub display_name: Option<String>,
-    #[serde(default = "default_false")]
+    #[serde(default)]
     pub developer: bool,
-    #[serde(default = "default_false")]
+    #[serde(default)]
     pub press_user: bool,
 }
 
@@ -180,13 +180,14 @@ pub struct BuildResponse {
 pub struct Build {
     pub id: u32,
     pub upload_id: Option<u32>,
-    #[serde(default = "default_0")]
+    #[serde(default)]
     pub parent_build_id: u32,
     pub state: Option<BuildState>,
     pub version: u32,
     pub user_version: Option<String>,
     pub user: Option<User>,
-    pub files: Option<Vec<BuildFile>>,
+    #[serde(default)]
+    pub files: Vec<BuildFile>,
     #[serde(deserialize_with = "deserialize_date")]
     pub created_at: NaiveDateTime,
     #[serde(deserialize_with = "deserialize_date")]
@@ -248,7 +249,32 @@ pub struct ScannedArchive {
     pub created_at: NaiveDateTime,
     #[serde(deserialize_with = "deserialize_date")]
     pub updated_at: NaiveDateTime,
-    // TODO: manifest, launch_targets
+    #[serde(deserialize_with = "deserialize_empty_object")]
+    pub launch_targets: Vec<LaunchTarget>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct LaunchTarget {
+    pub arch: String,
+    pub flavor: String,
+    pub path: String,
+    pub sha256: String,
+    pub size: u32,
+    pub pe_info: PeInfo,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct PeInfo {
+    pub imports: Vec<String>,
+    pub arch: String,
+    pub assembly_info: Option<AssemblyInfo>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AssemblyInfo {
+    pub description: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -394,12 +420,4 @@ where
         Value::Object(_) => Ok(Vec::new()),
         _ => Err(serde::de::Error::custom("Invalid data type for traits")),
     }
-}
-
-fn default_false() -> bool {
-    false
-}
-
-fn default_0() -> u32 {
-    0
 }
