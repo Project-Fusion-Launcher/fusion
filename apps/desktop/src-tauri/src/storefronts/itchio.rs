@@ -10,7 +10,7 @@ use wrapper_itchio::{api::models::LaunchTarget, ItchioClient};
 const BLACKLISTED_LAUNCH_TARGETS: [&str; 5] = [
     "UnityCrashHandler64.exe",
     "UnityCrashHandler32.exe",
-    "UnrealGame-Win64-Shipping.exe",
+    "UE4PrereqSetup_x64.exe",
     "UEPrereqSetup_x64.exe",
     "dxwebsetup.exe",
 ];
@@ -194,6 +194,10 @@ pub async fn get_launch_target(launch_targets: &[LaunchTarget]) -> String {
                 .iter()
                 .any(|&blacklisted| target.path.contains(blacklisted))
         })
-        .min_by_key(|target| PathBuf::from(&target.path).components().count())
+        .min_by_key(|target| {
+            let path = PathBuf::from(&target.path);
+            let is_exe = path.extension().map_or(false, |ext| ext == "exe");
+            (!is_exe, path.components().count())
+        })
         .map_or_else(String::new, |target| target.path.clone())
 }
