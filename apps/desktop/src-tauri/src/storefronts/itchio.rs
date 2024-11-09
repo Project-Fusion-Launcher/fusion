@@ -3,7 +3,7 @@ use crate::{
     managers::download::{Download, DownloadOptions},
     models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
 };
-use std::path::PathBuf;
+use std::{path::PathBuf, process::Stdio};
 use tokio::fs;
 use wrapper_itchio::{api::models::LaunchTarget, ItchioClient};
 
@@ -14,6 +14,8 @@ const BLACKLISTED_LAUNCH_TARGETS: [&str; 5] = [
     "UEPrereqSetup_x64.exe",
     "dxwebsetup.exe",
 ];
+
+const NO_WINDOW_FLAGS: u32 = 0x08000000;
 
 pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
     let client = ItchioClient::new(api_key);
@@ -168,6 +170,7 @@ pub async fn post_download(game_id: String, path: PathBuf, file_name: String) ->
             .arg(&file_path)
             .arg(format!("-o{}", path.to_string_lossy()))
             .arg("-aoa")
+            .creation_flags(NO_WINDOW_FLAGS)
             .output()
             .await;
 
@@ -200,4 +203,23 @@ pub async fn get_launch_target(launch_targets: &[LaunchTarget]) -> String {
             (!is_exe, path.components().count())
         })
         .map_or_else(String::new, |target| target.path.clone())
+}
+
+pub fn launch_game(game: Game) -> Result<()> {
+    let game_path = game.path.unwrap();
+    let launch_target = game.launch_target.unwrap();
+
+    let target_path = PathBuf::from(&game_path).join(&launch_target);
+
+    let result = tokio::process::Command::new(&target_path)
+        .current_dir(target_path.parent().unwrap())
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    println!("{:?}", result);
+
+    Ok(())
 }

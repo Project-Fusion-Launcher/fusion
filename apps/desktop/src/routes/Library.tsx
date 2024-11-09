@@ -49,8 +49,12 @@ const Library = () => {
   });
 
   const handleGameClick = (game: Game) => {
-    setSelectedGame(game);
-    setIsDialogOpen(true);
+    if (game.status === "installed") {
+      invoke("launch_game", { gameId: game.id, gameSource: game.source });
+    } else {
+      setSelectedGame(game);
+      setIsDialogOpen(true);
+    }
   };
 
   const handleDialogClose = () => {

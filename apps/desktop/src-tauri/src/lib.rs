@@ -27,6 +27,7 @@ pub async fn run() {
             storefronts::fetch_game_versions,
             storefronts::download_game,
             storefronts::fetch_version_info,
+            storefronts::launch_game,
         ])
         .setup(|app| {
             APP.set(app.handle().clone())

@@ -123,3 +123,18 @@ pub async fn download_game(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(), String> {
+    let mut connection = database::create_connection()?;
+
+    let game = Game::select(&mut connection, &game_source, &game_id)?;
+
+    match game_source {
+        GameSource::Itchio => {
+            itchio::launch_game(game)?;
+        }
+    }
+
+    Ok(())
+}
