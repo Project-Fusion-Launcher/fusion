@@ -1,15 +1,14 @@
-use std::sync::RwLock;
-
 use crate::{
     common::database,
     managers::download::{DownloadManager, DownloadOptions},
     models::{
         config::Config,
-        game::{Game, GameSource, GameStatus, GameVersion, ReducedGame, VersionDownloadInfo},
+        game::{Game, GameSource, GameVersion, ReducedGame, VersionDownloadInfo},
     },
     schema::games::dsl::games,
 };
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
+use std::sync::RwLock;
 use tauri::State;
 pub mod itchio;
 
@@ -28,19 +27,10 @@ pub async fn get_games(
             games_to_return.append(&mut itchio::fetch_games(&itchio_api_key).await?);
         }
 
-        // for installed games, check if they are still installed (path exsists)
-        games_to_return.iter_mut().for_each(|game| {
-            if game.status == GameStatus::Installed {
-                if let Some(path) = &game.path {
-                    if !std::path::Path::new(path).exists() {
-                        game.status = GameStatus::NotInstalled;
-                    }
-                }
-            }
-        });
-
-        Game::insert_or_ignore(&mut connection, &games_to_return).unwrap();
+        Game::insert_or_ignore(&mut connection, &games_to_return)?;
     }
+
+    Game::refresh_installed(&mut connection)?;
 
     let results: Vec<ReducedGame> = games
         .select(ReducedGame::as_select())

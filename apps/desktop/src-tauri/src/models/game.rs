@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::{common::error::Result, schema::games::dsl::*};
 use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
@@ -47,6 +49,26 @@ impl Game {
 
         Ok(())
     }
+
+    /// Refreshes the status of installed games in case they were manually removed.
+    pub fn refresh_installed(connection: &mut SqliteConnection) -> Result<()> {
+        let installed_games = games
+            .filter(status.eq(GameStatus::Installed))
+            .load::<Game>(connection)?;
+
+        for mut game in installed_games {
+            if let Some(game_path) = &game.path {
+                if Path::new(game_path).exists() {
+                    continue;
+                }
+            }
+
+            game.status = GameStatus::NotInstalled;
+            game.update(connection)?;
+        }
+
+        Ok(())
+    }
 }
 
 /// This is a reduced version of the Game model used to avoid sending unnecessary data to the frontend.
@@ -58,6 +80,7 @@ pub struct ReducedGame {
     pub source: GameSource,
     pub title: String,
     pub developer: Option<String>,
+    pub path: Option<String>,
     pub status: GameStatus,
 }
 
