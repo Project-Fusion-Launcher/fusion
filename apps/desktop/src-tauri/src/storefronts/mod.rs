@@ -5,7 +5,7 @@ use crate::{
     managers::download::{DownloadManager, DownloadOptions},
     models::{
         config::Config,
-        game::{Game, GameSource, GameVersion, ReducedGame, VersionDownloadInfo},
+        game::{Game, GameSource, GameStatus, GameVersion, ReducedGame, VersionDownloadInfo},
     },
     schema::games::dsl::games,
 };
@@ -28,10 +28,18 @@ pub async fn get_games(
             games_to_return.append(&mut itchio::fetch_games(&itchio_api_key).await?);
         }
 
-        diesel::insert_or_ignore_into(games)
-            .values(&games_to_return)
-            .execute(&mut connection)
-            .unwrap();
+        // for installed games, check if they are still installed (path exsists)
+        games_to_return.iter_mut().for_each(|game| {
+            if game.status == GameStatus::Installed {
+                if let Some(path) = &game.path {
+                    if !std::path::Path::new(path).exists() {
+                        game.status = GameStatus::NotInstalled;
+                    }
+                }
+            }
+        });
+
+        Game::insert_or_ignore(&mut connection, &games_to_return).unwrap();
     }
 
     let results: Vec<ReducedGame> = games

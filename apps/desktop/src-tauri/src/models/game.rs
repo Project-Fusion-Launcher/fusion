@@ -39,6 +39,14 @@ impl Game {
 
         Ok(())
     }
+
+    pub fn insert_or_ignore(connection: &mut SqliteConnection, values: &[Game]) -> Result<()> {
+        diesel::insert_or_ignore_into(games)
+            .values(values)
+            .execute(connection)?;
+
+        Ok(())
+    }
 }
 
 /// This is a reduced version of the Game model used to avoid sending unnecessary data to the frontend.

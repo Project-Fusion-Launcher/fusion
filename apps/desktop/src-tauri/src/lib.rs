@@ -9,6 +9,7 @@ pub mod managers;
 pub mod models;
 pub mod schema;
 pub mod storefronts;
+pub mod util;
 
 /// A [`OnceLock`](OnceLock) containing a [`tauri`](tauri) [`AppHandle`](AppHandle) for easy access.
 static APP: OnceLock<AppHandle> = OnceLock::new();

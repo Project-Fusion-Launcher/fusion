@@ -2,18 +2,11 @@ use crate::{
     common::{database, error::Result},
     managers::download::{Download, DownloadOptions},
     models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
+    util,
 };
 use std::{path::PathBuf, process::Stdio};
 use tokio::fs;
-use wrapper_itchio::{api::models::LaunchTarget, ItchioClient};
-
-const BLACKLISTED_LAUNCH_TARGETS: [&str; 5] = [
-    "UnityCrashHandler64.exe",
-    "UnityCrashHandler32.exe",
-    "UE4PrereqSetup_x64.exe",
-    "UEPrereqSetup_x64.exe",
-    "dxwebsetup.exe",
-];
+use wrapper_itchio::ItchioClient;
 
 const NO_WINDOW_FLAGS: u32 = 0x08000000;
 
@@ -74,7 +67,7 @@ pub async fn fetch_releases(
 pub async fn fetch_release_info(
     api_key: &str,
     upload_id: &str,
-    mut game: Game,
+    game: Game,
 ) -> Result<VersionDownloadInfo> {
     let client = ItchioClient::new(api_key);
 
@@ -90,14 +83,6 @@ pub async fn fetch_release_info(
 
         if let Ok(scanned_archive) = scanned_archive {
             if scanned_archive.extracted_size.is_some() {
-                let target = get_launch_target(&scanned_archive.launch_targets).await;
-                println!("Launch target: {}", target);
-
-                let mut connection = database::create_connection()?;
-
-                game.launch_target = Some(target);
-                game.update(&mut connection)?;
-
                 return Ok(VersionDownloadInfo {
                     install_size: scanned_archive.extracted_size.unwrap(),
                 });
@@ -179,30 +164,18 @@ pub async fn post_download(game_id: String, path: PathBuf, file_name: String) ->
         fs::remove_file(file_path).await.unwrap();
     }
 
+    let mut launch_target = util::fs::find_launch_target(&path).await?;
+
+    // Strip base path from launch target
+    if let Some(target) = &launch_target {
+        launch_target = Some(target.strip_prefix(&path).unwrap().to_path_buf());
+    }
+
+    game.launch_target = launch_target.map(|target| target.to_string_lossy().into_owned());
     game.status = GameStatus::Installed;
     game.update(&mut connection).unwrap();
 
     Ok(())
-}
-
-pub async fn get_launch_target(launch_targets: &[LaunchTarget]) -> String {
-    if launch_targets.len() == 1 {
-        return launch_targets[0].path.clone();
-    }
-
-    launch_targets
-        .iter()
-        .filter(|target| {
-            !BLACKLISTED_LAUNCH_TARGETS
-                .iter()
-                .any(|&blacklisted| target.path.contains(blacklisted))
-        })
-        .min_by_key(|target| {
-            let path = PathBuf::from(&target.path);
-            let is_exe = path.extension().map_or(false, |ext| ext == "exe");
-            (!is_exe, path.components().count())
-        })
-        .map_or_else(String::new, |target| target.path.clone())
 }
 
 pub fn launch_game(game: Game) -> Result<()> {
