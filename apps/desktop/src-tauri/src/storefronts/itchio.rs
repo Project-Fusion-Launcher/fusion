@@ -5,10 +5,7 @@ use crate::{
     util,
 };
 use std::{path::PathBuf, process::Stdio};
-use tokio::fs;
 use wrapper_itchio::ItchioClient;
-
-const NO_WINDOW_FLAGS: u32 = 0x08000000;
 
 pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
     let client = ItchioClient::new(api_key);
@@ -106,7 +103,7 @@ pub async fn fetch_release_info(
     Err("Failed to fetch release info".into())
 }
 
-pub async fn fetch_download_info(
+pub async fn pre_download(
     api_key: &str,
     upload_id: &str,
     game: &mut Game,
@@ -127,13 +124,6 @@ pub async fn fetch_download_info(
         .map(|build| build.version.to_string())
         .or(upload.md5_hash.clone());
 
-    game.path = Some(
-        download_options
-            .install_location
-            .to_string_lossy()
-            .into_owned(),
-    );
-
     Ok(Download {
         request: download_request,
         file_name: upload.filename,
@@ -153,22 +143,8 @@ pub async fn post_download(game_id: String, path: PathBuf, file_name: String) ->
         || file_path.extension().unwrap() == "7z"
         || file_path.extension().unwrap() == "rar"
     {
-        println!("Extracting archive: {:?}", file_path);
-        let exe_path = std::env::current_exe().unwrap();
-        let seven_zip = exe_path.parent().unwrap().join("thirdparty/7-Zip/7z.exe");
-
-        let result = tokio::process::Command::new(seven_zip)
-            .arg("x")
-            .arg(&file_path)
-            .arg(format!("-o{}", path.to_string_lossy()))
-            .arg("-aoa")
-            .creation_flags(NO_WINDOW_FLAGS)
-            .output()
-            .await;
-
-        println!("{:?}", result);
-
-        fs::remove_file(file_path).await.unwrap();
+        println!("Extracting game: {:?}", file_path);
+        util::fs::extract_file(&file_path, &path).await?;
     }
 
     let mut launch_target = util::fs::find_launch_target(&path).await?;

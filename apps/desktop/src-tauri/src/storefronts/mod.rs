@@ -138,42 +138,34 @@ pub async fn download_game(
 
     let complete_install_location = download_options
         .install_location
-        .join(game.title.replace(" ", "").replace(":", " - "));
+        .join(game.title.replace(":", " -"));
 
+    game.path = Some(complete_install_location.to_string_lossy().to_string());
     download_options.install_location = complete_install_location;
 
-    if game_source == GameSource::Itchio {
-        let itchio_api_key = config.read().unwrap().itchio_api_key();
-        if let Some(itchio_api_key) = itchio_api_key {
-            let download = itchio::fetch_download_info(
-                &itchio_api_key,
-                &version_id,
-                &mut game,
-                download_options,
-            )
-            .await?;
-
-            game.update(&mut connection).unwrap();
-
-            download_manager.enqueue_download(download);
+    let download = match game_source {
+        GameSource::Itchio => {
+            let itchio_api_key = config.read().unwrap().itchio_api_key();
+            if let Some(api_key) = itchio_api_key {
+                itchio::pre_download(&api_key, &version_id, &mut game, download_options).await?
+            } else {
+                return Err("Missing itch.io API key".to_string());
+            }
         }
-    } else {
-        let legacy_games_email = config.read().unwrap().legacy_games_email();
-        let legacy_games_token = config.read().unwrap().legacy_games_token();
-        if let Some(legacy_games_email) = legacy_games_email {
-            let download = legacygames::fetch_download_info(
-                legacy_games_email,
-                legacy_games_token,
-                &mut game,
-                download_options,
-            )
-            .await?;
-
-            game.update(&mut connection).unwrap();
-
-            download_manager.enqueue_download(download);
+        GameSource::LegacyGames => {
+            let legacy_games_email = config.read().unwrap().legacy_games_email();
+            let legacy_games_token = config.read().unwrap().legacy_games_token();
+            if let Some(email) = legacy_games_email {
+                legacygames::pre_download(email, legacy_games_token, &mut game, download_options)
+                    .await?
+            } else {
+                return Err("Missing Legacy Games credentials".to_string());
+            }
         }
-    }
+    };
+
+    game.update(&mut connection).unwrap();
+    download_manager.enqueue_download(download);
 
     Ok(())
 }
@@ -189,7 +181,7 @@ pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(),
             itchio::launch_game(game)?;
         }
         GameSource::LegacyGames => {
-            //legacygames::launch_game(game)?;
+            legacygames::launch_game(game)?;
         }
     }
 

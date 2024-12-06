@@ -1,9 +1,10 @@
 use crate::{
-    common::result::Result,
+    common::{database, result::Result},
     managers::download::{Download, DownloadOptions},
     models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
+    util,
 };
-use std::sync::Arc;
+use std::{path::PathBuf, process::Stdio, sync::Arc};
 use tokio::task::JoinSet;
 use wrapper_legacygames::{api::models::Product, LegacyGamesClient};
 
@@ -85,7 +86,7 @@ pub fn fetch_release_info() -> VersionDownloadInfo {
     VersionDownloadInfo { install_size: 0 }
 }
 
-pub async fn fetch_download_info(
+pub async fn pre_download(
     email: String,
     token: Option<String>,
     game: &mut Game,
@@ -96,30 +97,62 @@ pub async fn fetch_download_info(
         None => LegacyGamesClient::from_email(email),
     };
 
-    let download_request = if game.key.is_none() {
-        client.fetch_giveaway_installer(&game.id).await?
-    } else {
-        client
-            .fetch_wp_installer(game.key.clone().unwrap().parse()?, &game.id)
-            .await?
+    let download_request = match game.key {
+        Some(ref key) => client.fetch_wp_installer(key.parse()?, &game.id).await?,
+        None => client.fetch_giveaway_installer(&game.id).await?,
     };
 
     game.version = Some(game.id.clone());
 
-    game.path = Some(
-        download_options
-            .install_location
-            .to_string_lossy()
-            .into_owned(),
-    );
-
     Ok(Download {
         request: download_request,
-        file_name: game.title.clone().replace(" ", "_").replace(":", " - ") + ".exe",
+        file_name: String::from("setup.exe"),
         download_options,
-        source: GameSource::Itchio,
+        source: GameSource::LegacyGames,
         game_id: game.id.clone(),
     })
+}
+
+pub async fn post_download(game_id: String, path: PathBuf, file_name: String) -> Result<()> {
+    let file_path = path.join(file_name);
+
+    let mut connection = database::create_connection()?;
+    let mut game = Game::select(&mut connection, &GameSource::LegacyGames, &game_id)?;
+
+    println!("Extracting game: {:?}", file_path);
+    util::fs::extract_file(&file_path, &path).await?;
+
+    let mut launch_target = util::fs::find_launch_target(&path).await?;
+
+    // Strip base path from launch target
+    if let Some(target) = &launch_target {
+        launch_target = Some(target.strip_prefix(&path).unwrap().to_path_buf());
+    }
+
+    game.launch_target = launch_target.map(|target| target.to_string_lossy().into_owned());
+    game.status = GameStatus::Installed;
+    game.update(&mut connection).unwrap();
+
+    Ok(())
+}
+
+pub fn launch_game(game: Game) -> Result<()> {
+    let game_path = game.path.unwrap();
+    let launch_target = game.launch_target.unwrap();
+
+    let target_path = PathBuf::from(&game_path).join(&launch_target);
+
+    let result = tokio::process::Command::new(&target_path)
+        .current_dir(target_path.parent().unwrap())
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    println!("{:?}", result);
+
+    Ok(())
 }
 
 fn create_games(products: Vec<Product>, is_giveaway: bool) -> Vec<Game> {

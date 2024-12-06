@@ -1,4 +1,7 @@
-use crate::{models::game::GameSource, storefronts::itchio};
+use crate::{
+    models::game::GameSource,
+    storefronts::{itchio, legacygames},
+};
 use reqwest::RequestBuilder;
 use serde::Deserialize;
 use std::{
@@ -69,7 +72,9 @@ impl DownloadManager {
 
                     let result = match source {
                         GameSource::Itchio => itchio::post_download(game_id, path, file_name).await,
-                        GameSource::LegacyGames => Ok(()),
+                        GameSource::LegacyGames => {
+                            legacygames::post_download(game_id, path, file_name).await
+                        }
                     };
 
                     if let Err(e) = result {
