@@ -10,7 +10,9 @@ use crate::{
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use std::sync::RwLock;
 use tauri::State;
+
 pub mod itchio;
+pub mod legacygames;
 
 #[tauri::command]
 pub async fn get_games(
@@ -26,6 +28,17 @@ pub async fn get_games(
         if let Some(itchio_api_key) = itchio_api_key {
             games_to_return.append(&mut itchio::fetch_games(&itchio_api_key).await?);
         }
+
+        let legacy_games_email = config.read().unwrap().legacy_games_email();
+        let legacy_games_token = config.read().unwrap().legacy_games_token();
+
+        if let Some(legacy_games_email) = legacy_games_email {
+            games_to_return.append(
+                &mut legacygames::fetch_games(legacy_games_email, legacy_games_token).await?,
+            );
+        }
+
+        println!("Games to return: {:?}", games_to_return);
 
         Game::insert_or_ignore(&mut connection, &games_to_return)?;
     }
@@ -57,6 +70,15 @@ pub async fn fetch_game_versions(
                 itchio::fetch_releases(&itchio_api_key, &game_id, &game.key.unwrap()).await?,
             );
         }
+    } else {
+        let legacy_games_email = config.read().unwrap().legacy_games_email();
+        let legacy_games_token = config.read().unwrap().legacy_games_token();
+
+        if let Some(legacy_games_email) = legacy_games_email {
+            return Ok(
+                legacygames::fetch_releases(legacy_games_email, legacy_games_token, game).await?,
+            );
+        }
     }
 
     unreachable!()
@@ -78,6 +100,8 @@ pub async fn fetch_version_info(
         if let Some(itchio_api_key) = itchio_api_key {
             return Ok(itchio::fetch_release_info(&itchio_api_key, &version_id, game).await?);
         }
+    } else {
+        return Ok(legacygames::fetch_release_info());
     }
 
     unreachable!()
@@ -98,7 +122,7 @@ pub async fn download_game(
 
     let complete_install_location = download_options
         .install_location
-        .join(game.title.replace(" ", ""));
+        .join(game.title.replace(" ", "").replace(":", " - "));
 
     download_options.install_location = complete_install_location;
 
@@ -108,6 +132,22 @@ pub async fn download_game(
             let download = itchio::fetch_download_info(
                 &itchio_api_key,
                 &version_id,
+                &mut game,
+                download_options,
+            )
+            .await?;
+
+            game.update(&mut connection).unwrap();
+
+            download_manager.enqueue_download(download);
+        }
+    } else {
+        let legacy_games_email = config.read().unwrap().legacy_games_email();
+        let legacy_games_token = config.read().unwrap().legacy_games_token();
+        if let Some(legacy_games_email) = legacy_games_email {
+            let download = legacygames::fetch_download_info(
+                legacy_games_email,
+                legacy_games_token,
                 &mut game,
                 download_options,
             )
@@ -131,6 +171,9 @@ pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(),
     match game_source {
         GameSource::Itchio => {
             itchio::launch_game(game)?;
+        }
+        GameSource::LegacyGames => {
+            //legacygames::launch_game(game)?;
         }
     }
 

@@ -1,11 +1,13 @@
 CREATE TABLE `configs` (
   `id` INTEGER NOT NULL PRIMARY KEY,
-  `itchio_api_key` TEXT
+  `itchio_api_key` TEXT,
+  `legacy_games_token` TEXT,
+  `legacy_games_email` TEXT
 );
 
 CREATE TABLE `games` (
   `id` TEXT NOT NULL,
-  `source` TEXT CHECK (source IN ('itchio')) NOT NULL,
+  `source` TEXT CHECK (source IN ('itchio', 'legacy_games')) NOT NULL,
   `title` TEXT NOT NULL,
   `key` TEXT,
   `developer` TEXT,

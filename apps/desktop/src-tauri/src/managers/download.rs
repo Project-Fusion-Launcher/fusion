@@ -63,11 +63,13 @@ impl DownloadManager {
                     let path = download.download_options.install_location.clone();
                     let file_name = download.file_name.clone();
                     let game_id = download.game_id.clone();
+                    let source = download.source.clone();
 
                     Self::download(download).await;
 
-                    let result = match download.source {
+                    let result = match source {
                         GameSource::Itchio => itchio::post_download(game_id, path, file_name).await,
+                        GameSource::LegacyGames => Ok(()),
                     };
 
                     if let Err(e) = result {

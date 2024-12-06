@@ -2,6 +2,8 @@ diesel::table! {
     configs (id) {
         id -> Integer,
         itchio_api_key -> Nullable<Text>,
+        legacy_games_token -> Nullable<Text>,
+        legacy_games_email -> Nullable<Text>,
     }
 }
 

@@ -1183,6 +1183,7 @@ dependencies = [
  "tauri-plugin-window-state",
  "tokio",
  "wrapper-itchio",
+ "wrapper-legacygames",
 ]
 
 [[package]]
@@ -5451,6 +5452,18 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
+ "tokio",
+]
+
+[[package]]
+name = "wrapper-legacygames"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "chrono",
+ "reqwest",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 

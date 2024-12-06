@@ -90,6 +90,27 @@ pub struct Game {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct InstallerResponse {
+    pub status: Status,
+    pub data: InstallerResponseData,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum InstallerResponseData {
+    Error(String),
+    Installer(Installer),
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Installer {
+    pub id: String,
+    pub name: String,
+    pub installer_uuid: String,
+    pub file: String,
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum Status {
     Ok,

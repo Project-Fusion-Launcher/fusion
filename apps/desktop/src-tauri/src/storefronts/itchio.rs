@@ -94,7 +94,7 @@ pub async fn fetch_release_info(
         tokio::time::sleep(std::time::Duration::from_secs(2_u64.pow(5 - retries))).await;
     }
 
-    unimplemented!()
+    unreachable!()
 }
 
 pub async fn fetch_download_info(
@@ -110,9 +110,7 @@ pub async fn fetch_download_info(
 
     let upload = client.fetch_game_upload(upload_id, game_key).await?;
 
-    let download_request = client
-        .fetch_upload_download_url(upload_id, game_key)
-        .await?;
+    let download_request = client.fetch_upload_download_url(upload_id, game_key);
 
     game.version = upload
         .build

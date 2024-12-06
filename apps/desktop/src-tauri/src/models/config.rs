@@ -8,6 +8,8 @@ use diesel::prelude::*;
 pub struct Config {
     id: i32,
     itchio_api_key: Option<String>,
+    legacy_games_token: Option<String>,
+    legacy_games_email: Option<String>,
 }
 
 impl Config {
@@ -51,6 +53,22 @@ impl Config {
 
     pub fn set_itchio_api_key(&mut self, value: Option<String>) {
         self.itchio_api_key = value;
+    }
+
+    pub fn legacy_games_email(&self) -> Option<String> {
+        self.legacy_games_email.clone()
+    }
+
+    pub fn set_legacy_games_email(&mut self, value: Option<String>) {
+        self.legacy_games_email = value;
+    }
+
+    pub fn legacy_games_token(&self) -> Option<String> {
+        self.legacy_games_token.clone()
+    }
+
+    pub fn set_legacy_games_token(&mut self, value: Option<String>) {
+        self.legacy_games_token = value;
     }
 
     pub fn set_itchio_api_key_and_update(

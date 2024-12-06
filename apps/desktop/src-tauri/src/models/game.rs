@@ -104,6 +104,7 @@ pub struct VersionDownloadInfo {
 #[serde(rename_all = "camelCase")]
 pub enum GameSource {
     Itchio,
+    LegacyGames,
 }
 
 #[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq)]

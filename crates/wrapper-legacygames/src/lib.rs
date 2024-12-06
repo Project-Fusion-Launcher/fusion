@@ -1,9 +1,15 @@
-use api::models::{IsExistsByEmail, Products, TestLogin};
+use api::models::{
+    InstallerResponse, InstallerResponseData, IsExistsByEmail, Product, Products, ProductsData,
+    TestLogin,
+};
 use base64::{prelude::BASE64_STANDARD, Engine};
-use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::{
+    header::{ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE},
+    RequestBuilder,
+};
 use serde::de::DeserializeOwned;
 
-mod api;
+pub mod api;
 mod tests;
 
 pub struct LegacyGamesClient {
@@ -36,21 +42,143 @@ impl LegacyGamesClient {
         }
     }
 
+    /// Checks if the client is an email client.
+    pub fn is_email_client(&self) -> bool {
+        self.token.is_none()
+    }
+
+    /// Checks if the client is a token client.
+    pub fn is_token_client(&self) -> bool {
+        self.token.is_some()
+    }
+
     /// Fetches the giveaway games associated with the email.
-    pub async fn fetch_giveaway_products(&self) -> Result<Products, reqwest::Error> {
-        self.make_get_request(&api::endpoints::get_giveaway_catalog_by_email(&self.email))
+    pub async fn fetch_giveaway_products(&self) -> Result<Vec<Product>, reqwest::Error> {
+        let response: Products = self
+            .make_get_request(&api::endpoints::get_giveaway_catalog_by_email(&self.email))
+            .await?;
+
+        match response.data {
+            ProductsData::Products(products) => Ok(products),
+            ProductsData::Error(_) => Ok(Vec::new()),
+        }
+    }
+
+    /// Fetches the installer for a giveaway game.
+    pub async fn fetch_giveaway_installer(
+        &self,
+        installer_uuid: &str,
+    ) -> Result<RequestBuilder, &'static str> {
+        let response: InstallerResponse = self
+            .make_get_request(&api::endpoints::get_giveaway_installer(installer_uuid))
             .await
+            .map_err(|_| "Failed to fetch installer")?;
+
+        match response.data {
+            InstallerResponseData::Installer(installer) => Ok(self
+                .http
+                .get(&installer.file)
+                .header("Authorization", "?token?")
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")),
+            InstallerResponseData::Error(_) => Err("Installer not found"),
+        }
+    }
+
+    /// Fetches the size of the installer for a giveaway game.
+    pub async fn fetch_giveaway_installer_size(
+        &self,
+        installer_uuid: &str,
+    ) -> Result<u32, &'static str> {
+        let response: InstallerResponse = self
+            .make_get_request(&api::endpoints::get_giveaway_installer(installer_uuid))
+            .await
+            .map_err(|_| "Failed to fetch installer")?;
+
+        if let InstallerResponseData::Installer(installer) = response.data {
+            let response = self
+                .http
+                .head(&installer.file)
+                .send()
+                .await
+                .map_err(|_| "Failed to fetch installer")?;
+
+            if let Some(content_length) = response.headers().get(CONTENT_LENGTH) {
+                Ok(content_length.to_str().unwrap().parse::<u32>().unwrap())
+            } else {
+                Ok(0)
+            }
+        } else {
+            Err("Installer not found")
+        }
+    }
+
+    /// Fetches the installer for a wp game.
+    pub async fn fetch_wp_installer(
+        &self,
+        product_id: u32,
+        game_id: &str,
+    ) -> Result<RequestBuilder, &'static str> {
+        let response: InstallerResponse = self
+            .make_get_request(&api::endpoints::get_wp_installer(product_id, game_id))
+            .await
+            .map_err(|_| "Failed to fetch installer")?;
+
+        match response.data {
+            InstallerResponseData::Installer(installer) => Ok(self
+                .http
+                .get(&installer.file)
+                .header("Authorization", "?token?")
+                .header("Accept", "application/json")
+                .header("Content-Type", "application/json")),
+            InstallerResponseData::Error(_) => Err("Installer not found"),
+        }
+    }
+
+    /// Fetches the size of the installer for a giveaway game.
+    pub async fn fetch_wp_installer_size(
+        &self,
+        product_id: u32,
+        game_id: &str,
+    ) -> Result<u32, &'static str> {
+        let response: InstallerResponse = self
+            .make_get_request(&api::endpoints::get_wp_installer(product_id, game_id))
+            .await
+            .map_err(|_| "Failed to fetch installer")?;
+
+        if let InstallerResponseData::Installer(installer) = response.data {
+            let response = self
+                .http
+                .head(&installer.file)
+                .send()
+                .await
+                .map_err(|_| "Failed to fetch installer")?;
+
+            if let Some(content_length) = response.headers().get(CONTENT_LENGTH) {
+                Ok(content_length.to_str().unwrap().parse::<u32>().unwrap())
+            } else {
+                Ok(0)
+            }
+        } else {
+            Err("Installer not found")
+        }
     }
 
     /// Fetches the purchased games. Note that a bearer token is required.
-    pub async fn fetch_products(&mut self) -> Result<Products, reqwest::Error> {
+    pub async fn fetch_products(&mut self) -> Result<Vec<Product>, reqwest::Error> {
         if self.user_id.is_none() {
             let login = Self::test_login(self.token.clone().unwrap()).await.unwrap();
             self.user_id = login.data.user_id;
         }
 
-        self.make_get_request(&api::endpoints::get_user_downloads(self.user_id.unwrap()))
-            .await
+        let response: Products = self
+            .make_get_request(&api::endpoints::get_user_downloads(self.user_id.unwrap()))
+            .await?;
+
+        match response.data {
+            ProductsData::Products(products) => Ok(products),
+            ProductsData::Error(_) => Ok(Vec::new()),
+        }
     }
 
     /// Checks if a user exists by email.
