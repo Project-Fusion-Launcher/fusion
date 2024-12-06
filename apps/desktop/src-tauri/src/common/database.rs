@@ -1,4 +1,4 @@
-use super::error::Result;
+use super::result::Result;
 use crate::APP;
 use diesel::{Connection, SqliteConnection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};

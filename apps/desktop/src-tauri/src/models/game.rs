@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{common::error::Result, schema::games::dsl::*};
+use crate::{common::result::Result, schema::games::dsl::*};
 use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use serde::{Deserialize, Serialize};

@@ -11,10 +11,12 @@ pub enum Error {
     Diesel(diesel::result::Error),
     DieselConnection(diesel::ConnectionError),
     Io(io::Error),
+    JoinError(tokio::task::JoinError),
     ParseInt(std::num::ParseIntError),
     Reqwest(reqwest::Error),
     Tauri(tauri::Error),
     Other(String),
+    WrapperLegacygames(wrapper_legacygames::result::Error),
 }
 
 impl StdError for Error {}
@@ -34,6 +36,12 @@ impl From<diesel::ConnectionError> for Error {
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
         Self::Io(e)
+    }
+}
+
+impl From<tokio::task::JoinError> for Error {
+    fn from(e: tokio::task::JoinError) -> Self {
+        Self::JoinError(e)
     }
 }
 
@@ -73,16 +81,24 @@ impl From<&str> for Error {
     }
 }
 
+impl From<wrapper_legacygames::result::Error> for Error {
+    fn from(e: wrapper_legacygames::result::Error) -> Self {
+        Self::WrapperLegacygames(e)
+    }
+}
+
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
             Self::Diesel(e) => write!(f, "Diesel error: {}", e),
             Self::DieselConnection(e) => write!(f, "Diesel connection error: {}", e),
             Self::Io(e) => write!(f, "IO error: {}", e),
+            Self::JoinError(e) => write!(f, "Join error: {}", e),
             Self::ParseInt(e) => write!(f, "Parse int error: {}", e),
             Self::Reqwest(e) => write!(f, "Reqwest error: {}", e),
             Self::Tauri(e) => write!(f, "Tauri error: {}", e),
             Self::Other(e) => write!(f, "Other error: {}", e),
+            Self::WrapperLegacygames(e) => write!(f, "Wrapper-Legacygames error: {}", e),
         }
     }
 }

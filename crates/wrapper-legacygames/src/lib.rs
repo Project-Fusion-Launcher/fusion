@@ -7,15 +7,17 @@ use reqwest::{
     header::{ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE},
     RequestBuilder,
 };
+use result::Result;
 use serde::de::DeserializeOwned;
+use tokio::try_join;
 
 pub mod api;
+pub mod result;
 mod tests;
 
 pub struct LegacyGamesClient {
     email: String,
     token: Option<String>,
-    user_id: Option<u32>,
     http: reqwest::Client,
 }
 
@@ -27,7 +29,6 @@ impl LegacyGamesClient {
             email,
             token: None,
             http: reqwest::Client::new(),
-            user_id: None,
         }
     }
 
@@ -38,7 +39,6 @@ impl LegacyGamesClient {
             email,
             token: Some(token),
             http: reqwest::Client::new(),
-            user_id: None,
         }
     }
 
@@ -53,9 +53,9 @@ impl LegacyGamesClient {
     }
 
     /// Fetches the giveaway games associated with the email.
-    pub async fn fetch_giveaway_products(&self) -> Result<Vec<Product>, reqwest::Error> {
+    pub async fn fetch_giveaway_products(&self) -> Result<Vec<Product>> {
         let response: Products = self
-            .make_get_request(&api::endpoints::get_giveaway_catalog_by_email(&self.email))
+            .make_get_request(&api::endpoints::giveaway_catalog_by_email(&self.email))
             .await?;
 
         match response.data {
@@ -65,114 +65,46 @@ impl LegacyGamesClient {
     }
 
     /// Fetches the installer for a giveaway game.
-    pub async fn fetch_giveaway_installer(
-        &self,
-        installer_uuid: &str,
-    ) -> Result<RequestBuilder, &'static str> {
+    pub async fn fetch_giveaway_installer(&self, installer_uuid: &str) -> Result<RequestBuilder> {
         let response: InstallerResponse = self
-            .make_get_request(&api::endpoints::get_giveaway_installer(installer_uuid))
-            .await
-            .map_err(|_| "Failed to fetch installer")?;
+            .make_get_request(&api::endpoints::giveaway_installer(installer_uuid))
+            .await?;
 
         match response.data {
-            InstallerResponseData::Installer(installer) => Ok(self
-                .http
-                .get(&installer.file)
-                .header("Authorization", "?token?")
-                .header("Accept", "application/json")
-                .header("Content-Type", "application/json")),
-            InstallerResponseData::Error(_) => Err("Installer not found"),
+            InstallerResponseData::Installer(installer) => Ok(self.http.get(&installer.file)),
+            InstallerResponseData::Error(e) => Err(e.into()),
         }
     }
 
     /// Fetches the size of the installer for a giveaway game.
-    pub async fn fetch_giveaway_installer_size(
-        &self,
-        installer_uuid: &str,
-    ) -> Result<u32, &'static str> {
+    pub async fn fetch_giveaway_installer_size(&self, installer_uuid: &str) -> Result<u32> {
         let response: InstallerResponse = self
-            .make_get_request(&api::endpoints::get_giveaway_installer(installer_uuid))
-            .await
-            .map_err(|_| "Failed to fetch installer")?;
+            .make_get_request(&api::endpoints::giveaway_installer(installer_uuid))
+            .await?;
 
         if let InstallerResponseData::Installer(installer) = response.data {
-            let response = self
-                .http
-                .head(&installer.file)
-                .send()
-                .await
-                .map_err(|_| "Failed to fetch installer")?;
+            let response = self.make_head_request(&installer.file).await?;
 
             if let Some(content_length) = response.headers().get(CONTENT_LENGTH) {
-                Ok(content_length.to_str().unwrap().parse::<u32>().unwrap())
+                Ok(content_length.to_str().unwrap().parse::<u32>()?)
             } else {
                 Ok(0)
             }
         } else {
-            Err("Installer not found")
-        }
-    }
-
-    /// Fetches the installer for a wp game.
-    pub async fn fetch_wp_installer(
-        &self,
-        product_id: u32,
-        game_id: &str,
-    ) -> Result<RequestBuilder, &'static str> {
-        let response: InstallerResponse = self
-            .make_get_request(&api::endpoints::get_wp_installer(product_id, game_id))
-            .await
-            .map_err(|_| "Failed to fetch installer")?;
-
-        match response.data {
-            InstallerResponseData::Installer(installer) => Ok(self
-                .http
-                .get(&installer.file)
-                .header("Authorization", "?token?")
-                .header("Accept", "application/json")
-                .header("Content-Type", "application/json")),
-            InstallerResponseData::Error(_) => Err("Installer not found"),
-        }
-    }
-
-    /// Fetches the size of the installer for a giveaway game.
-    pub async fn fetch_wp_installer_size(
-        &self,
-        product_id: u32,
-        game_id: &str,
-    ) -> Result<u32, &'static str> {
-        let response: InstallerResponse = self
-            .make_get_request(&api::endpoints::get_wp_installer(product_id, game_id))
-            .await
-            .map_err(|_| "Failed to fetch installer")?;
-
-        if let InstallerResponseData::Installer(installer) = response.data {
-            let response = self
-                .http
-                .head(&installer.file)
-                .send()
-                .await
-                .map_err(|_| "Failed to fetch installer")?;
-
-            if let Some(content_length) = response.headers().get(CONTENT_LENGTH) {
-                Ok(content_length.to_str().unwrap().parse::<u32>().unwrap())
-            } else {
-                Ok(0)
-            }
-        } else {
-            Err("Installer not found")
+            Err("Installer not found".into())
         }
     }
 
     /// Fetches the purchased games. Note that a bearer token is required.
-    pub async fn fetch_products(&mut self) -> Result<Vec<Product>, reqwest::Error> {
-        if self.user_id.is_none() {
-            let login = Self::test_login(self.token.clone().unwrap()).await.unwrap();
-            self.user_id = login.data.user_id;
+    pub async fn fetch_wp_products(&self) -> Result<Vec<Product>> {
+        if self.is_email_client() {
+            return Err("Token required".into());
         }
 
+        let login = Self::test_login(self.token.clone().unwrap()).await?;
+
         let response: Products = self
-            .make_get_request(&api::endpoints::get_user_downloads(self.user_id.unwrap()))
+            .make_get_request(&api::endpoints::user_downloads(login.data.user_id.unwrap()))
             .await?;
 
         match response.data {
@@ -181,8 +113,60 @@ impl LegacyGamesClient {
         }
     }
 
+    /// Fetches the installer for a purchased game.
+    pub async fn fetch_wp_installer(
+        &self,
+        product_id: u32,
+        game_id: &str,
+    ) -> Result<RequestBuilder> {
+        if self.is_email_client() {
+            return Err("Token required".into());
+        }
+
+        let response: InstallerResponse = self
+            .make_get_request(&api::endpoints::wp_installer(product_id, game_id))
+            .await?;
+
+        match response.data {
+            InstallerResponseData::Installer(installer) => Ok(self.http.get(&installer.file)),
+            InstallerResponseData::Error(e) => Err(e.into()),
+        }
+    }
+
+    /// Fetches the size of the installer for a purchased game.
+    pub async fn fetch_wp_installer_size(&self, product_id: u32, game_id: &str) -> Result<u32> {
+        if self.is_email_client() {
+            return Err("Token required".into());
+        }
+
+        let response: InstallerResponse = self
+            .make_get_request(&api::endpoints::wp_installer(product_id, game_id))
+            .await?;
+
+        if let InstallerResponseData::Installer(installer) = response.data {
+            let response = self.make_head_request(&installer.file).await?;
+
+            if let Some(content_length) = response.headers().get(CONTENT_LENGTH) {
+                Ok(content_length.to_str().unwrap().parse::<u32>()?)
+            } else {
+                Ok(0)
+            }
+        } else {
+            Err("Installer not found".into())
+        }
+    }
+
+    /// Fetches both giveaway and wp products (if possible).
+    pub async fn fetch_products(&mut self) -> Result<Vec<Product>> {
+        let (mut giveaway_products, mut wp_products) =
+            try_join!(self.fetch_giveaway_products(), self.fetch_wp_products())?;
+
+        giveaway_products.append(&mut wp_products);
+        Ok(giveaway_products)
+    }
+
     /// Checks if a user exists by email.
-    pub async fn fetch_user_exists(email: &str) -> Result<IsExistsByEmail, reqwest::Error> {
+    pub async fn fetch_user_exists(email: &str) -> Result<IsExistsByEmail> {
         Self::make_get_request_static(
             &api::endpoints::is_exsists_by_email(email),
             &reqwest::Client::new(),
@@ -192,7 +176,7 @@ impl LegacyGamesClient {
     }
 
     /// Checks if a login is valid.
-    pub async fn test_login(token: String) -> Result<TestLogin, reqwest::Error> {
+    pub async fn test_login(token: String) -> Result<TestLogin> {
         Self::make_get_request_static(
             &api::endpoints::login(),
             &reqwest::Client::new(),
@@ -210,7 +194,7 @@ impl LegacyGamesClient {
     /// Makes a GET request to the Legacy Games API.
     /// This function is not static and requires a LegacyGamesClient to be created,
     /// in order to avoid creating multiple reqwest::Client instances.
-    async fn make_get_request<D>(&self, url: &str) -> Result<D, reqwest::Error>
+    async fn make_get_request<D>(&self, url: &str) -> Result<D>
     where
         D: DeserializeOwned,
     {
@@ -223,7 +207,7 @@ impl LegacyGamesClient {
         url: &str,
         http: &reqwest::Client,
         token: &Option<String>,
-    ) -> Result<D, reqwest::Error>
+    ) -> Result<D>
     where
         D: DeserializeOwned,
     {
@@ -237,6 +221,14 @@ impl LegacyGamesClient {
             request = request.header("UserToken", format!("Basic {}", token.clone().unwrap()));
         }
 
-        request.send().await?.json().await
+        let response = request.send().await?.json().await?;
+
+        Ok(response)
+    }
+
+    async fn make_head_request(&self, url: &str) -> Result<reqwest::Response> {
+        let response = self.http.head(url).send().await?;
+
+        Ok(response)
     }
 }

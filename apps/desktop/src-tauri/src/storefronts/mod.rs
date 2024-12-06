@@ -10,6 +10,7 @@ use crate::{
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use std::sync::RwLock;
 use tauri::State;
+use tokio::task::JoinSet;
 
 pub mod itchio;
 pub mod legacygames;
@@ -22,23 +23,33 @@ pub async fn get_games(
     let mut connection = database::create_connection()?;
 
     if refetch {
+        let mut tasks = JoinSet::new();
         let mut games_to_return = Vec::new();
 
+        // itch.io
         let itchio_api_key = config.read().unwrap().itchio_api_key();
         if let Some(itchio_api_key) = itchio_api_key {
-            games_to_return.append(&mut itchio::fetch_games(&itchio_api_key).await?);
+            tasks.spawn(async move { itchio::fetch_games(&itchio_api_key).await });
         }
 
+        // Legacy Games
         let legacy_games_email = config.read().unwrap().legacy_games_email();
         let legacy_games_token = config.read().unwrap().legacy_games_token();
-
         if let Some(legacy_games_email) = legacy_games_email {
-            games_to_return.append(
-                &mut legacygames::fetch_games(legacy_games_email, legacy_games_token).await?,
-            );
+            tasks.spawn(async move {
+                legacygames::fetch_games(legacy_games_email, legacy_games_token).await
+            });
         }
 
-        println!("Games to return: {:?}", games_to_return);
+        while let Some(res) = tasks.join_next().await {
+            match res {
+                Ok(fetched_games) => match fetched_games {
+                    Ok(fetched_games) => games_to_return.extend(fetched_games),
+                    Err(e) => println!("{:?}", e),
+                },
+                Err(e) => println!("{:?}", e),
+            }
+        }
 
         Game::insert_or_ignore(&mut connection, &games_to_return)?;
     }
@@ -59,29 +70,31 @@ pub async fn fetch_game_versions(
     game_id: String,
     game_source: GameSource,
 ) -> Result<Vec<GameVersion>, String> {
-    let mut connection = database::create_connection()?;
+    let mut connection = database::create_connection().map_err(|e| e.to_string())?;
 
-    let game = Game::select(&mut connection, &game_source, &game_id)?;
+    let game = Game::select(&mut connection, &game_source, &game_id).map_err(|e| e.to_string())?;
 
-    if game_source == GameSource::Itchio {
-        let itchio_api_key = config.read().unwrap().itchio_api_key();
-        if let Some(itchio_api_key) = itchio_api_key {
-            return Ok(
-                itchio::fetch_releases(&itchio_api_key, &game_id, &game.key.unwrap()).await?,
-            );
+    match game_source {
+        GameSource::Itchio => {
+            let itchio_api_key = config.read().unwrap().itchio_api_key();
+            if let Some(api_key) = itchio_api_key {
+                return itchio::fetch_game_versions(&api_key, &game_id, &game.key.unwrap())
+                    .await
+                    .map_err(|e| e.to_string());
+            }
         }
-    } else {
-        let legacy_games_email = config.read().unwrap().legacy_games_email();
-        let legacy_games_token = config.read().unwrap().legacy_games_token();
-
-        if let Some(legacy_games_email) = legacy_games_email {
-            return Ok(
-                legacygames::fetch_releases(legacy_games_email, legacy_games_token, game).await?,
-            );
+        GameSource::LegacyGames => {
+            let legacy_games_email = config.read().unwrap().legacy_games_email();
+            let legacy_games_token = config.read().unwrap().legacy_games_token();
+            if let Some(email) = legacy_games_email {
+                return legacygames::fetch_game_versions(email, legacy_games_token, game)
+                    .await
+                    .map_err(|e| e.to_string());
+            }
         }
     }
 
-    unreachable!()
+    Err("Invalid game source or missing credentials".to_string())
 }
 
 #[tauri::command]
@@ -95,16 +108,19 @@ pub async fn fetch_version_info(
 
     let game = Game::select(&mut connection, &game_source, &game_id)?;
 
-    if game_source == GameSource::Itchio {
-        let itchio_api_key = config.read().unwrap().itchio_api_key();
-        if let Some(itchio_api_key) = itchio_api_key {
-            return Ok(itchio::fetch_release_info(&itchio_api_key, &version_id, game).await?);
+    match game_source {
+        GameSource::Itchio => {
+            let itchio_api_key = config.read().unwrap().itchio_api_key();
+            if let Some(api_key) = itchio_api_key {
+                return Ok(itchio::fetch_release_info(&api_key, &version_id, game).await?);
+            }
         }
-    } else {
-        return Ok(legacygames::fetch_release_info());
+        GameSource::LegacyGames => {
+            return Ok(legacygames::fetch_release_info());
+        }
     }
 
-    unreachable!()
+    Err("Invalid game source or missing credentials".to_string())
 }
 
 #[tauri::command]

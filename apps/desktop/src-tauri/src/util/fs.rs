@@ -1,4 +1,4 @@
-use crate::common::error::Result;
+use crate::common::result::Result;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 

@@ -1,5 +1,5 @@
 use crate::{
-    common::{database, error::Result},
+    common::{database, result::Result},
     managers::download::{Download, DownloadOptions},
     models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
     util,
@@ -12,33 +12,43 @@ const NO_WINDOW_FLAGS: u32 = 0x08000000;
 
 pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
     let client = ItchioClient::new(api_key);
-
-    let owned_keys = client.fetch_owned_keys(1).await?;
-
     let mut games = Vec::new();
-    for key in owned_keys.owned_keys {
-        let developer = key
-            .game
-            .user
-            .and_then(|user| user.display_name.or(Some(user.username)));
+    let mut page = 1;
 
-        games.push(Game {
-            id: key.game.id.to_string(),
-            title: key.game.title,
-            source: GameSource::Itchio,
-            key: Some(key.id.to_string()),
-            developer,
-            launch_target: None,
-            path: None,
-            version: None,
-            status: GameStatus::NotInstalled,
-        });
+    loop {
+        let owned_keys = client.fetch_owned_keys(page).await?;
+        let current_page_count = owned_keys.owned_keys.len() as u8;
+
+        games.extend(owned_keys.owned_keys.into_iter().map(|key| {
+            let developer = key
+                .game
+                .user
+                .and_then(|user| user.display_name.or(Some(user.username)));
+
+            Game {
+                id: key.game.id.to_string(),
+                title: key.game.title,
+                source: GameSource::Itchio,
+                key: Some(key.id.to_string()),
+                developer,
+                launch_target: None,
+                path: None,
+                version: None,
+                status: GameStatus::NotInstalled,
+            }
+        }));
+
+        if current_page_count < owned_keys.per_page {
+            break;
+        }
+
+        page += 1;
     }
 
     Ok(games)
 }
 
-pub async fn fetch_releases(
+pub async fn fetch_game_versions(
     api_key: &str,
     game_id: &str,
     game_key: &str,
@@ -47,10 +57,9 @@ pub async fn fetch_releases(
 
     let game_id: u32 = game_id.parse()?;
     let game_key: u32 = game_key.parse()?;
-    let game = client.fetch_game_uploads(game_id, game_key).await?;
+    let uploads = client.fetch_game_uploads(game_id, game_key).await?;
 
-    let uploads = game
-        .uploads
+    let game_versions = uploads
         .into_iter()
         .map(|upload| GameVersion {
             id: upload.id.to_string(),
@@ -61,7 +70,7 @@ pub async fn fetch_releases(
         })
         .collect();
 
-    Ok(uploads)
+    Ok(game_versions)
 }
 
 pub async fn fetch_release_info(
@@ -94,7 +103,7 @@ pub async fn fetch_release_info(
         tokio::time::sleep(std::time::Duration::from_secs(2_u64.pow(5 - retries))).await;
     }
 
-    unreachable!()
+    Err("Failed to fetch release info".into())
 }
 
 pub async fn fetch_download_info(

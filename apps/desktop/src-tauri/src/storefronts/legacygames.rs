@@ -1,89 +1,87 @@
 use crate::{
-    common::error::Result,
+    common::result::Result,
     managers::download::{Download, DownloadOptions},
     models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
 };
-use wrapper_legacygames::LegacyGamesClient;
+use std::sync::Arc;
+use tokio::task::JoinSet;
+use wrapper_legacygames::{api::models::Product, LegacyGamesClient};
 
 pub async fn fetch_games(email: String, token: Option<String>) -> Result<Vec<Game>> {
-    let mut client = if let Some(token) = token {
-        LegacyGamesClient::from_token(email, token)
-    } else {
-        LegacyGamesClient::from_email(email)
+    let client = match token {
+        Some(token) => Arc::new(LegacyGamesClient::from_token(email, token)),
+        None => Arc::new(LegacyGamesClient::from_email(email)),
     };
 
-    let giveaway_products = client.fetch_giveaway_products().await?;
-
-    let mut games = Vec::new();
-    for product in giveaway_products {
-        for game in product.games {
-            games.push(Game {
-                // Use installer_uuid as game ids can be duplicated for some reason
-                id: game.installer_uuid,
-                title: game.game_name,
-                source: GameSource::LegacyGames,
-                key: None,
-                developer: None,
-                launch_target: None,
-                path: None,
-                version: None,
-                status: GameStatus::NotInstalled,
-            });
-        }
-    }
+    let mut join_set = JoinSet::new();
 
     if client.is_token_client() {
-        let wp_games = client.fetch_products().await?;
+        let client_clone = client.clone();
 
-        for product in wp_games {
-            for game in product.games {
-                games.push(Game {
-                    id: game.game_id,
-                    title: game.game_name,
-                    source: GameSource::LegacyGames,
-                    key: Some(product.product_id.to_string()),
-                    developer: None,
-                    launch_target: None,
-                    path: None,
-                    version: None,
-                    status: GameStatus::NotInstalled,
-                });
+        join_set.spawn(async move {
+            match client_clone.fetch_wp_products().await {
+                Ok(products) => {
+                    let games = create_games(products, false);
+                    Ok(games)
+                }
+                Err(err) => Err(err),
             }
+        });
+    }
+
+    join_set.spawn(async move {
+        match client.fetch_giveaway_products().await {
+            Ok(products) => {
+                let games = create_games(products, true);
+                Ok(games)
+            }
+            Err(err) => Err(err),
+        }
+    });
+
+    let mut result = Vec::new();
+
+    while let Some(res) = join_set.join_next().await {
+        match res {
+            Ok(games) => result.extend(games?),
+            Err(e) => return Err(e.into()),
         }
     }
 
-    Ok(games)
+    Ok(result)
 }
 
-pub async fn fetch_releases(
+pub async fn fetch_game_versions(
     email: String,
     token: Option<String>,
     game: Game,
 ) -> Result<Vec<GameVersion>> {
-    let client = if let Some(token) = token {
-        LegacyGamesClient::from_token(email, token)
-    } else {
-        LegacyGamesClient::from_email(email)
+    let client = match token {
+        Some(token) => LegacyGamesClient::from_token(email, token),
+        None => LegacyGamesClient::from_email(email),
     };
 
-    let size = if game.key.is_none() {
-        client.fetch_giveaway_installer_size(&game.id).await?
-    } else {
-        client
-            .fetch_wp_installer_size(game.key.unwrap().parse()?, &game.id)
-            .await?
+    let size = match game.key {
+        Some(ref key) => {
+            client
+                .fetch_wp_installer_size(key.parse()?, &game.id)
+                .await?
+        }
+        None => client.fetch_giveaway_installer_size(&game.id).await?,
     };
 
     Ok(vec![GameVersion {
         id: game.id.clone(),
-        game_id: game.id.clone(),
+        game_id: game.id,
         source: GameSource::LegacyGames,
-        name: game.title.clone(),
+        name: game.title,
         download_size: size,
     }])
 }
 
 pub fn fetch_release_info() -> VersionDownloadInfo {
+    // There is no way to fetch the installed size that I know.
+    // The game_installed_size in the API's resonse is actually the download size.
     VersionDownloadInfo { install_size: 0 }
 }
 
@@ -93,10 +91,9 @@ pub async fn fetch_download_info(
     game: &mut Game,
     download_options: DownloadOptions,
 ) -> Result<Download> {
-    let client = if let Some(token) = token {
-        LegacyGamesClient::from_token(email, token)
-    } else {
-        LegacyGamesClient::from_email(email)
+    let client = match token {
+        Some(token) => LegacyGamesClient::from_token(email, token),
+        None => LegacyGamesClient::from_email(email),
     };
 
     let download_request = if game.key.is_none() {
@@ -123,4 +120,31 @@ pub async fn fetch_download_info(
         source: GameSource::Itchio,
         game_id: game.id.clone(),
     })
+}
+
+fn create_games(products: Vec<Product>, is_giveaway: bool) -> Vec<Game> {
+    products
+        .into_iter()
+        .flat_map(|product| {
+            product.games.into_iter().map(move |game| {
+                let (game_id, product_id) = if is_giveaway {
+                    (game.installer_uuid.to_string(), None)
+                } else {
+                    (game.game_id.to_string(), Some(product.id.to_string()))
+                };
+
+                Game {
+                    id: game_id,
+                    title: game.game_name,
+                    source: GameSource::LegacyGames,
+                    key: product_id,
+                    developer: None,
+                    launch_target: None,
+                    path: None,
+                    version: None,
+                    status: GameStatus::NotInstalled,
+                }
+            })
+        })
+        .collect()
 }

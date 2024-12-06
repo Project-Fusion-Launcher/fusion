@@ -9,10 +9,6 @@
       "path": "../apps/desktop",
     },
     {
-      "name": "crates/scraper-myabandonware",
-      "path": "../crates/scraper-myabandonware",
-    },
-    {
       "name": "crates/wrapper-itchio",
       "path": "../crates/wrapper-itchio",
     },

@@ -5,7 +5,7 @@ export function capitalizeFirstLetter(string: string) {
 export function bytesToSize(bytes: number | null | undefined) {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
 
-  if (bytes === 0 || bytes === null || bytes === undefined) return "0 Bytes";
+  if (bytes === 0 || bytes === null || bytes === undefined) return "Unknown";
 
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];

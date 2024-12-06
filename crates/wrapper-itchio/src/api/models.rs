@@ -61,6 +61,7 @@ pub struct TOTPLoginParams {
 pub struct OwnedKeys {
     pub per_page: u8,
     pub page: u32,
+    #[serde(deserialize_with = "deserialize_empty_object")]
     pub owned_keys: Vec<OwnedKey>,
 }
 

@@ -30,7 +30,7 @@ mod tests {
     async fn products_test() {
         let token = LegacyGamesClient::generate_token("ABCD", "abcd");
         let mut client = LegacyGamesClient::from_token(String::from("abcd"), token);
-        let products = client.fetch_products().await;
+        let products = client.fetch_wp_products().await;
         println!("{:?}", products);
         assert!(products.is_ok());
     }

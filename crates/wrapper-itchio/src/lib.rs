@@ -36,9 +36,11 @@ impl ItchioClient {
         &self,
         game_id: u32,
         download_key_id: u32,
-    ) -> Result<Uploads, reqwest::Error> {
-        self.make_get_request(&api::endpoints::uploads(game_id, download_key_id))
-            .await
+    ) -> Result<Vec<Upload>, reqwest::Error> {
+        let response: Uploads = self
+            .make_get_request(&api::endpoints::uploads(game_id, download_key_id))
+            .await?;
+        Ok(response.uploads)
     }
 
     /// Fetches a specific upload.

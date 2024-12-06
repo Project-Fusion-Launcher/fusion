@@ -1,4 +1,4 @@
-use crate::{common::error::Result, schema::configs::dsl::*};
+use crate::{common::result::Result, schema::configs::dsl::*};
 use diesel::prelude::*;
 
 /// A model representing the application configuration.
