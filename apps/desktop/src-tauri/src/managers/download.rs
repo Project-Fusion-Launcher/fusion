@@ -1,7 +1,7 @@
 use crate::{
     models::{game::GameSource, payloads::DownloadFinished},
     storefronts::{itchio, legacygames},
-    util, APP,
+    APP,
 };
 use reqwest::RequestBuilder;
 use serde::Deserialize;
@@ -70,15 +70,8 @@ impl DownloadManager {
                     let file_name = download.file_name.clone();
                     let game_id = download.game_id.clone();
                     let source = download.source.clone();
-                    let md5 = download.md5.clone();
 
                     Self::download(download).await;
-                    if let Some(md5) = md5 {
-                        let result = util::file::verify_md5(&path.join(&file_name), &md5)
-                            .await
-                            .unwrap();
-                        println!("MD5 verification: {}", result);
-                    }
 
                     let result = match source {
                         GameSource::Itchio => {
@@ -112,14 +105,15 @@ impl DownloadManager {
     }
 
     async fn download(download: Download) {
-        let (tx, mut rx) = mpsc::channel(16);
+        let (writer_tx, mut writer_rx) = mpsc::channel(16);
+        let (verifier_tx, mut verifier_rx) = mpsc::channel(16);
 
         let downloader = task::spawn(async move {
             let mut response = download.request.send().await.unwrap();
 
             while let Some(chunk) = response.chunk().await.unwrap() {
-                if (tx.send(chunk).await).is_err() {
-                    break; // Receiver dropped
+                if (writer_tx.send(chunk).await).is_err() {
+                    break;
                 }
             }
         });
@@ -141,14 +135,34 @@ impl DownloadManager {
             .await
             .unwrap();
 
+        let md5_exists = download.md5.is_some();
         let writer = task::spawn(async move {
-            while let Some(chunk) = rx.recv().await {
+            while let Some(chunk) = writer_rx.recv().await {
                 file.write_all(&chunk).await.unwrap();
+                if md5_exists {
+                    verifier_tx.send(chunk).await.unwrap();
+                }
             }
+        });
+
+        let verifier = task::spawn(async move {
+            let mut hasher = md5::Context::new();
+            while let Some(chunk) = verifier_rx.recv().await {
+                hasher.consume(&chunk);
+            }
+            hasher.compute()
         });
 
         downloader.await.unwrap();
         writer.await.unwrap();
+
+        if let Some(md5) = download.md5 {
+            let result = verifier.await.unwrap();
+            println!("MD5: {:x}", result);
+            if format!("{:x}", result) != md5 {
+                println!("MD5 mismatch!");
+            }
+        }
 
         println!("Downloaded: {}", download.file_name);
     }

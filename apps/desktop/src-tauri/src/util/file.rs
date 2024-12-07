@@ -1,10 +1,6 @@
 use crate::common::result::Result;
 use std::path::Path;
-use std::time::Instant;
-use tokio::{
-    fs,
-    io::{self, AsyncReadExt},
-};
+use tokio::fs;
 
 const NO_WINDOW_FLAGS: u32 = 0x08000000;
 
@@ -45,40 +41,4 @@ where
     fs::remove_file(file_path).await?;
 
     Ok(())
-}
-
-pub async fn verify_md5<P>(file_path: &P, md5: &str) -> Result<bool>
-where
-    P: AsRef<Path>,
-{
-    let start = Instant::now();
-
-    let file_path = file_path.as_ref();
-
-    if !file_path.exists() {
-        return Err(format!("File does not exist: {:?}", file_path).into());
-    }
-
-    let file = fs::File::open(file_path).await?;
-    let mut reader = io::BufReader::new(file);
-
-    let mut hasher = md5::Context::new();
-    let mut buffer = [0; 16 * 1024];
-
-    loop {
-        let bytes_read = reader.read(&mut buffer).await?;
-        if bytes_read == 0 {
-            break;
-        }
-        hasher.consume(&buffer[..bytes_read]);
-    }
-
-    let digest = hasher.compute();
-
-    let duration = start.elapsed();
-    println!("MD5 verification took: {:?}", duration);
-    println!("MD5: {:x}", digest);
-    println!("Expected MD5: {}", md5);
-
-    Ok(format!("{:x}", digest) == md5)
 }
