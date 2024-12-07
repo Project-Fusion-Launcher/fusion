@@ -130,6 +130,7 @@ pub async fn pre_download(
         download_options,
         source: GameSource::Itchio,
         game_id: game.id.clone(),
+        md5: upload.md5_hash,
     })
 }
 
@@ -144,7 +145,7 @@ pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Res
         || file_path.extension().unwrap() == "rar"
     {
         println!("Extracting game: {:?}", file_path);
-        util::fs::extract_file(&file_path, &path).await?;
+        util::file::extract_file(&file_path, &path).await?;
     }
 
     let mut launch_target = util::fs::find_launch_target(&path).await?;

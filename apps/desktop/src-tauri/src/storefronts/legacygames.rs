@@ -4,6 +4,7 @@ use crate::{
     models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
     util,
 };
+use reqwest::header::ETAG;
 use std::{path::PathBuf, process::Stdio, sync::Arc};
 use tokio::task::JoinSet;
 use wrapper_legacygames::{api::models::Product, LegacyGamesClient};
@@ -97,19 +98,29 @@ pub async fn pre_download(
         None => LegacyGamesClient::from_email(email),
     };
 
-    let download_request = match game.key {
+    let installer_url = match game.key {
         Some(ref key) => client.fetch_wp_installer(key.parse()?, &game.id).await?,
         None => client.fetch_giveaway_installer(&game.id).await?,
     };
 
+    let http = reqwest::Client::new();
+
+    // Extract the MD5 hash from the ETag header
+    let response = http.head(&installer_url).send().await?;
+    let md5 = response
+        .headers()
+        .get(ETAG)
+        .map(|header| header.to_str().unwrap().trim_matches('"').to_string());
+
     game.version = Some(game.id.clone());
 
     Ok(Download {
-        request: download_request,
+        request: http.get(installer_url),
         file_name: String::from("setup.exe"),
         download_options,
         source: GameSource::LegacyGames,
         game_id: game.id.clone(),
+        md5,
     })
 }
 
@@ -120,7 +131,7 @@ pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Res
     let mut game = Game::select(&mut connection, &GameSource::LegacyGames, game_id)?;
 
     println!("Extracting game: {:?}", file_path);
-    util::fs::extract_file(&file_path, &path).await?;
+    util::file::extract_file(&file_path, &path).await?;
 
     let mut launch_target = util::fs::find_launch_target(&path).await?;
 

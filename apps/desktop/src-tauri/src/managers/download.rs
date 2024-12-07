@@ -1,7 +1,7 @@
 use crate::{
     models::{game::GameSource, payloads::DownloadFinished},
     storefronts::{itchio, legacygames},
-    APP,
+    util, APP,
 };
 use reqwest::RequestBuilder;
 use serde::Deserialize;
@@ -24,6 +24,7 @@ pub struct Download {
     pub source: GameSource,
     pub game_id: String,
     pub download_options: DownloadOptions,
+    pub md5: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -69,8 +70,15 @@ impl DownloadManager {
                     let file_name = download.file_name.clone();
                     let game_id = download.game_id.clone();
                     let source = download.source.clone();
+                    let md5 = download.md5.clone();
 
                     Self::download(download).await;
+                    if let Some(md5) = md5 {
+                        let result = util::file::verify_md5(&path.join(&file_name), &md5)
+                            .await
+                            .unwrap();
+                        println!("MD5 verification: {}", result);
+                    }
 
                     let result = match source {
                         GameSource::Itchio => {

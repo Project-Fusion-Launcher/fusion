@@ -3,10 +3,7 @@ use api::models::{
     TestLogin,
 };
 use base64::{prelude::BASE64_STANDARD, Engine};
-use reqwest::{
-    header::{ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE},
-    RequestBuilder,
-};
+use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE};
 use result::Result;
 use serde::de::DeserializeOwned;
 use tokio::try_join;
@@ -65,13 +62,13 @@ impl LegacyGamesClient {
     }
 
     /// Fetches the installer for a giveaway game.
-    pub async fn fetch_giveaway_installer(&self, installer_uuid: &str) -> Result<RequestBuilder> {
+    pub async fn fetch_giveaway_installer(&self, installer_uuid: &str) -> Result<String> {
         let response: InstallerResponse = self
             .make_get_request(&api::endpoints::giveaway_installer(installer_uuid))
             .await?;
 
         match response.data {
-            InstallerResponseData::Installer(installer) => Ok(self.http.get(&installer.file)),
+            InstallerResponseData::Installer(installer) => Ok(installer.file),
             InstallerResponseData::Error(e) => Err(e.into()),
         }
     }
@@ -114,11 +111,7 @@ impl LegacyGamesClient {
     }
 
     /// Fetches the installer for a purchased game.
-    pub async fn fetch_wp_installer(
-        &self,
-        product_id: u32,
-        game_id: &str,
-    ) -> Result<RequestBuilder> {
+    pub async fn fetch_wp_installer(&self, product_id: u32, game_id: &str) -> Result<String> {
         if self.is_email_client() {
             return Err("Token required".into());
         }
@@ -128,7 +121,7 @@ impl LegacyGamesClient {
             .await?;
 
         match response.data {
-            InstallerResponseData::Installer(installer) => Ok(self.http.get(&installer.file)),
+            InstallerResponseData::Installer(installer) => Ok(installer.file),
             InstallerResponseData::Error(e) => Err(e.into()),
         }
     }
