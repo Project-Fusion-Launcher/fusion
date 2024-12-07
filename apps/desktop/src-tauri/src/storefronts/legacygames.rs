@@ -113,11 +113,11 @@ pub async fn pre_download(
     })
 }
 
-pub async fn post_download(game_id: String, path: PathBuf, file_name: String) -> Result<()> {
+pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
     let file_path = path.join(file_name);
 
     let mut connection = database::create_connection()?;
-    let mut game = Game::select(&mut connection, &GameSource::LegacyGames, &game_id)?;
+    let mut game = Game::select(&mut connection, &GameSource::LegacyGames, game_id)?;
 
     println!("Extracting game: {:?}", file_path);
     util::fs::extract_file(&file_path, &path).await?;

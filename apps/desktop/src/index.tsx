@@ -5,7 +5,7 @@ import App from "./App";
 import "./styles.css";
 import "@repo/ui/fonts";
 import { Navigate, Route, Router } from "@solidjs/router";
-import Library from "./routes/Library";
+import Library from "./routes/Library/Library";
 import Retro from "./routes/Retro";
 
 render(

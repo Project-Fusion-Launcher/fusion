@@ -1,7 +1,7 @@
 import { Button } from "@kobalte/core/button";
 import { ArrowDownToLine, Play } from "lucide-solid";
 import { Match, Switch } from "solid-js";
-import type { Game } from "../routes/Library";
+import { type Game } from "../models/types";
 
 interface GameCardProps {
   game: Game;

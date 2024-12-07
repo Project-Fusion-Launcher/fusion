@@ -1,6 +1,7 @@
 use crate::{
-    models::game::GameSource,
+    models::{game::GameSource, payloads::DownloadFinished},
     storefronts::{itchio, legacygames},
+    APP,
 };
 use reqwest::RequestBuilder;
 use serde::Deserialize;
@@ -9,6 +10,7 @@ use std::{
     path::PathBuf,
     sync::{Arc, Mutex},
 };
+use tauri::Emitter;
 use tokio::{
     fs::{self, OpenOptions},
     io::AsyncWriteExt,
@@ -71,15 +73,27 @@ impl DownloadManager {
                     Self::download(download).await;
 
                     let result = match source {
-                        GameSource::Itchio => itchio::post_download(game_id, path, file_name).await,
+                        GameSource::Itchio => {
+                            itchio::post_download(&game_id, path, &file_name).await
+                        }
                         GameSource::LegacyGames => {
-                            legacygames::post_download(game_id, path, file_name).await
+                            legacygames::post_download(&game_id, path, &file_name).await
                         }
                     };
 
                     if let Err(e) = result {
                         println!("Error post-download: {}", e);
                     }
+                    APP.get()
+                        .unwrap()
+                        .emit(
+                            "download-finished",
+                            DownloadFinished {
+                                id: game_id,
+                                source,
+                            },
+                        )
+                        .unwrap();
                 } else {
                     println!("Waiting for downloads...");
                     queue_notifier.notified().await;

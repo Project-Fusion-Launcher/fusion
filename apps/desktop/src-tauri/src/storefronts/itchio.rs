@@ -133,11 +133,11 @@ pub async fn pre_download(
     })
 }
 
-pub async fn post_download(game_id: String, path: PathBuf, file_name: String) -> Result<()> {
+pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
     let file_path = path.join(file_name);
 
     let mut connection = database::create_connection()?;
-    let mut game = Game::select(&mut connection, &GameSource::Itchio, &game_id)?;
+    let mut game = Game::select(&mut connection, &GameSource::Itchio, game_id)?;
 
     if file_path.extension().unwrap() == "zip"
         || file_path.extension().unwrap() == "7z"

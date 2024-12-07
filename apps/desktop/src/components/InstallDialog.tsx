@@ -1,5 +1,4 @@
 import { Button, Dialog, IconButton, Select, TextField } from "@repo/ui";
-import type { Game } from "../routes/Library";
 import {
   createResource,
   createEffect,
@@ -10,6 +9,7 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { Download, Folder, HardDrive, LoaderCircle } from "lucide-solid";
 import { open } from "@tauri-apps/plugin-dialog";
+import { type Game } from "../models/types";
 import { bytesToSize } from "../util/string";
 
 interface InstallDialogProps {
@@ -69,25 +69,25 @@ const InstallDialog = (props: InstallDialogProps) => {
     }
   });
 
-  const handleVersionSelect = (value: string | null) => {
+  function handleVersionSelect(value: string | null) {
     const version =
       versions()?.find((version) => version.name === value) || null;
     setSelectedVersion(version);
     if (version) {
       refetchVersionDownloadInfo();
     }
-  };
+  }
 
-  const handleDirectorySelect = () => {
+  function handleDirectorySelect() {
     open({
       multiple: false,
       directory: true,
     }).then((result) => {
       if (result) setInstallLocation(result);
     });
-  };
+  }
 
-  const handleInstall = () => {
+  function handleInstall() {
     if (selectedVersion() === null || !installLocation()) return;
     setPreparingToInstall(true);
     invoke("download_game", {
@@ -102,7 +102,7 @@ const InstallDialog = (props: InstallDialogProps) => {
       props.handleDialogClose();
       setPreparingToInstall(false);
     });
-  };
+  }
 
   return (
     <Dialog
