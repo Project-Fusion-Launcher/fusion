@@ -21,7 +21,8 @@ const config: Omit<Config, "content"> = {
       accent: {
         DEFAULT: "#874295",
       },
-      highlighted: "#BAB6BE0A",
+      highlighted: "#BAB6BE3A",
+      danger: "#E83333",
       black: "#000000",
       white: "#FFFFFF",
     },

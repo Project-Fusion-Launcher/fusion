@@ -18,6 +18,8 @@ pub struct Game {
     pub path: Option<String>,
     pub version: Option<String>,
     pub status: GameStatus,
+    pub favorite: bool,
+    pub hidden: bool,
 }
 
 impl Game {
@@ -82,6 +84,8 @@ pub struct ReducedGame {
     pub developer: Option<String>,
     pub path: Option<String>,
     pub status: GameStatus,
+    pub favorite: bool,
+    pub hidden: bool,
 }
 
 #[derive(Serialize, Clone, Debug)]

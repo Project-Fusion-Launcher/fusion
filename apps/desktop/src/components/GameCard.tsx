@@ -5,14 +5,16 @@ import { type Game } from "../models/types";
 
 interface GameCardProps {
   game: Game;
-  onClick?: () => void;
+  onClick: () => void;
+  onContextMenu: () => void;
 }
 
 const GameCard = (props: GameCardProps) => {
   return (
     <Button
       class="w-192 group flex flex-shrink-0 flex-col hover:cursor-pointer"
-      onClick={() => props.onClick && props.onClick()}
+      onClick={() => props.onClick()}
+      onContextMenu={() => props.onContextMenu()}
     >
       <div class="bg-secondary h-288 group-hover:outline-accent relative w-full overflow-hidden rounded outline-none outline-2 transition-all group-hover:shadow-[0_0_1.5rem_rgba(255,255,255,0.25)]">
         <img

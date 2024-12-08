@@ -104,6 +104,10 @@ const InstallDialog = (props: InstallDialogProps) => {
     });
   }
 
+  function getMappedVersions() {
+    return versions()?.map((version) => version.name) || [];
+  }
+
   return (
     <Dialog
       title={
@@ -130,11 +134,7 @@ const InstallDialog = (props: InstallDialogProps) => {
                   : "Select a version"
             }
             loading={versions.loading}
-            options={
-              !versions.loading
-                ? versions()?.map((version) => version.name)
-                : []
-            }
+            options={getMappedVersions()}
             label="Version to install"
             value={selectedVersion()?.name}
             onChange={handleVersionSelect}

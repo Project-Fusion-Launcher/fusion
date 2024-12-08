@@ -187,6 +187,8 @@ fn create_games(products: Vec<Product>, is_giveaway: bool) -> Vec<Game> {
                     path: None,
                     version: None,
                     status: GameStatus::NotInstalled,
+                    favorite: false,
+                    hidden: false,
                 }
             })
         })

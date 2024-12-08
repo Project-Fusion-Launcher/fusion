@@ -30,7 +30,7 @@ const Sidebar = (props: SidebarProps) => {
       <div class="flex items-center py-44">
         <Box class="text-primary size-48" style={{ "stroke-width": "2px" }} />
       </div>
-      <Tabs.List class="text-primary relative flex w-full flex-col items-center">
+      <Tabs.List class="text-secondary relative flex w-full flex-col items-center">
         <For each={[...pagesSection1, ...pagesSection2]}>
           {(page, i) => (
             <>
@@ -41,12 +41,17 @@ const Sidebar = (props: SidebarProps) => {
                 value={page.name}
                 class="relative flex h-52 w-full items-center justify-center"
               >
-                <page.icon class="size-32" />
+                <page.icon
+                  class="size-32 transition-all"
+                  classList={{
+                    "stroke-white scale-105": page.name == props.currentTab,
+                  }}
+                />
               </Tabs.Trigger>
             </>
           )}
         </For>
-        <Tabs.Indicator class="bg-highlighted border-r-md border-accent absolute w-full transition-transform" />
+        <Tabs.Indicator class="border-r-md border-accent absolute w-full transition-transform" />
       </Tabs.List>
     </Tabs.Root>
   );

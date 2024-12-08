@@ -15,5 +15,7 @@ CREATE TABLE `games` (
   `path` TEXT,
   `version` TEXT,
   `status` TEXT CHECK (status IN ('installed', 'not_installed')) NOT NULL,
+  `favorite` BOOLEAN NOT NULL DEFAULT FALSE,
+  `hidden` BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY (`id`, `source`)
 );

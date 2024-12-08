@@ -4,6 +4,9 @@ export interface Game {
   source: GameSource;
   developer?: string;
   status: GameStatus;
+  path?: string;
+  favorite: boolean;
+  hidden: boolean;
 }
 
 export type GameStatus = "installed" | "notInstalled";

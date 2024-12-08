@@ -18,5 +18,7 @@ diesel::table! {
         path -> Nullable<Text>,
         version -> Nullable<Text>,
         status -> crate::models::game::GameStatusMapping,
+        favorite -> Bool,
+        hidden -> Bool,
     }
 }
