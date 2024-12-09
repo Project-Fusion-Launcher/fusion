@@ -4,7 +4,8 @@ use crate::{
     models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
     util,
 };
-use std::{path::PathBuf, process::Stdio};
+use std::path::PathBuf;
+use tokio::fs;
 use wrapper_itchio::ItchioClient;
 
 pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
@@ -170,15 +171,17 @@ pub fn launch_game(game: Game) -> Result<()> {
 
     let target_path = PathBuf::from(&game_path).join(&launch_target);
 
-    let result = tokio::process::Command::new(&target_path)
-        .current_dir(target_path.parent().unwrap())
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    util::file::execute_file(&target_path)?;
 
-    println!("{:?}", result);
+    Ok(())
+}
+
+pub async fn uninstall_game(game: &Game) -> Result<()> {
+    let path = PathBuf::from(game.path.as_ref().unwrap());
+
+    if path.exists() {
+        fs::remove_dir_all(&path).await?;
+    }
 
     Ok(())
 }

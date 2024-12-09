@@ -5,8 +5,8 @@ use crate::{
     util,
 };
 use reqwest::header::ETAG;
-use std::{path::PathBuf, process::Stdio, sync::Arc};
-use tokio::task::JoinSet;
+use std::{path::PathBuf, sync::Arc};
+use tokio::{fs, task::JoinSet};
 use wrapper_legacygames::{api::models::Product, LegacyGamesClient};
 
 pub async fn fetch_games(email: String, token: Option<String>) -> Result<Vec<Game>> {
@@ -153,15 +153,7 @@ pub fn launch_game(game: Game) -> Result<()> {
 
     let target_path = PathBuf::from(&game_path).join(&launch_target);
 
-    let result = tokio::process::Command::new(&target_path)
-        .current_dir(target_path.parent().unwrap())
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .map_err(|e| e.to_string())?;
-
-    println!("{:?}", result);
+    util::file::execute_file(&target_path)?;
 
     Ok(())
 }
@@ -193,4 +185,16 @@ fn create_games(products: Vec<Product>, is_giveaway: bool) -> Vec<Game> {
             })
         })
         .collect()
+}
+
+pub async fn uninstall_game(game: &Game) -> Result<()> {
+    let path = PathBuf::from(game.path.as_ref().unwrap());
+
+    // The uninstaller requires admin. Removing the directory should be enough
+    // as nothing is created in the registry (we also don't use the installer).
+    if path.exists() {
+        fs::remove_dir_all(&path).await?;
+    }
+
+    Ok(())
 }

@@ -42,3 +42,24 @@ where
 
     Ok(())
 }
+
+pub fn execute_file<P>(file_path: &P) -> Result<()>
+where
+    P: AsRef<Path>,
+{
+    let file_path = file_path.as_ref();
+
+    if !file_path.exists() {
+        return Err(format!("File does not exist: {:?}", file_path).into());
+    }
+
+    let result = tokio::process::Command::new(file_path)
+        .current_dir(file_path.parent().unwrap())
+        .creation_flags(NO_WINDOW_FLAGS)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+
+    println!("{:?}", result);
+
+    Ok(())
+}

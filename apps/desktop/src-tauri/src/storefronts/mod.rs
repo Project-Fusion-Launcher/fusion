@@ -3,7 +3,7 @@ use crate::{
     managers::download::{DownloadManager, DownloadOptions},
     models::{
         config::Config,
-        game::{Game, GameSource, GameVersion, ReducedGame, VersionDownloadInfo},
+        game::{Game, GameSource, GameStatus, GameVersion, ReducedGame, VersionDownloadInfo},
     },
     schema::games::dsl::games,
 };
@@ -184,6 +184,28 @@ pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(),
             legacygames::launch_game(game)?;
         }
     }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn uninstall_game(game_id: String, game_source: GameSource) -> Result<(), String> {
+    let mut connection = database::create_connection()?;
+
+    let mut game = Game::select(&mut connection, &game_source, &game_id)?;
+
+    match game_source {
+        GameSource::Itchio => {
+            itchio::uninstall_game(&game).await?;
+        }
+        GameSource::LegacyGames => {
+            legacygames::uninstall_game(&game).await?;
+        }
+    }
+
+    game.path = None;
+    game.status = GameStatus::NotInstalled;
+    game.update(&mut connection)?;
 
     Ok(())
 }

@@ -22,17 +22,25 @@ type ItemVariants = VariantProps<typeof itemVariants>;
 
 export interface ContextMenuItemProps extends ItemVariants {
   children: JSX.Element;
+  onSelect?: () => void;
 }
 
 const ContextMenuItem = (props: ContextMenuItemProps) => {
   return (
-    <KContextMenu.Item class={itemVariants({ variant: props.variant })}>
+    <KContextMenu.Item
+      class={itemVariants({ variant: props.variant })}
+      onSelect={props.onSelect}
+    >
       {props.children}
     </KContextMenu.Item>
   );
 };
 
-const ContextMenuSubTrigger = (props: ContextMenuItemProps) => {
+export interface ContextMenuSubTriggerProps extends ItemVariants {
+  children: JSX.Element;
+}
+
+const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => {
   return (
     <KContextMenu.SubTrigger class={itemVariants({ variant: props.variant })}>
       {props.children}

@@ -21,6 +21,7 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
 } from "@repo/ui";
+import { invoke } from "@tauri-apps/api/core";
 
 interface GameContextMenuProps {
   game: Game | null;
@@ -28,6 +29,14 @@ interface GameContextMenuProps {
 }
 
 const GameContextMenu = (props: GameContextMenuProps) => {
+  function handleUninstall() {
+    if (props.game === null) return;
+    invoke("uninstall_game", {
+      gameId: props.game.id,
+      gameSource: props.game.source,
+    });
+  }
+
   return (
     <ContextMenu>
       <ContextMenu.Trigger>{props.children}</ContextMenu.Trigger>
@@ -85,7 +94,10 @@ const GameContextMenu = (props: GameContextMenuProps) => {
                       <Folder class="size-16" />
                       Open install folder
                     </ContextMenuItem>
-                    <ContextMenuItem variant="danger">
+                    <ContextMenuItem
+                      variant="danger"
+                      onSelect={handleUninstall}
+                    >
                       <Trash2 class="size-16" />
                       Uninstall
                     </ContextMenuItem>
