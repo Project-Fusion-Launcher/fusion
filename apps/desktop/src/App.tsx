@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "@solidjs/router";
 import { createSignal } from "solid-js";
 import { createEffect } from "solid-js";
 import { WindowEventListener } from "@solid-primitives/event-listener";
+import ContextProvider from "./State";
 
 const App = (props: RouteSectionProps) => {
   const [currentTab, setCurrentTab] = createSignal("library");
@@ -26,12 +27,12 @@ const App = (props: RouteSectionProps) => {
   });
 
   return (
-    <>
+    <ContextProvider>
       <WindowEventListener onContextmenu={(e) => e.preventDefault()} />
       <WindowTitlebar class="fixed z-50 w-full bg-transparent" />
       <Sidebar currentTab={currentTab()} onTabChange={handleTabChange} />
       <div class="flex w-full flex-col">{props.children}</div>
-    </>
+    </ContextProvider>
   );
 };
 

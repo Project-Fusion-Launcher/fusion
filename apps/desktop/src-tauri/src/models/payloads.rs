@@ -2,7 +2,15 @@ use super::game::GameSource;
 use serde::Serialize;
 
 #[derive(Serialize, Clone, Debug)]
-pub struct DownloadFinished {
-    pub id: String,
-    pub source: GameSource,
+#[serde(rename_all = "camelCase")]
+pub struct DownloadFinishedPayload {
+    pub game_id: String,
+    pub game_source: GameSource,
+}
+
+#[derive(Serialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct GameUninstalledPayload {
+    pub game_id: String,
+    pub game_source: GameSource,
 }

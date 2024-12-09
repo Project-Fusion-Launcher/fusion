@@ -4,12 +4,13 @@ use crate::{
     models::{
         config::Config,
         game::{Game, GameSource, GameStatus, GameVersion, ReducedGame, VersionDownloadInfo},
+        payloads::GameUninstalledPayload,
     },
     schema::games::dsl::games,
 };
 use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use std::sync::RwLock;
-use tauri::State;
+use tauri::{AppHandle, Emitter, State};
 use tokio::task::JoinSet;
 
 pub mod itchio;
@@ -189,7 +190,11 @@ pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(),
 }
 
 #[tauri::command]
-pub async fn uninstall_game(game_id: String, game_source: GameSource) -> Result<(), String> {
+pub async fn uninstall_game(
+    app_handle: AppHandle,
+    game_id: String,
+    game_source: GameSource,
+) -> Result<(), String> {
     let mut connection = database::create_connection()?;
 
     let mut game = Game::select(&mut connection, &game_source, &game_id)?;
@@ -206,6 +211,16 @@ pub async fn uninstall_game(game_id: String, game_source: GameSource) -> Result<
     game.path = None;
     game.status = GameStatus::NotInstalled;
     game.update(&mut connection)?;
+
+    app_handle
+        .emit(
+            "game-uninstalled",
+            GameUninstalledPayload {
+                game_id,
+                game_source,
+            },
+        )
+        .map_err(|e| e.to_string())?;
 
     Ok(())
 }

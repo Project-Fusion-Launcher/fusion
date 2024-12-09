@@ -118,7 +118,7 @@ pub async fn pre_download(
         request: http.get(installer_url),
         file_name: String::from("setup.exe"),
         download_options,
-        source: GameSource::LegacyGames,
+        game_source: GameSource::LegacyGames,
         game_id: game.id.clone(),
         md5,
     })

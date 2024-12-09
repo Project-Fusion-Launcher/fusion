@@ -1,5 +1,5 @@
 use crate::{
-    models::{game::GameSource, payloads::DownloadFinished},
+    models::{game::GameSource, payloads::DownloadFinishedPayload},
     storefronts::{itchio, legacygames},
     APP,
 };
@@ -21,7 +21,7 @@ use tokio::{
 pub struct Download {
     pub request: RequestBuilder,
     pub file_name: String,
-    pub source: GameSource,
+    pub game_source: GameSource,
     pub game_id: String,
     pub download_options: DownloadOptions,
     pub md5: Option<String>,
@@ -69,11 +69,11 @@ impl DownloadManager {
                     let path = download.download_options.install_location.clone();
                     let file_name = download.file_name.clone();
                     let game_id = download.game_id.clone();
-                    let source = download.source.clone();
+                    let game_source = download.game_source.clone();
 
                     Self::download(download).await;
 
-                    let result = match source {
+                    let result = match game_source {
                         GameSource::Itchio => {
                             itchio::post_download(&game_id, path, &file_name).await
                         }
@@ -89,9 +89,9 @@ impl DownloadManager {
                         .unwrap()
                         .emit(
                             "download-finished",
-                            DownloadFinished {
-                                id: game_id,
-                                source,
+                            DownloadFinishedPayload {
+                                game_id,
+                                game_source,
                             },
                         )
                         .unwrap();

@@ -1,46 +1,26 @@
 import { Badge, Button } from "@repo/ui";
 import Header from "../../components/Header";
-import { createRenderEffect, createSignal, onCleanup } from "solid-js";
+import {
+  createRenderEffect,
+  createSignal,
+  onCleanup,
+  useContext,
+} from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { RefreshCcw } from "lucide-solid";
 import InstallDialog from "../../components/InstallDialog";
 import { type Game } from "../../models/types";
-import { createStore, produce } from "solid-js/store";
-import { listen } from "@tauri-apps/api/event";
-import { type DownloadFinished } from "../../models/payloads";
 import GameGrid from "./GameGrid";
+import { AppContext } from "../../State";
 
 const Library = () => {
-  const [state, setState] = createStore({
-    games: [] as Game[],
-    total: 0,
-    installed: 0,
-  });
+  const { state, setState } = useContext(AppContext);
 
   const [isDialogOpen, setIsDialogOpen] = createSignal(false);
   const [selectedGame, setSelectedGame] = createSignal<Game | null>(null);
 
   createRenderEffect(() => {
     getGames(false);
-  });
-
-  const unlisten = listen<DownloadFinished>("download-finished", (event) => {
-    const payload = event.payload;
-    setState(
-      "games",
-      (game) => {
-        console.log(game.id, game.source);
-        return game.id === payload.id && game.source === payload.source;
-      },
-      produce((game) => {
-        game.status = "installed";
-      }),
-    );
-    setState("installed", (installed) => installed + 1);
-  });
-
-  onCleanup(() => {
-    unlisten.then((u) => u());
   });
 
   function getGames(refetch: boolean) {
@@ -70,6 +50,10 @@ const Library = () => {
       setSelectedGame(null);
     }, 300);
   }
+
+  onCleanup(() => {
+    setState("games", []);
+  });
 
   return (
     <>

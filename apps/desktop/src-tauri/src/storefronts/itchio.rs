@@ -131,7 +131,7 @@ pub async fn pre_download(
         request: download_request,
         file_name: upload.filename,
         download_options,
-        source: GameSource::Itchio,
+        game_source: GameSource::Itchio,
         game_id: game.id.clone(),
         md5: upload.md5_hash,
     })
