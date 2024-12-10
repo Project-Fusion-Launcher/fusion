@@ -119,10 +119,12 @@ const InstallDialog = (props: InstallDialogProps) => {
       onOpenChange={props.handleDialogClose}
     >
       <div class="mb-40 flex min-w-[300px] gap-40">
-        <img
-          src="https://cdn.cloudflare.steamstatic.com/steam/apps/2835570/library_600x900_2x.jpg?t=1723031183"
-          class="w-192 rounded"
-        />
+        <div class="w-192 h-288 border-border flex flex-shrink-0 overflow-hidden rounded border">
+          <img
+            src={props.selectedGame?.coverUrl}
+            class="h-auto w-auto object-cover"
+          />
+        </div>
         <div class="flex w-full flex-col gap-20">
           <Select
             variant="outline"

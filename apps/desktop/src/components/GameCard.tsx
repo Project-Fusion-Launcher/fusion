@@ -18,8 +18,9 @@ const GameCard = (props: GameCardProps) => {
     >
       <div class="bg-secondary h-288 group-hover:outline-accent relative w-full overflow-hidden rounded outline-none outline-2 transition-all group-hover:shadow-[0_0_1.5rem_rgba(255,255,255,0.25)]">
         <img
-          class="absolute object-cover"
-          src="https://cdn.cloudflare.steamstatic.com/steam/apps/2835570/library_600x900_2x.jpg?t=1723031183"
+          class="absolute h-full object-cover"
+          src={props.game.coverUrl}
+          loading="lazy"
         />
         <div class="bg-background absolute z-10 flex h-full w-full items-center justify-center bg-opacity-60 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
           <Switch>

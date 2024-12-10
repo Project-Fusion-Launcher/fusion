@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug, Serialize)]
 #[diesel(table_name = crate::schema::games)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
 pub struct Game {
     pub id: String,
     pub source: GameSource,
@@ -20,6 +21,7 @@ pub struct Game {
     pub status: GameStatus,
     pub favorite: bool,
     pub hidden: bool,
+    pub cover_url: Option<String>,
 }
 
 impl Game {
@@ -77,6 +79,7 @@ impl Game {
 #[derive(Queryable, Selectable, Clone, Debug, Serialize)]
 #[diesel(table_name = crate::schema::games)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
 pub struct ReducedGame {
     pub id: String,
     pub source: GameSource,
@@ -86,6 +89,7 @@ pub struct ReducedGame {
     pub status: GameStatus,
     pub favorite: bool,
     pub hidden: bool,
+    pub cover_url: Option<String>,
 }
 
 #[derive(Serialize, Clone, Debug)]

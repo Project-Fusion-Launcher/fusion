@@ -20,5 +20,6 @@ diesel::table! {
         status -> crate::models::game::GameStatusMapping,
         favorite -> Bool,
         hidden -> Bool,
+        cover_url -> Nullable<Text>,
     }
 }

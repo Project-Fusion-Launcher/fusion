@@ -7,6 +7,7 @@ export interface Game {
   path?: string;
   favorite: boolean;
   hidden: boolean;
+  coverUrl?: string;
 }
 
 export type GameStatus = "installed" | "notInstalled";

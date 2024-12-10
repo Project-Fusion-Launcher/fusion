@@ -181,6 +181,7 @@ fn create_games(products: Vec<Product>, is_giveaway: bool) -> Vec<Game> {
                     status: GameStatus::NotInstalled,
                     favorite: false,
                     hidden: false,
+                    cover_url: Some(game.game_coverart),
                 }
             })
         })

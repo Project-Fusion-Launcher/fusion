@@ -17,5 +17,6 @@ CREATE TABLE `games` (
   `status` TEXT CHECK (status IN ('installed', 'not_installed')) NOT NULL,
   `favorite` BOOLEAN NOT NULL DEFAULT FALSE,
   `hidden` BOOLEAN NOT NULL DEFAULT FALSE,
+  `cover_url` TEXT,
   PRIMARY KEY (`id`, `source`)
 );
