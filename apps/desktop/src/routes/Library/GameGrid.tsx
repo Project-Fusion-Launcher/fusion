@@ -27,6 +27,10 @@ const GameGrid = (props: GameGridProps) => {
     setColumns(numColumns);
   }
 
+  function handleGameClick(game: Game | null) {
+    if (game) props.onGameClick(game);
+  }
+
   return (
     <>
       <WindowEventListener onResize={calculateColumns} />
@@ -38,7 +42,10 @@ const GameGrid = (props: GameGridProps) => {
         {/* There cannot be a context menu per game as it causes too much scroll lag.
             There is probably a better way to handle this.
         */}
-        <GameContextMenu game={selectedGame()}>
+        <GameContextMenu
+          game={selectedGame()}
+          onMainAction={() => handleGameClick(selectedGame())}
+        >
           <Virtualizer
             data={groupArrayElements(props.games, columns())}
             overscan={1}
@@ -58,7 +65,7 @@ const GameGrid = (props: GameGridProps) => {
                     <>
                       <GameCard
                         game={game}
-                        onClick={() => props.onGameClick(game)}
+                        onClick={() => handleGameClick(game)}
                         onContextMenu={() => setSelectedGame(game)}
                       />
                       {/* Fill empty spots in the last row with divs */}

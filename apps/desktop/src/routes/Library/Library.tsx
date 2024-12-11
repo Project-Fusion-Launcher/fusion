@@ -11,13 +11,14 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { RefreshCcw } from "lucide-solid";
 import InstallDialog from "../../components/InstallDialog";
-import { type Game } from "../../models/types";
+import {
+  type GameFilters,
+  type GameFiltersStatus,
+  type Game,
+} from "../../models/types";
 import GameGrid from "./GameGrid";
 import { AppContext } from "../../State";
-import type {
-  GameFiltersPayload,
-  GameFiltersStatus,
-} from "../../models/payloads";
+import type {} from "../../models/payloads";
 import { createStore } from "solid-js/store";
 
 interface StatusFilterButtonProps {
@@ -58,30 +59,19 @@ const Library = () => {
   const [isDialogOpen, setIsDialogOpen] = createSignal(false);
   const [selectedGame, setSelectedGame] = createSignal<Game | null>(null);
 
-  const [filters, setFilters] = createStore<GameFiltersPayload>({
+  const [currentGameStatus, setCurrentGameStatus] =
+    createSignal<GameFiltersStatus>("all");
+
+  const [filters, setFilters] = createStore<GameFilters>({
     query: "",
-    status: "all",
   });
 
   createRenderEffect(() => {
     getGames(false);
   });
 
-  function handleNewGames(newGames: Game[]) {
-    setState("games", newGames);
-    if (filters.status === "all") {
-      setState("total", newGames.length);
-      setState(
-        "installed",
-        newGames.filter((g) => g.status === "installed").length,
-      );
-    }
-  }
-
   function getGames(refetch: boolean) {
-    invoke<Game[]>("get_games", { refetch, filters: filters }).then(
-      handleNewGames,
-    );
+    state.getGames(refetch, filters);
   }
 
   function handleGameClick(game: Game) {
@@ -105,11 +95,6 @@ const Library = () => {
     getGames(false);
   }
 
-  function handleStatusChange(status: GameFiltersStatus) {
-    setFilters("status", status);
-    getGames(false);
-  }
-
   onCleanup(() => {
     setState("games", []);
   });
@@ -124,21 +109,21 @@ const Library = () => {
       <div class="mb-16 h-28 px-40">
         <div class="flex h-full w-min items-center gap-40">
           <StatusFilterButton
-            selectedStatus={filters.status}
+            selectedStatus={currentGameStatus()}
             status="all"
-            onClick={handleStatusChange}
+            onClick={setCurrentGameStatus}
             number={state.total}
           />
           <StatusFilterButton
-            selectedStatus={filters.status}
+            selectedStatus={currentGameStatus()}
             status="installed"
-            onClick={handleStatusChange}
+            onClick={setCurrentGameStatus}
             number={state.installed}
           />
           <StatusFilterButton
-            selectedStatus={filters.status}
+            selectedStatus={currentGameStatus()}
             status="notInstalled"
-            onClick={handleStatusChange}
+            onClick={setCurrentGameStatus}
             number={state.total - state.installed}
           />
           <Button variant="outline" onClick={() => getGames(true)}>
@@ -146,7 +131,14 @@ const Library = () => {
           </Button>
         </div>
       </div>
-      <GameGrid games={state.games} onGameClick={handleGameClick} />
+      <GameGrid
+        games={state.games.filter(
+          (game) =>
+            game.status === currentGameStatus() ||
+            currentGameStatus() === "all",
+        )}
+        onGameClick={handleGameClick}
+      />
       <InstallDialog
         selectedGame={selectedGame()}
         open={isDialogOpen()}

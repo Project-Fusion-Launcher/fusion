@@ -35,7 +35,7 @@ pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
                 status: GameStatus::NotInstalled,
                 favorite: false,
                 hidden: false,
-                cover_url: key.game.cover_url,
+                cover_url: key.game.still_cover_url.or(key.game.cover_url),
                 sort_title: Some(key.game.title.to_lowercase()),
             }
         }));

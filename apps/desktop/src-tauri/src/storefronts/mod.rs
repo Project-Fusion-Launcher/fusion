@@ -220,3 +220,15 @@ pub async fn uninstall_game(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn hide_game(game_id: String, game_source: GameSource) -> Result<(), String> {
+    let mut connection = database::create_connection()?;
+
+    let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
+
+    game.hidden = true;
+    game.update(&mut connection)?;
+
+    Ok(())
+}

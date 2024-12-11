@@ -19,15 +19,4 @@ pub struct GameUninstalledPayload {
 #[serde(rename_all = "camelCase")]
 pub struct GameFiltersPayload {
     pub query: Option<String>,
-    #[serde(default)]
-    pub status: GameFiltersStatus,
-}
-
-#[derive(Deserialize, Clone, Debug, Default)]
-#[serde(rename_all = "camelCase")]
-pub enum GameFiltersStatus {
-    #[default]
-    All,
-    Installed,
-    NotInstalled,
 }

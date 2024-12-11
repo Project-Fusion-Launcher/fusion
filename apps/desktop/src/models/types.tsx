@@ -12,3 +12,9 @@ export interface Game {
 
 export type GameStatus = "installed" | "notInstalled";
 export type GameSource = "legacyGames" | "itchio";
+
+export interface GameFilters {
+  query?: string;
+}
+
+export type GameFiltersStatus = "all" | GameStatus;

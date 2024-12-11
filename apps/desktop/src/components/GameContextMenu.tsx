@@ -1,5 +1,5 @@
 import { ContextMenu } from "@kobalte/core/context-menu";
-import { Match, Show, Switch, type JSX } from "solid-js";
+import { Match, Show, Switch, useContext, type JSX } from "solid-js";
 import type { Game } from "../models/types";
 import {
   ArrowDownToLine,
@@ -22,19 +22,28 @@ import {
   ContextMenuSubTrigger,
 } from "@repo/ui";
 import { invoke } from "@tauri-apps/api/core";
+import { AppContext } from "../State";
 
 interface GameContextMenuProps {
   game: Game | null;
   children: JSX.Element;
+  onMainAction?: () => void;
 }
 
 const GameContextMenu = (props: GameContextMenuProps) => {
+  const { state } = useContext(AppContext);
+
   function handleUninstall() {
     if (props.game === null) return;
     invoke("uninstall_game", {
       gameId: props.game.id,
       gameSource: props.game.source,
     });
+  }
+
+  function handleHide() {
+    if (props.game === null) return;
+    state.hideGame(props.game);
   }
 
   return (
@@ -45,13 +54,16 @@ const GameContextMenu = (props: GameContextMenuProps) => {
           <ContextMenuContent>
             <Switch>
               <Match when={props.game?.status === "installed"}>
-                <ContextMenuItem variant="accent">
+                <ContextMenuItem variant="accent" onSelect={props.onMainAction}>
                   <Play class="size-16" />
                   PLAY
                 </ContextMenuItem>
               </Match>
               <Match when={props.game?.status === "notInstalled"}>
-                <ContextMenuItem variant="primary">
+                <ContextMenuItem
+                  variant="primary"
+                  onSelect={props.onMainAction}
+                >
                   <ArrowDownToLine class="size-16" />
                   INSTALL
                 </ContextMenuItem>
@@ -77,18 +89,20 @@ const GameContextMenu = (props: GameContextMenuProps) => {
               </ContextMenuSubTrigger>
               <ContextMenu.Portal>
                 <ContextMenuSubContent>
-                  <ContextMenuItem>
-                    <Switch>
-                      <Match when={props.game?.hidden}>
+                  <Switch>
+                    <Match when={props.game?.hidden}>
+                      <ContextMenuItem>
                         <Eye class="size-16" />
                         Unhide game
-                      </Match>
-                      <Match when={!props.game?.hidden}>
+                      </ContextMenuItem>
+                    </Match>
+                    <Match when={!props.game?.hidden}>
+                      <ContextMenuItem onSelect={handleHide}>
                         <EyeOff class="size-16" />
                         Hide game
-                      </Match>
-                    </Switch>
-                  </ContextMenuItem>
+                      </ContextMenuItem>
+                    </Match>
+                  </Switch>
                   <Show when={props.game?.status === "installed"}>
                     <ContextMenuItem>
                       <Folder class="size-16" />

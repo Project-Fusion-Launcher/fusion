@@ -5,7 +5,7 @@ use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use serde::{Deserialize, Serialize};
 
-use super::payloads::{GameFiltersPayload, GameFiltersStatus};
+use super::payloads::GameFiltersPayload;
 
 #[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug, Serialize)]
 #[diesel(table_name = crate::schema::games)]
@@ -107,16 +107,6 @@ impl ReducedGame {
         if let Some(filters) = filters {
             if let Some(query) = filters.query {
                 statement = statement.filter(title.like(format!("%{}%", query)));
-            }
-
-            match filters.status {
-                GameFiltersStatus::All => {}
-                GameFiltersStatus::Installed => {
-                    statement = statement.filter(status.eq(GameStatus::Installed));
-                }
-                GameFiltersStatus::NotInstalled => {
-                    statement = statement.filter(status.eq(GameStatus::NotInstalled));
-                }
             }
         }
 

@@ -1,6 +1,6 @@
 import type { JSX } from "solid-js";
 import { createContext, onCleanup } from "solid-js";
-import type { Game } from "./models/types";
+import type { Game, GameFilters } from "./models/types";
 import type { SetStoreFunction } from "solid-js/store";
 import { createStore, produce } from "solid-js/store";
 import { listen } from "@tauri-apps/api/event";
@@ -8,12 +8,15 @@ import type {
   DownloadFinishedPayload,
   GameUninstalledPayload,
 } from "./models/payloads";
+import { invoke } from "@tauri-apps/api/core";
 
 export const AppContext = createContext<{
   state: {
     games: Game[];
     total: number;
     installed: number;
+    hideGame: (game: Game) => void;
+    getGames: (refetch?: boolean, filters?: GameFilters) => void;
   };
   setState: SetStoreFunction<{
     games: Game[];
@@ -25,6 +28,8 @@ export const AppContext = createContext<{
     games: [],
     total: 0,
     installed: 0,
+    hideGame: () => {},
+    getGames: () => {},
   },
   setState: () => {},
 });
@@ -38,9 +43,38 @@ const ContextProvider = (props: StateProps) => {
     games: [] as Game[],
     total: 0,
     installed: 0,
+    hideGame,
+    getGames,
   });
 
+  // Helper function to update the game count of currently active games
+  function refreshGameCount() {
+    setState("total", state.games.length);
+    setState(
+      "installed",
+      state.games.filter((g) => g.status === "installed").length,
+    );
+  }
+
   /* INVOKERS */
+  function getGames(refetch = false, filters?: GameFilters) {
+    invoke<Game[]>("get_games", { refetch, filters }).then((games) => {
+      setState("games", games);
+      refreshGameCount();
+    });
+  }
+
+  function hideGame(game: Game) {
+    invoke<void>("hide_game", {
+      gameId: game.id,
+      gameSource: game.source,
+    }).then(() => {
+      setState("games", (games) =>
+        games.filter((g) => !(g.id === game.id && g.source === game.source)),
+      );
+      refreshGameCount();
+    });
+  }
 
   /* LISTENERS */
   const downloadFinishedUnlisten = listen<DownloadFinishedPayload>(
@@ -49,13 +83,12 @@ const ContextProvider = (props: StateProps) => {
       const payload = event.payload;
       setState(
         "games",
-        (game) =>
-          game.id === payload.gameId && game.source === payload.gameSource,
-        produce((game) => {
-          game.status = "installed";
+        (g) => g.id === payload.gameId && g.source === payload.gameSource,
+        produce((g) => {
+          g.status = "installed";
         }),
       );
-      setState("installed", (installed) => installed + 1);
+      refreshGameCount();
     },
   );
 
@@ -71,7 +104,7 @@ const ContextProvider = (props: StateProps) => {
           game.status = "notInstalled";
         }),
       );
-      setState("installed", (installed) => installed - 1);
+      refreshGameCount();
     },
   );
 
