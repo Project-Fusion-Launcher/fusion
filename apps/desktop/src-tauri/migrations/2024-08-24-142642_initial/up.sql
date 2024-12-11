@@ -18,5 +18,6 @@ CREATE TABLE `games` (
   `favorite` BOOLEAN NOT NULL DEFAULT FALSE,
   `hidden` BOOLEAN NOT NULL DEFAULT FALSE,
   `cover_url` TEXT,
+  `sort_title` TEXT,
   PRIMARY KEY (`id`, `source`)
 );

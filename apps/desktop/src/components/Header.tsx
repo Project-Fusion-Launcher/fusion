@@ -1,14 +1,13 @@
 import { TextField } from "@repo/ui";
 import { Search } from "lucide-solid";
-import { createSignal } from "solid-js";
 
 interface HeaderProps {
   title: string;
+  query?: string;
+  setQuery?: (query: string) => void;
 }
 
 const Header = (props: HeaderProps) => {
-  const [search, setSearch] = createSignal("");
-
   return (
     <div class="px-40 py-44">
       <div class="flex grow items-center gap-40">
@@ -19,8 +18,8 @@ const Header = (props: HeaderProps) => {
           placeholder="Search"
           width="full"
           autocomplete="off"
-          value={search()}
-          onInput={setSearch}
+          value={props.query || ""}
+          onInput={props.setQuery}
           icon={Search}
         />
       </div>

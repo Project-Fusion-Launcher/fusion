@@ -2,13 +2,13 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const variants = tv({
-  base: "flex w-min items-center justify-center rounded",
+  base: "flex w-min items-center justify-center rounded transition-colors",
   variants: {
     variant: {
       primary: "bg-primary text-bg",
       secondary: "bg-secondary text-bg",
       accent: "bg-accent text-primary",
-      outline: "border-border text-secondary border",
+      outline: "outline-border text-secondary outline outline-1",
     },
     size: {
       sm: "h-24 px-[6px] text-sm",

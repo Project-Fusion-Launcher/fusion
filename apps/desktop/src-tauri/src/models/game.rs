@@ -5,6 +5,8 @@ use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use serde::{Deserialize, Serialize};
 
+use super::payloads::{GameFiltersPayload, GameFiltersStatus};
+
 #[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug, Serialize)]
 #[diesel(table_name = crate::schema::games)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
@@ -22,10 +24,11 @@ pub struct Game {
     pub favorite: bool,
     pub hidden: bool,
     pub cover_url: Option<String>,
+    pub sort_title: Option<String>,
 }
 
 impl Game {
-    pub fn select(
+    pub fn select_one(
         connection: &mut SqliteConnection,
         game_source: &GameSource,
         game_id: &str,
@@ -90,6 +93,37 @@ pub struct ReducedGame {
     pub favorite: bool,
     pub hidden: bool,
     pub cover_url: Option<String>,
+}
+
+impl ReducedGame {
+    pub fn select(
+        connection: &mut SqliteConnection,
+        filters: Option<GameFiltersPayload>,
+    ) -> Result<Vec<ReducedGame>> {
+        let mut statement = games.select(ReducedGame::as_select()).into_boxed();
+
+        statement = statement.filter(hidden.eq(false)).order(sort_title.asc());
+
+        if let Some(filters) = filters {
+            if let Some(query) = filters.query {
+                statement = statement.filter(title.like(format!("%{}%", query)));
+            }
+
+            match filters.status {
+                GameFiltersStatus::All => {}
+                GameFiltersStatus::Installed => {
+                    statement = statement.filter(status.eq(GameStatus::Installed));
+                }
+                GameFiltersStatus::NotInstalled => {
+                    statement = statement.filter(status.eq(GameStatus::NotInstalled));
+                }
+            }
+        }
+
+        let results: Vec<ReducedGame> = statement.load(connection).unwrap();
+
+        Ok(results)
+    }
 }
 
 #[derive(Serialize, Clone, Debug)]

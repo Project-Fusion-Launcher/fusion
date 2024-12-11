@@ -128,7 +128,7 @@ pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Res
     let file_path = path.join(file_name);
 
     let mut connection = database::create_connection()?;
-    let mut game = Game::select(&mut connection, &GameSource::LegacyGames, game_id)?;
+    let mut game = Game::select_one(&mut connection, &GameSource::LegacyGames, game_id)?;
 
     println!("Extracting game: {:?}", file_path);
     util::file::extract_file(&file_path, &path).await?;
@@ -171,7 +171,7 @@ fn create_games(products: Vec<Product>, is_giveaway: bool) -> Vec<Game> {
 
                 Game {
                     id: game_id,
-                    title: game.game_name,
+                    title: game.game_name.clone(),
                     source: GameSource::LegacyGames,
                     key: product_id,
                     developer: None,
@@ -182,6 +182,7 @@ fn create_games(products: Vec<Product>, is_giveaway: bool) -> Vec<Game> {
                     favorite: false,
                     hidden: false,
                     cover_url: Some(game.game_coverart),
+                    sort_title: Some(game.game_name.to_lowercase()),
                 }
             })
         })

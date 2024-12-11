@@ -25,7 +25,7 @@ pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
 
             Game {
                 id: key.game.id.to_string(),
-                title: key.game.title,
+                title: key.game.title.clone(),
                 source: GameSource::Itchio,
                 key: Some(key.id.to_string()),
                 developer,
@@ -36,6 +36,7 @@ pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
                 favorite: false,
                 hidden: false,
                 cover_url: key.game.cover_url,
+                sort_title: Some(key.game.title.to_lowercase()),
             }
         }));
 
@@ -142,7 +143,7 @@ pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Res
     let file_path = path.join(file_name);
 
     let mut connection = database::create_connection()?;
-    let mut game = Game::select(&mut connection, &GameSource::Itchio, game_id)?;
+    let mut game = Game::select_one(&mut connection, &GameSource::Itchio, game_id)?;
 
     if file_path.extension().unwrap() == "zip"
         || file_path.extension().unwrap() == "7z"

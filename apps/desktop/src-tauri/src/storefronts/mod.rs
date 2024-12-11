@@ -4,11 +4,9 @@ use crate::{
     models::{
         config::Config,
         game::{Game, GameSource, GameStatus, GameVersion, ReducedGame, VersionDownloadInfo},
-        payloads::GameUninstalledPayload,
+        payloads::{GameFiltersPayload, GameUninstalledPayload},
     },
-    schema::games::dsl::games,
 };
-use diesel::{QueryDsl, RunQueryDsl, SelectableHelper};
 use std::sync::RwLock;
 use tauri::{AppHandle, Emitter, State};
 use tokio::task::JoinSet;
@@ -20,6 +18,7 @@ pub mod legacygames;
 pub async fn get_games(
     config: State<'_, RwLock<Config>>,
     refetch: bool,
+    filters: Option<GameFiltersPayload>,
 ) -> Result<Vec<ReducedGame>, String> {
     let mut connection = database::create_connection()?;
 
@@ -57,11 +56,7 @@ pub async fn get_games(
 
     Game::refresh_installed(&mut connection)?;
 
-    let results: Vec<ReducedGame> = games
-        .select(ReducedGame::as_select())
-        .load(&mut connection)
-        .unwrap();
-
+    let results = ReducedGame::select(&mut connection, filters)?;
     Ok(results)
 }
 
@@ -73,7 +68,8 @@ pub async fn fetch_game_versions(
 ) -> Result<Vec<GameVersion>, String> {
     let mut connection = database::create_connection().map_err(|e| e.to_string())?;
 
-    let game = Game::select(&mut connection, &game_source, &game_id).map_err(|e| e.to_string())?;
+    let game =
+        Game::select_one(&mut connection, &game_source, &game_id).map_err(|e| e.to_string())?;
 
     match game_source {
         GameSource::Itchio => {
@@ -107,7 +103,7 @@ pub async fn fetch_version_info(
 ) -> Result<VersionDownloadInfo, String> {
     let mut connection = database::create_connection()?;
 
-    let game = Game::select(&mut connection, &game_source, &game_id)?;
+    let game = Game::select_one(&mut connection, &game_source, &game_id)?;
 
     match game_source {
         GameSource::Itchio => {
@@ -135,7 +131,7 @@ pub async fn download_game(
 ) -> Result<(), String> {
     let mut connection = database::create_connection()?;
 
-    let mut game = Game::select(&mut connection, &game_source, &game_id)?;
+    let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
 
     let complete_install_location = download_options
         .install_location
@@ -175,7 +171,7 @@ pub async fn download_game(
 pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(), String> {
     let mut connection = database::create_connection()?;
 
-    let game = Game::select(&mut connection, &game_source, &game_id)?;
+    let game = Game::select_one(&mut connection, &game_source, &game_id)?;
 
     match game_source {
         GameSource::Itchio => {
@@ -197,7 +193,7 @@ pub async fn uninstall_game(
 ) -> Result<(), String> {
     let mut connection = database::create_connection()?;
 
-    let mut game = Game::select(&mut connection, &game_source, &game_id)?;
+    let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
 
     match game_source {
         GameSource::Itchio => {

@@ -5,7 +5,7 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const variants = tv({
-  base: "flex items-center justify-center rounded",
+  base: "relative flex items-center justify-center rounded",
   variants: {
     variant: {
       primary: "bg-primary text-bg",
