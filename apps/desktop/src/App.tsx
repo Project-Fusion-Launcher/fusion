@@ -6,9 +6,10 @@ import { createSignal } from "solid-js";
 import { createEffect } from "solid-js";
 import { WindowEventListener } from "@solid-primitives/event-listener";
 import ContextProvider from "./State";
+import { pages } from "./models/pages";
 
 const App = (props: RouteSectionProps) => {
-  const [currentTab, setCurrentTab] = createSignal("library");
+  const [currentTab, setCurrentTab] = createSignal(pages[0].name);
 
   const navigate = useNavigate();
   const location = useLocation();

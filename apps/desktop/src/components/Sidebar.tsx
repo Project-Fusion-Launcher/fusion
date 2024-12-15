@@ -1,23 +1,13 @@
 import { Tabs } from "@kobalte/core";
 import { Separator } from "@repo/ui";
-import { Box, Boxes, Joystick, Library, Store, UsersRound } from "lucide-solid";
+import { Box } from "lucide-solid";
 import { For, Show } from "solid-js";
+import { pages } from "../models/pages";
 
 interface SidebarProps {
   currentTab: string;
   onTabChange: (tab: string) => void;
 }
-
-const pagesSection1 = [
-  { name: "library", icon: Library },
-  { name: "retro", icon: Joystick },
-  { name: "collections", icon: Boxes },
-];
-
-const pagesSection2 = [
-  { name: "stores", icon: Store },
-  { name: "friends", icon: UsersRound },
-];
 
 const Sidebar = (props: SidebarProps) => {
   return (
@@ -31,10 +21,10 @@ const Sidebar = (props: SidebarProps) => {
         <Box class="text-primary size-48" style={{ "stroke-width": "2px" }} />
       </div>
       <Tabs.List class="text-secondary relative flex w-full flex-col items-center">
-        <For each={[...pagesSection1, ...pagesSection2]}>
-          {(page, i) => (
+        <For each={pages}>
+          {(page) => (
             <>
-              <Show when={i() === pagesSection1.length}>
+              <Show when={page.name === "storefronts"}>
                 <Separator />
               </Show>
               <Tabs.Trigger
