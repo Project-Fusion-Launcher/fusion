@@ -18,3 +18,15 @@ export interface GameFilters {
 }
 
 export type GameFiltersStatus = "all" | GameStatus;
+
+export interface GameVersion {
+  id: string;
+  gameId: string;
+  source: string;
+  name: string;
+  downloadSize: number;
+}
+
+export interface VersionDownloadInfo {
+  installSize: number;
+}

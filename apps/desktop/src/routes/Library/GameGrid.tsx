@@ -8,27 +8,37 @@ import GameContextMenu from "../../components/GameContextMenu";
 
 interface GameGridProps {
   games: Game[];
-  onGameClick: (game: Game) => void;
+  onMainAction: (game: Game) => void;
 }
 
 const GameGrid = (props: GameGridProps) => {
   const [columns, setColumns] = createSignal(4);
   const [selectedGame, setSelectedGame] = createSignal<Game | null>(null);
 
+  let gameContainerRef: HTMLDivElement;
+
+  // Calculate the initial number of columns
   createEffect(() => {
     calculateColumns();
   });
 
-  let gameContainerRef: HTMLDivElement;
-
+  // Calculate the number of columns based on the container width
   function calculateColumns() {
-    let numColumns = Math.floor(gameContainerRef.clientWidth / (192 + 36));
+    // TODO: allow for custom game sizes
+    // 192px is the width of the game card
+    // 24px is the gap between game cards
+    // 16px is the left padding of the game container minus game gap
+    // 20px is the right padding
+    console.log(gameContainerRef.clientWidth);
+    let numColumns = Math.floor(
+      (gameContainerRef.clientWidth - 16 - 20) / (192 + 24),
+    );
     if (numColumns < 1) numColumns = 1;
     setColumns(numColumns);
   }
 
-  function handleGameClick(game: Game | null) {
-    if (game) props.onGameClick(game);
+  function handleMainAction(game: Game | null) {
+    if (game) props.onMainAction(game);
   }
 
   return (
@@ -44,7 +54,7 @@ const GameGrid = (props: GameGridProps) => {
         */}
         <GameContextMenu
           game={selectedGame()}
-          onMainAction={() => handleGameClick(selectedGame())}
+          onMainAction={() => handleMainAction(selectedGame())}
         >
           <Virtualizer
             data={groupArrayElements(props.games, columns())}
@@ -54,7 +64,6 @@ const GameGrid = (props: GameGridProps) => {
               <div
                 class="game-row flex justify-between gap-24 py-24 pl-40 pr-[20px]"
                 onContextMenu={(e) => {
-                  e.currentTarget.focus();
                   if (e.target.classList.contains("game-row")) {
                     setSelectedGame(null);
                   }
@@ -65,7 +74,7 @@ const GameGrid = (props: GameGridProps) => {
                     <>
                       <GameCard
                         game={game}
-                        onClick={() => handleGameClick(game)}
+                        onClick={() => handleMainAction(game)}
                         onContextMenu={() => setSelectedGame(game)}
                       />
                       {/* Fill empty spots in the last row with divs */}

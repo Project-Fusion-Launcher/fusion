@@ -13,8 +13,8 @@ const GameCard = (props: GameCardProps) => {
   return (
     <Button
       class="w-192 group flex flex-shrink-0 flex-col hover:cursor-pointer"
-      onClick={() => props.onClick()}
-      onContextMenu={() => props.onContextMenu()}
+      onClick={props.onClick}
+      onContextMenu={props.onContextMenu}
     >
       <div class="bg-secondary h-288 group-hover:outline-accent relative w-full overflow-hidden rounded outline-none outline-2 transition-all group-hover:shadow-[0_0_1.5rem_rgba(255,255,255,0.25)]">
         <img

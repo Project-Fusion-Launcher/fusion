@@ -7,7 +7,7 @@ export interface DialogProps {
   children?: JSX.Element;
   defaultOpen?: boolean;
   open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 const Dialog = (props: DialogProps) => {

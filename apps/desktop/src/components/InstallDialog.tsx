@@ -9,75 +9,68 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { Download, Folder, HardDrive, LoaderCircle } from "lucide-solid";
 import { open } from "@tauri-apps/plugin-dialog";
+import type { GameVersion, VersionDownloadInfo } from "../models/types";
 import { type Game } from "../models/types";
 import { bytesToSize } from "../util/string";
 
 interface InstallDialogProps {
   selectedGame: Game | null;
   open: boolean;
-  handleDialogClose: () => void;
-}
-
-interface GameVersion {
-  id: string;
-  gameId: string;
-  source: string;
-  name: string;
-  downloadSize: number;
-}
-
-interface VersionDownloadInfo {
-  installSize: number;
+  onDialogClose: () => void;
 }
 
 const InstallDialog = (props: InstallDialogProps) => {
   const [versions, { refetch: refetchVersions }] =
-    createResource<GameVersion[]>(fetchVersions);
-
+    createResource(fetchVersions);
   const [selectedVersion, setSelectedVersion] =
     createSignal<GameVersion | null>();
+
   const [versionDownloadInfo, { refetch: refetchVersionDownloadInfo }] =
     createResource<VersionDownloadInfo | null>(fetchVersionDownloadInfo);
-  const [installLocation, setInstallLocation] = createSignal<string>(
+
+  const [installLocation, setInstallLocation] = createSignal(
     "C:\\Users\\jorge\\Desktop",
   );
   const [preparingToInstall, setPreparingToInstall] = createSignal(false);
 
+  // Fetch the versions of the selected game
   async function fetchVersions(): Promise<GameVersion[]> {
     if (props.selectedGame === null) return [];
-    const versions = (await invoke("fetch_game_versions", {
+    const versions = await invoke<GameVersion[]>("fetch_game_versions", {
       gameId: props.selectedGame?.id,
       gameSource: props.selectedGame?.source,
-    }).catch(() => [])) as GameVersion[];
+    }).catch(() => []);
     if (versions.length === 1) setSelectedVersion(versions[0]);
     return versions;
   }
 
+  // Fetch the download info of the selected version
   async function fetchVersionDownloadInfo(): Promise<VersionDownloadInfo | null> {
     if (selectedVersion() === null) return null;
-    return (await invoke("fetch_version_info", {
+    return await invoke<VersionDownloadInfo>("fetch_version_info", {
       gameId: props.selectedGame?.id,
       gameSource: props.selectedGame?.source,
       versionId: selectedVersion()?.id,
-    }).catch(() => ({ installSize: 0 }))) as VersionDownloadInfo;
+    }).catch(() => ({ installSize: 0 }));
   }
 
+  // Refetch the versions when the selected game changes
   createEffect(() => {
     if (props.selectedGame) {
-      setSelectedVersion(null);
       refetchVersions();
     }
   });
 
+  // Handle the selection of a version
   function handleVersionSelect(value: string | null) {
-    const version =
-      versions()?.find((version) => version.name === value) || null;
+    const version = versions()?.find((v) => v.name === value) || null;
     setSelectedVersion(version);
     if (version) {
       refetchVersionDownloadInfo();
     }
   }
 
+  // Open a dialog to select the install location
   function handleDirectorySelect() {
     open({
       multiple: false,
@@ -87,8 +80,14 @@ const InstallDialog = (props: InstallDialogProps) => {
     });
   }
 
+  // Handle the installation of the selected game
   function handleInstall() {
-    if (selectedVersion() === null || !installLocation()) return;
+    if (
+      selectedVersion() === null ||
+      !installLocation() ||
+      preparingToInstall()
+    )
+      return;
     setPreparingToInstall(true);
     invoke("download_game", {
       gameId: props.selectedGame?.id,
@@ -97,26 +96,37 @@ const InstallDialog = (props: InstallDialogProps) => {
       downloadOptions: {
         installLocation: installLocation(),
       },
-      // eslint-disable-next-line solid/reactivity
     }).then(() => {
-      props.handleDialogClose();
+      handleDialogClose();
       setPreparingToInstall(false);
     });
   }
 
+  // Handle the closing of the dialog
+  function handleDialogClose() {
+    setSelectedVersion(null);
+    props.onDialogClose();
+  }
+
+  /* HELPER FUNCTIONS */
+
+  // Get the mapped version names
   function getMappedVersions() {
     return versions()?.map((version) => version.name) || [];
   }
 
+  // Get the placeholder for the version select
+  function getPlaceholder() {
+    if (versions.loading) return "Fetching versions";
+    if ((versions()?.length || 0) === 0) return "No versions available";
+    return "Select a version";
+  }
+
   return (
     <Dialog
-      title={
-        "Install" +
-        (props.selectedGame ? ` ${props.selectedGame?.title}` : "Game")
-      }
-      defaultOpen
+      title={"Install" + props.selectedGame?.title}
       open={props.open}
-      onOpenChange={props.handleDialogClose}
+      onOpenChange={handleDialogClose}
     >
       <div class="mb-40 flex min-w-[300px] gap-40">
         <div class="w-192 h-288 border-border flex flex-shrink-0 overflow-hidden rounded border">
@@ -128,13 +138,7 @@ const InstallDialog = (props: InstallDialogProps) => {
         <div class="flex w-full flex-col gap-20">
           <Select
             variant="outline"
-            placeholder={
-              versions.loading
-                ? "Fetching versions"
-                : (versions()?.length || 0) === 0
-                  ? "No versions available"
-                  : "Select a version"
-            }
+            placeholder={getPlaceholder()}
             loading={versions.loading}
             options={getMappedVersions()}
             label="Version to install"
@@ -154,7 +158,6 @@ const InstallDialog = (props: InstallDialogProps) => {
               <Folder class="size-16" />
             </IconButton>
           </div>
-
           <table
             class="text-secondary flex-cole text-md flex"
             classList={{ "opacity-0": !selectedVersion() }}
@@ -197,7 +200,7 @@ const InstallDialog = (props: InstallDialogProps) => {
         </Button>
         <Button
           variant="outline"
-          onClick={props.handleDialogClose}
+          onClick={handleDialogClose}
           disabled={preparingToInstall()}
         >
           Cancel

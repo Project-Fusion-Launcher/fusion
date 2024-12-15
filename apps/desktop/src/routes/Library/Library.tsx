@@ -18,7 +18,6 @@ import {
 } from "../../models/types";
 import GameGrid from "./GameGrid";
 import { AppContext } from "../../State";
-import type {} from "../../models/payloads";
 import { createStore } from "solid-js/store";
 
 interface StatusFilterButtonProps {
@@ -66,15 +65,24 @@ const Library = () => {
     query: "",
   });
 
+  // Fetch the games on component mount
   createRenderEffect(() => {
     getGames(false);
   });
 
+  // Clear the games on component unmount as there's no point
+  // in keeping them in memory
+  onCleanup(() => {
+    setState("games", []);
+  });
+
+  // Fetch the games from the backend
   function getGames(refetch: boolean) {
     state.getGames(refetch, filters);
   }
 
-  function handleGameClick(game: Game) {
+  // Handle the main action button click event (launch or install)
+  function handleMainAction(game: Game) {
     if (game.status === "installed") {
       invoke("launch_game", { gameId: game.id, gameSource: game.source });
     } else {
@@ -83,6 +91,7 @@ const Library = () => {
     }
   }
 
+  // Handle the install dialog close event
   function handleDialogClose() {
     setIsDialogOpen(false);
     setTimeout(() => {
@@ -90,14 +99,11 @@ const Library = () => {
     }, 300);
   }
 
+  // Handle the query change event
   function handleQueryChange(query: string) {
     setFilters("query", query);
     getGames(false);
   }
-
-  onCleanup(() => {
-    setState("games", []);
-  });
 
   return (
     <>
@@ -137,12 +143,12 @@ const Library = () => {
             game.status === currentGameStatus() ||
             currentGameStatus() === "all",
         )}
-        onGameClick={handleGameClick}
+        onMainAction={handleMainAction}
       />
       <InstallDialog
         selectedGame={selectedGame()}
         open={isDialogOpen()}
-        handleDialogClose={handleDialogClose}
+        onDialogClose={handleDialogClose}
       />
     </>
   );
