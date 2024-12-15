@@ -9,7 +9,7 @@ import ContextProvider from "./State";
 import { pages } from "./models/pages";
 
 const App = (props: RouteSectionProps) => {
-  const [currentTab, setCurrentTab] = createSignal(pages[0].name);
+  const [currentTab, setCurrentTab] = createSignal(pages.library.name);
 
   const navigate = useNavigate();
   const location = useLocation();

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { TextField as KTextField } from "@kobalte/core/text-field";
 import { X } from "lucide-solid";
 import type { Component } from "solid-js";
@@ -84,6 +83,7 @@ const TextField = (props: TextFieldProps) => {
       >
         <Dynamic
           component={props.icon}
+          // @ts-ignore
           class={iconVariants({ size: props.size })}
         />
         <KTextField.Input
