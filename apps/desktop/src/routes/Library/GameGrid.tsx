@@ -29,7 +29,6 @@ const GameGrid = (props: GameGridProps) => {
     // 24px is the gap between game cards
     // 16px is the left padding of the game container minus game gap
     // 20px is the right padding
-    console.log(gameContainerRef.clientWidth);
     let numColumns = Math.floor(
       (gameContainerRef.clientWidth - 16 - 20) / (192 + 24),
     );
