@@ -19,6 +19,7 @@ const variants = tv({
     size: {
       sm: "size-32 flex-shrink-0 [&>*]:size-12",
       md: "size-40 flex-shrink-0 [&>*]:size-16",
+      lg: "size-48 flex-shrink-0 [&>*]:size-20",
     },
   },
   compoundVariants: [{ variant: "ghost", class: "px-0" }],

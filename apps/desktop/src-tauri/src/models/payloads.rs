@@ -3,9 +3,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct DownloadFinishedPayload {
+pub struct DownloadPayload {
     pub game_id: String,
     pub game_source: GameSource,
+    pub game_title: String,
+    pub download_size: u64,
+    pub downloaded: u64,
 }
 
 #[derive(Serialize, Clone, Debug)]

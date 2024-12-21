@@ -109,11 +109,11 @@ pub async fn fetch_version_info(
         GameSource::Itchio => {
             let itchio_api_key = config.read().unwrap().itchio_api_key();
             if let Some(api_key) = itchio_api_key {
-                return Ok(itchio::fetch_release_info(&api_key, &version_id, game).await?);
+                return Ok(itchio::fetch_version_info(&api_key, &version_id, game).await?);
             }
         }
         GameSource::LegacyGames => {
-            return Ok(legacygames::fetch_release_info());
+            return Ok(legacygames::fetch_version_info());
         }
     }
 
@@ -135,7 +135,7 @@ pub async fn download_game(
 
     let complete_install_location = download_options
         .install_location
-        .join(game.title.replace(":", " -"));
+        .join(game.title.replace(" :", " -").replace(":", " -"));
 
     game.path = Some(complete_install_location.to_string_lossy().to_string());
     download_options.install_location = complete_install_location;

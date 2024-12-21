@@ -22,11 +22,19 @@ export type GameFiltersStatus = "all" | GameStatus;
 export interface GameVersion {
   id: string;
   gameId: string;
-  source: string;
+  source: GameSource;
   name: string;
   downloadSize: number;
 }
 
 export interface VersionDownloadInfo {
   installSize: number;
+}
+
+export interface DownloadItem {
+  gameId: string;
+  gameSource: GameSource;
+  gameTitle: string;
+  downloadSize: number;
+  downloaded: number;
 }

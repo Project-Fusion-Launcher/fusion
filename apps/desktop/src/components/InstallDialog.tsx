@@ -124,7 +124,7 @@ const InstallDialog = (props: InstallDialogProps) => {
 
   return (
     <Dialog
-      title={"Install" + props.selectedGame?.title}
+      title={"Install " + props.selectedGame?.title}
       open={props.open}
       onOpenChange={handleDialogClose}
     >
@@ -155,11 +155,11 @@ const InstallDialog = (props: InstallDialogProps) => {
               placeholder="C:\Users\jorge\Desktop"
             />
             <IconButton variant="outline" onClick={handleDirectorySelect}>
-              <Folder class="size-16" />
+              <Folder />
             </IconButton>
           </div>
           <table
-            class="text-secondary flex-cole text-md flex"
+            class="text-secondary flex-cole flex text-base"
             classList={{ "opacity-0": !selectedVersion() }}
           >
             <tbody>

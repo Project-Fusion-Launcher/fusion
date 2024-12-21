@@ -81,7 +81,7 @@ pub async fn fetch_game_versions(
     }])
 }
 
-pub fn fetch_release_info() -> VersionDownloadInfo {
+pub fn fetch_version_info() -> VersionDownloadInfo {
     // There is no way to fetch the installed size that I know.
     // The game_installed_size in the API's resonse is actually the download size.
     VersionDownloadInfo { install_size: 0 }
@@ -112,6 +112,15 @@ pub async fn pre_download(
         .get(ETAG)
         .map(|header| header.to_str().unwrap().trim_matches('"').to_string());
 
+    let size = match game.key {
+        Some(ref key) => {
+            client
+                .fetch_wp_installer_size(key.parse()?, &game.id)
+                .await?
+        }
+        None => client.fetch_giveaway_installer_size(&game.id).await?,
+    };
+
     game.version = Some(game.id.clone());
 
     Ok(Download {
@@ -120,7 +129,9 @@ pub async fn pre_download(
         download_options,
         game_source: GameSource::LegacyGames,
         game_id: game.id.clone(),
+        game_title: game.title.clone(),
         md5,
+        download_size: size as u64,
     })
 }
 

@@ -1,18 +1,17 @@
 import type { JSX } from "solid-js";
 import { createContext, onCleanup } from "solid-js";
-import type { Game, GameFilters } from "./models/types";
+import type { DownloadItem, Game, GameFilters } from "./models/types";
 import type { SetStoreFunction } from "solid-js/store";
 import { createStore, produce } from "solid-js/store";
 import { listen } from "@tauri-apps/api/event";
-import type {
-  DownloadFinishedPayload,
-  GameUninstalledPayload,
-} from "./models/payloads";
+import type { GameUninstalledPayload } from "./models/payloads";
 import { invoke } from "@tauri-apps/api/core";
 
 export const AppContext = createContext<{
   state: {
     games: Game[];
+    downloadQueue: DownloadItem[];
+    downloadCompleted: DownloadItem[];
     total: number;
     installed: number;
     hideGame: (game: Game) => void;
@@ -20,12 +19,16 @@ export const AppContext = createContext<{
   };
   setState: SetStoreFunction<{
     games: Game[];
+    downloadQueue: DownloadItem[];
+    downloadCompleted: DownloadItem[];
     total: number;
     installed: number;
   }>;
 }>({
   state: {
     games: [],
+    downloadQueue: [],
+    downloadCompleted: [],
     total: 0,
     installed: 0,
     hideGame: () => {},
@@ -41,6 +44,8 @@ interface StateProps {
 const ContextProvider = (props: StateProps) => {
   const [state, setState] = createStore({
     games: [] as Game[],
+    downloadQueue: [] as DownloadItem[],
+    downloadCompleted: [] as DownloadItem[],
     total: 0,
     installed: 0,
     hideGame,
@@ -77,10 +82,43 @@ const ContextProvider = (props: StateProps) => {
   }
 
   /* LISTENERS */
-  const downloadFinishedUnlisten = listen<DownloadFinishedPayload>(
+  const downloadQueuedUnlisten = listen<DownloadItem>(
+    "download-queued",
+    (event) => {
+      const payload = event.payload;
+      setState("downloadQueue", state.downloadQueue.length, payload);
+    },
+  );
+
+  const downloadProgressUnlisten = listen<DownloadItem>(
+    "download-progress",
+    (event) => {
+      const payload = event.payload;
+      setState(
+        "downloadQueue",
+        (i) =>
+          i.gameId === payload.gameId && i.gameSource === payload.gameSource,
+        produce((i) => {
+          i.downloaded = payload.downloaded;
+        }),
+      );
+    },
+  );
+
+  const downloadFinishedUnlisten = listen<DownloadItem>(
     "download-finished",
     (event) => {
       const payload = event.payload;
+      setState("downloadQueue", (items) =>
+        items.filter(
+          (i) =>
+            !(
+              i.gameId === payload.gameId && i.gameSource === payload.gameSource
+            ),
+        ),
+      );
+      setState("downloadCompleted", state.downloadCompleted.length, payload);
+
       setState(
         "games",
         (g) => g.id === payload.gameId && g.source === payload.gameSource,
@@ -110,6 +148,8 @@ const ContextProvider = (props: StateProps) => {
 
   onCleanup(() => {
     // This component should never unmount, but unlisten just in case
+    downloadQueuedUnlisten.then((u) => u());
+    downloadProgressUnlisten.then((u) => u());
     downloadFinishedUnlisten.then((u) => u());
     gameUninstalledUnlisten.then((u) => u());
   });

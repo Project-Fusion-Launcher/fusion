@@ -75,7 +75,7 @@ pub async fn fetch_game_versions(
     Ok(game_versions)
 }
 
-pub async fn fetch_release_info(
+pub async fn fetch_version_info(
     api_key: &str,
     upload_id: &str,
     game: Game,
@@ -135,7 +135,9 @@ pub async fn pre_download(
         download_options,
         game_source: GameSource::Itchio,
         game_id: game.id.clone(),
+        game_title: game.title.clone(),
         md5: upload.md5_hash,
+        download_size: upload.size.unwrap_or(0) as u64,
     })
 }
 

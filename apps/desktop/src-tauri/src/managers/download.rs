@@ -1,5 +1,5 @@
 use crate::{
-    models::{game::GameSource, payloads::DownloadFinishedPayload},
+    models::{game::GameSource, payloads::DownloadPayload},
     storefronts::{itchio, legacygames},
     APP,
 };
@@ -8,14 +8,18 @@ use serde::Deserialize;
 use std::{
     collections::VecDeque,
     path::PathBuf,
-    sync::{Arc, Mutex},
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc, Mutex,
+    },
+    time::Duration,
 };
 use tauri::Emitter;
 use tokio::{
     fs::{self, OpenOptions},
     io::AsyncWriteExt,
     sync::{mpsc, Notify},
-    task,
+    task, time,
 };
 
 pub struct Download {
@@ -23,8 +27,10 @@ pub struct Download {
     pub file_name: String,
     pub game_source: GameSource,
     pub game_id: String,
-    pub download_options: DownloadOptions,
+    pub game_title: String,
     pub md5: Option<String>,
+    pub download_size: u64,
+    pub download_options: DownloadOptions,
 }
 
 #[derive(Deserialize)]
@@ -50,7 +56,18 @@ impl DownloadManager {
     }
 
     pub fn enqueue_download(&self, download: Download) {
+        let payload = DownloadPayload {
+            game_id: download.game_id.clone(),
+            game_source: download.game_source.clone(),
+            game_title: download.game_title.clone(),
+            download_size: download.download_size,
+            downloaded: 0,
+        };
+
         self.queue.lock().unwrap().push_back(download);
+
+        APP.get().unwrap().emit("download-queued", payload).unwrap();
+
         self.queue_notifier.notify_one();
     }
 
@@ -71,6 +88,14 @@ impl DownloadManager {
                     let game_id = download.game_id.clone();
                     let game_source = download.game_source.clone();
 
+                    let payload = DownloadPayload {
+                        game_id: game_id.clone(),
+                        game_source: game_source.clone(),
+                        game_title: download.game_title.clone(),
+                        download_size: download.download_size,
+                        downloaded: download.download_size,
+                    };
+
                     Self::download(download).await;
 
                     let result = match game_source {
@@ -87,13 +112,7 @@ impl DownloadManager {
                     }
                     APP.get()
                         .unwrap()
-                        .emit(
-                            "download-finished",
-                            DownloadFinishedPayload {
-                                game_id,
-                                game_source,
-                            },
-                        )
+                        .emit("download-finished", payload)
                         .unwrap();
                 } else {
                     println!("Waiting for downloads...");
@@ -136,9 +155,35 @@ impl DownloadManager {
             .unwrap();
 
         let md5_exists = download.md5.is_some();
+        let total_written = Arc::new(AtomicU64::new(0));
+        let total_written_clone = total_written.clone();
+
+        let progress_reporter = task::spawn(async move {
+            let mut interval = time::interval(Duration::from_secs(1));
+            let app_handle = APP.get().unwrap();
+            loop {
+                interval.tick().await;
+                let written = total_written.load(Ordering::Relaxed);
+                println!("Downloaded: {}", written);
+                app_handle
+                    .emit(
+                        "download-progress",
+                        DownloadPayload {
+                            game_id: download.game_id.clone(),
+                            game_source: download.game_source.clone(),
+                            game_title: download.game_title.clone(),
+                            download_size: download.download_size,
+                            downloaded: written,
+                        },
+                    )
+                    .unwrap();
+            }
+        });
+
         let writer = task::spawn(async move {
             while let Some(chunk) = writer_rx.recv().await {
                 file.write_all(&chunk).await.unwrap();
+                total_written_clone.fetch_add(chunk.len() as u64, Ordering::Relaxed);
                 if md5_exists {
                     verifier_tx.send(chunk).await.unwrap();
                 }
@@ -155,6 +200,8 @@ impl DownloadManager {
 
         downloader.await.unwrap();
         writer.await.unwrap();
+
+        progress_reporter.abort();
 
         if let Some(md5) = download.md5 {
             let result = verifier.await.unwrap();
