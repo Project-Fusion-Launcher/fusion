@@ -297,7 +297,7 @@ pub enum GameType {
     Html,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum UploadStorage {
     Hosted,

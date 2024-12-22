@@ -85,12 +85,10 @@ impl DownloadManager {
                 if let Some(download) = download {
                     let path = download.download_options.install_location.clone();
                     let file_name = download.file_name.clone();
-                    let game_id = download.game_id.clone();
-                    let game_source = download.game_source.clone();
 
                     let payload = DownloadPayload {
-                        game_id: game_id.clone(),
-                        game_source: game_source.clone(),
+                        game_id: download.game_id.clone(),
+                        game_source: download.game_source.clone(),
                         game_title: download.game_title.clone(),
                         download_size: download.download_size,
                         downloaded: download.download_size,
@@ -98,22 +96,28 @@ impl DownloadManager {
 
                     Self::download(download).await;
 
-                    let result = match game_source {
+                    APP.get()
+                        .unwrap()
+                        .emit("download-finished", &payload)
+                        .unwrap();
+
+                    let result = match payload.game_source {
                         GameSource::Itchio => {
-                            itchio::post_download(&game_id, path, &file_name).await
+                            itchio::post_download(&payload.game_id, path, &file_name).await
                         }
                         GameSource::LegacyGames => {
-                            legacygames::post_download(&game_id, path, &file_name).await
+                            legacygames::post_download(&payload.game_id, path, &file_name).await
                         }
                     };
+
+                    APP.get()
+                        .unwrap()
+                        .emit("download-installed", &payload)
+                        .unwrap();
 
                     if let Err(e) = result {
                         println!("Error post-download: {}", e);
                     }
-                    APP.get()
-                        .unwrap()
-                        .emit("download-finished", payload)
-                        .unwrap();
                 } else {
                     println!("Waiting for downloads...");
                     queue_notifier.notified().await;

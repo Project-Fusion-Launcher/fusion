@@ -78,6 +78,7 @@ pub async fn fetch_game_versions(
         source: GameSource::LegacyGames,
         name: game.title,
         download_size: size,
+        external: false,
     }])
 }
 

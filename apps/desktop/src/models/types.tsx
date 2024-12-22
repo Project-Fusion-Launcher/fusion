@@ -25,6 +25,7 @@ export interface GameVersion {
   source: GameSource;
   name: string;
   downloadSize: number;
+  external: boolean;
 }
 
 export interface VersionDownloadInfo {

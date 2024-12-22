@@ -144,7 +144,13 @@ pub async fn download_game(
         GameSource::Itchio => {
             let itchio_api_key = config.read().unwrap().itchio_api_key();
             if let Some(api_key) = itchio_api_key {
-                itchio::pre_download(&api_key, &version_id, &mut game, download_options).await?
+                if let Some(download) =
+                    itchio::pre_download(&api_key, &version_id, &mut game, download_options).await?
+                {
+                    download
+                } else {
+                    return Ok(());
+                }
             } else {
                 return Err("Missing itch.io API key".to_string());
             }

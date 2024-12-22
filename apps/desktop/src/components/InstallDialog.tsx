@@ -65,7 +65,7 @@ const InstallDialog = (props: InstallDialogProps) => {
   function handleVersionSelect(value: string | null) {
     const version = versions()?.find((v) => v.name === value) || null;
     setSelectedVersion(version);
-    if (version) {
+    if (version && !version.external) {
       refetchVersionDownloadInfo();
     }
   }
@@ -167,7 +167,11 @@ const InstallDialog = (props: InstallDialogProps) => {
                 <td class="flex items-center gap-8 pr-16 font-light">
                   <Download class="size-16" /> Download size:
                 </td>
-                <td>{bytesToSize(selectedVersion()?.downloadSize)}</td>
+                <td>
+                  {selectedVersion()?.external
+                    ? "Unknown"
+                    : bytesToSize(selectedVersion()?.downloadSize)}
+                </td>
               </tr>
               <tr>
                 <td class="flex items-center gap-8 pr-16 font-light">
@@ -176,6 +180,7 @@ const InstallDialog = (props: InstallDialogProps) => {
                 </td>
                 <td>
                   <Switch>
+                    <Match when={selectedVersion()?.external}>Unknown</Match>
                     <Match when={versionDownloadInfo.loading}>
                       <LoaderCircle class="size-16 animate-spin" />
                     </Match>

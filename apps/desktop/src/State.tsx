@@ -11,6 +11,7 @@ export const AppContext = createContext<{
   state: {
     games: Game[];
     downloadQueue: DownloadItem[];
+    externalDownloads: DownloadItem[];
     completedDownloads: DownloadItem[];
     total: number;
     installed: number;
@@ -20,6 +21,7 @@ export const AppContext = createContext<{
   setState: SetStoreFunction<{
     games: Game[];
     downloadQueue: DownloadItem[];
+    externalDownloads: DownloadItem[];
     completedDownloads: DownloadItem[];
     total: number;
     installed: number;
@@ -28,6 +30,7 @@ export const AppContext = createContext<{
   state: {
     games: [],
     downloadQueue: [],
+    externalDownloads: [],
     completedDownloads: [],
     total: 0,
     installed: 0,
@@ -45,6 +48,7 @@ const ContextProvider = (props: StateProps) => {
   const [state, setState] = createStore({
     games: [] as Game[],
     downloadQueue: [] as DownloadItem[],
+    externalDownloads: [] as DownloadItem[],
     completedDownloads: [] as DownloadItem[],
     total: 0,
     installed: 0,
@@ -90,6 +94,14 @@ const ContextProvider = (props: StateProps) => {
     },
   );
 
+  const downloadExternalUnlisten = listen<DownloadItem>(
+    "download-external",
+    (event) => {
+      const payload = event.payload;
+      setState("externalDownloads", state.externalDownloads.length, payload);
+    },
+  );
+
   const downloadProgressUnlisten = listen<DownloadItem>(
     "download-progress",
     (event) => {
@@ -109,7 +121,30 @@ const ContextProvider = (props: StateProps) => {
     "download-finished",
     (event) => {
       const payload = event.payload;
+      setState(
+        "downloadQueue",
+        (i) =>
+          i.gameId === payload.gameId && i.gameSource === payload.gameSource,
+        produce((i) => {
+          i.downloaded = payload.downloadSize;
+        }),
+      );
+    },
+  );
+
+  const downloadInstalledUnlisten = listen<DownloadItem>(
+    "download-installed",
+    (event) => {
+      const payload = event.payload;
       setState("downloadQueue", (items) =>
+        items.filter(
+          (i) =>
+            !(
+              i.gameId === payload.gameId && i.gameSource === payload.gameSource
+            ),
+        ),
+      );
+      setState("externalDownloads", (items) =>
         items.filter(
           (i) =>
             !(
@@ -149,8 +184,10 @@ const ContextProvider = (props: StateProps) => {
   onCleanup(() => {
     // This component should never unmount, but unlisten just in case
     downloadQueuedUnlisten.then((u) => u());
+    downloadExternalUnlisten.then((u) => u());
     downloadProgressUnlisten.then((u) => u());
     downloadFinishedUnlisten.then((u) => u());
+    downloadInstalledUnlisten.then((u) => u());
     gameUninstalledUnlisten.then((u) => u());
   });
 

@@ -28,7 +28,7 @@ const Section = (props: SectionProps) => {
         >
           {props.title} <span class="text-secondary">({props.count})</span>
         </span>
-        <Show when={props.title != "Up Next" && props.count > 0}>
+        <Show when={props.title === "Completed" && props.count > 0}>
           <Button variant="ghost" onClick={props.onRemoveAll}>
             <span class="text-secondary font-medium">Remove all</span>
           </Button>
@@ -75,10 +75,17 @@ const Downloads = () => {
       <DownloadDetails item={state.downloadQueue[0]} />
       <div class="h-full overflow-hidden pl-40 pr-[14px] pt-40">
         <div
-          class="flex h-full flex-col gap-40 overflow-y-auto pr-20"
+          class="flex h-full flex-col gap-40 overflow-y-auto pb-40 pr-20"
           style={{ "scrollbar-gutter": "stable" }}
         >
-          <Section title="Up Next" count={state.downloadQueue.length}>
+          <Section
+            title="Up Next"
+            count={
+              state.downloadQueue.length === 0
+                ? 0
+                : state.downloadQueue.length - 1
+            }
+          >
             <Switch>
               <Match when={state.downloadQueue.length === 0}>
                 <Notice>There are no games in the queue.</Notice>
@@ -90,6 +97,17 @@ const Downloads = () => {
               </Match>
             </Switch>
           </Section>
+          <Show when={state.externalDownloads.length > 0}>
+            <Section
+              title="External Downloads"
+              count={state.externalDownloads.length}
+            >
+              <For each={state.externalDownloads}>
+                {(item) => <DownloadItem item={item} />}
+              </For>
+            </Section>
+          </Show>
+
           <Section
             title="Completed"
             count={state.completedDownloads.length}

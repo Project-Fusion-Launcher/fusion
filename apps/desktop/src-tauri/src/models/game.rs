@@ -124,6 +124,7 @@ pub struct GameVersion {
     pub source: GameSource,
     pub name: String,
     pub download_size: u32,
+    pub external: bool,
 }
 
 #[derive(Serialize, Clone, Debug)]

@@ -1,12 +1,16 @@
 use crate::{
     common::{database, result::Result},
     managers::download::{Download, DownloadOptions},
-    models::game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
-    util,
+    models::{
+        game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
+        payloads::DownloadPayload,
+    },
+    util, APP,
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use tauri::{webview::DownloadEvent, Emitter, Manager, Url, WebviewUrl, WebviewWindow};
 use tokio::fs;
-use wrapper_itchio::ItchioClient;
+use wrapper_itchio::{api::models::UploadStorage, ItchioClient};
 
 pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
     let client = ItchioClient::new(api_key);
@@ -69,6 +73,7 @@ pub async fn fetch_game_versions(
             source: GameSource::Itchio,
             name: upload.display_name.unwrap_or(upload.filename),
             download_size: upload.size.unwrap_or(0),
+            external: upload.storage == UploadStorage::External,
         })
         .collect();
 
@@ -113,7 +118,7 @@ pub async fn pre_download(
     upload_id: &str,
     game: &mut Game,
     download_options: DownloadOptions,
-) -> Result<Download> {
+) -> Result<Option<Download>> {
     let client = ItchioClient::new(api_key);
 
     let upload_id: u32 = upload_id.parse()?;
@@ -123,13 +128,26 @@ pub async fn pre_download(
 
     let download_request = client.fetch_upload_download_url(upload_id, game_key);
 
+    if upload.storage == UploadStorage::External {
+        let response = download_request.send().await?;
+        let url = response.url().to_owned();
+        handle_external_download(
+            url,
+            &download_options.install_location,
+            &game.id,
+            &game.title,
+        )
+        .await?;
+        return Ok(None);
+    }
+
     game.version = upload
         .build
         .as_ref()
         .map(|build| build.version.to_string())
         .or(upload.md5_hash.clone());
 
-    Ok(Download {
+    Ok(Some(Download {
         request: download_request,
         file_name: upload.filename,
         download_options,
@@ -138,14 +156,46 @@ pub async fn pre_download(
         game_title: game.title.clone(),
         md5: upload.md5_hash,
         download_size: upload.size.unwrap_or(0) as u64,
-    })
+    }))
 }
 
 pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
+    process_post_download(game_id, path, file_name).await?;
+
+    Ok(())
+}
+
+async fn post_download_external(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
+    let (size, game) = process_post_download(game_id, path, file_name).await?;
+
+    APP.get()
+        .unwrap()
+        .emit(
+            "download-installed",
+            DownloadPayload {
+                game_id: game.id,
+                game_source: GameSource::Itchio,
+                game_title: game.title,
+                download_size: size,
+                downloaded: size,
+            },
+        )
+        .unwrap();
+
+    Ok(())
+}
+
+async fn process_post_download(
+    game_id: &str,
+    path: PathBuf,
+    file_name: &str,
+) -> Result<(u64, Game)> {
     let file_path = path.join(file_name);
 
     let mut connection = database::create_connection()?;
     let mut game = Game::select_one(&mut connection, &GameSource::Itchio, game_id)?;
+
+    let size = fs::metadata(&file_path).await?.len();
 
     if file_path.extension().unwrap() == "zip"
         || file_path.extension().unwrap() == "7z"
@@ -166,7 +216,7 @@ pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Res
     game.status = GameStatus::Installed;
     game.update(&mut connection).unwrap();
 
-    Ok(())
+    Ok((size, game))
 }
 
 pub fn launch_game(game: Game) -> Result<()> {
@@ -187,5 +237,84 @@ pub async fn uninstall_game(game: &Game) -> Result<()> {
         fs::remove_dir_all(&path).await?;
     }
 
+    Ok(())
+}
+
+pub async fn handle_external_download(
+    url: Url,
+    install_location: &Path,
+    game_id: &str,
+    game_title: &str,
+) -> Result<()> {
+    if APP
+        .get()
+        .unwrap()
+        .get_webview_window("ichio-external")
+        .is_some()
+    {
+        return Err("External download window already open, wait for the download to finish before starting a new one".into());
+    }
+
+    let install_location = install_location.to_path_buf();
+    let game_id = game_id.to_string();
+    let game_title = game_title.to_string();
+    WebviewWindow::builder(
+        APP.get().unwrap(),
+        "itchio-external",
+        WebviewUrl::External(url),
+    )
+    .on_download(move |webview, event| {
+        match event {
+            DownloadEvent::Requested { url, destination } => {
+                webview.window().hide().unwrap();
+                println!("downloading {}", url);
+                *destination = install_location
+                    .clone()
+                    .join(destination.file_name().unwrap());
+
+                APP.get()
+                    .unwrap()
+                    .emit(
+                        "download-external",
+                        DownloadPayload {
+                            game_id: game_id.clone(),
+                            game_source: GameSource::Itchio,
+                            game_title: game_title.clone(),
+                            download_size: 0,
+                            downloaded: 0,
+                        },
+                    )
+                    .unwrap();
+            }
+            DownloadEvent::Finished { url, path, success } => {
+                println!("downloaded {} to {:?}, success: {}", url, path, success);
+
+                let path = path.unwrap();
+                let file_name = path.file_name().unwrap().to_string_lossy().into_owned();
+                let directory = path.parent().unwrap().to_path_buf();
+
+                let game_id = game_id.clone();
+                tokio::spawn(async move {
+                    if let Err(e) = post_download_external(&game_id, directory, &file_name).await {
+                        eprintln!("Failed to post download: {}", e);
+                    }
+                });
+                webview.window().close().unwrap();
+            }
+            _ => (),
+        }
+        // let the download start
+        true
+    })
+    .initialization_script(
+        r#"
+            window.open = function (url, ...args) {
+                window.location.href = url;
+                return null;
+            }
+        "#,
+    )
+    .title("itch.io External Download")
+    .build()?;
     Ok(())
 }

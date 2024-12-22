@@ -22,3 +22,16 @@
 ::-webkit-scrollbar-thumb:hover {
   background: theme(colors.accent.DEFAULT);
 }
+
+.indeterminate {
+  animation: indeterminate-animation 2s linear infinite;
+}
+
+@keyframes indeterminate-animation {
+  0% {
+    transform: translate(-100%, 0);
+  }
+  100% {
+    transform: translate(400%, 0);
+  }
+}
