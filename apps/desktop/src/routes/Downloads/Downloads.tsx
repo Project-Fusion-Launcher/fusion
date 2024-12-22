@@ -7,6 +7,7 @@ import type { GameSource } from "../../models/types";
 import { TransitionGroup } from "solid-transition-group";
 import { Info } from "lucide-solid";
 import { Button } from "@repo/ui";
+import DownloadDetails from "./DownloadDetails";
 
 interface SectionProps {
   title: string;
@@ -56,7 +57,7 @@ const Downloads = () => {
 
   // Handle removing a completed download
   function handleRemoveCompleted(gameId: string, gameSource: GameSource) {
-    setState("downloadCompleted", (items) =>
+    setState("completedDownloads", (items) =>
       items.filter(
         (i) => !(i.gameId === gameId && i.gameSource === gameSource),
       ),
@@ -65,15 +66,13 @@ const Downloads = () => {
 
   // Handle removing all completed downloads
   function handleRemoveCompletedAll() {
-    setState("downloadCompleted", []);
+    setState("completedDownloads", []);
   }
 
   return (
     <>
       <Header title="Downloads" hideSearch />
-      <div class="h-136 min-h-136 border-border text-primary w-full border-b">
-        Details go here
-      </div>
+      <DownloadDetails item={state.downloadQueue[0]} />
       <div class="h-full overflow-hidden pl-40 pr-[14px] pt-40">
         <div
           class="flex h-full flex-col gap-40 overflow-y-auto pr-20"
@@ -84,8 +83,8 @@ const Downloads = () => {
               <Match when={state.downloadQueue.length === 0}>
                 <Notice>There are no games in the queue.</Notice>
               </Match>
-              <Match when={state.downloadQueue.length > 0}>
-                <For each={state.downloadQueue}>
+              <Match when={state.downloadQueue.length > 1}>
+                <For each={state.downloadQueue.slice(1)}>
                   {(item) => <DownloadItem item={item} />}
                 </For>
               </Match>
@@ -93,7 +92,7 @@ const Downloads = () => {
           </Section>
           <Section
             title="Completed"
-            count={state.downloadCompleted.length}
+            count={state.completedDownloads.length}
             onRemoveAll={handleRemoveCompletedAll}
           >
             <TransitionGroup
@@ -110,7 +109,7 @@ const Downloads = () => {
                 a.finished.then(done);
               }}
             >
-              <For each={state.downloadCompleted}>
+              <For each={state.completedDownloads}>
                 {(item) => (
                   <DownloadItem item={item} onRemove={handleRemoveCompleted} />
                 )}

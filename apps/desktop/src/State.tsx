@@ -11,7 +11,7 @@ export const AppContext = createContext<{
   state: {
     games: Game[];
     downloadQueue: DownloadItem[];
-    downloadCompleted: DownloadItem[];
+    completedDownloads: DownloadItem[];
     total: number;
     installed: number;
     hideGame: (game: Game) => void;
@@ -20,7 +20,7 @@ export const AppContext = createContext<{
   setState: SetStoreFunction<{
     games: Game[];
     downloadQueue: DownloadItem[];
-    downloadCompleted: DownloadItem[];
+    completedDownloads: DownloadItem[];
     total: number;
     installed: number;
   }>;
@@ -28,7 +28,7 @@ export const AppContext = createContext<{
   state: {
     games: [],
     downloadQueue: [],
-    downloadCompleted: [],
+    completedDownloads: [],
     total: 0,
     installed: 0,
     hideGame: () => {},
@@ -45,7 +45,7 @@ const ContextProvider = (props: StateProps) => {
   const [state, setState] = createStore({
     games: [] as Game[],
     downloadQueue: [] as DownloadItem[],
-    downloadCompleted: [] as DownloadItem[],
+    completedDownloads: [] as DownloadItem[],
     total: 0,
     installed: 0,
     hideGame,
@@ -117,7 +117,7 @@ const ContextProvider = (props: StateProps) => {
             ),
         ),
       );
-      setState("downloadCompleted", state.downloadCompleted.length, payload);
+      setState("completedDownloads", state.completedDownloads.length, payload);
 
       setState(
         "games",
