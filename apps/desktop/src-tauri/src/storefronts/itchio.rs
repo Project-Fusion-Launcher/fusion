@@ -187,7 +187,17 @@ pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Res
     Ok(())
 }
 
-async fn post_download_external(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
+async fn post_download_external(
+    game_id: &str,
+    path: PathBuf,
+    file_name: &str,
+    success: bool,
+) -> Result<()> {
+    if !success {
+        // TODO: handle download failure
+        return Err("Download failed".into());
+    }
+
     let file_path = path.join(file_name);
     let size = fs::metadata(&file_path).await?.len();
 
@@ -293,7 +303,9 @@ pub async fn handle_external_download(
 
                 let game_id = game_id.clone();
                 tokio::spawn(async move {
-                    if let Err(e) = post_download_external(&game_id, directory, &file_name).await {
+                    if let Err(e) =
+                        post_download_external(&game_id, directory, &file_name, success).await
+                    {
                         eprintln!("Failed to post download: {}", e);
                     }
                 });
