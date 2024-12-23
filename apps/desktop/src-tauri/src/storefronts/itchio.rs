@@ -160,42 +160,10 @@ pub async fn pre_download(
 }
 
 pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
-    process_post_download(game_id, path, file_name).await?;
-
-    Ok(())
-}
-
-async fn post_download_external(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
-    let (size, game) = process_post_download(game_id, path, file_name).await?;
-
-    APP.get()
-        .unwrap()
-        .emit(
-            "download-installed",
-            DownloadPayload {
-                game_id: game.id,
-                game_source: GameSource::Itchio,
-                game_title: game.title,
-                download_size: size,
-                downloaded: size,
-            },
-        )
-        .unwrap();
-
-    Ok(())
-}
-
-async fn process_post_download(
-    game_id: &str,
-    path: PathBuf,
-    file_name: &str,
-) -> Result<(u64, Game)> {
     let file_path = path.join(file_name);
 
     let mut connection = database::create_connection()?;
     let mut game = Game::select_one(&mut connection, &GameSource::Itchio, game_id)?;
-
-    let size = fs::metadata(&file_path).await?.len();
 
     if file_path.extension().unwrap() == "zip"
         || file_path.extension().unwrap() == "7z"
@@ -216,7 +184,37 @@ async fn process_post_download(
     game.status = GameStatus::Installed;
     game.update(&mut connection).unwrap();
 
-    Ok((size, game))
+    Ok(())
+}
+
+async fn post_download_external(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
+    let file_path = path.join(file_name);
+    let size = fs::metadata(&file_path).await?.len();
+
+    let mut connection = database::create_connection()?;
+    let game = Game::select_one(&mut connection, &GameSource::Itchio, game_id)?;
+
+    let payload = DownloadPayload {
+        game_id: game.id,
+        game_source: GameSource::Itchio,
+        game_title: game.title,
+        download_size: size,
+        downloaded: size,
+    };
+
+    APP.get()
+        .unwrap()
+        .emit("download-finished", &payload)
+        .unwrap();
+
+    post_download(game_id, path, file_name).await?;
+
+    APP.get()
+        .unwrap()
+        .emit("download-installed", &payload)
+        .unwrap();
+
+    Ok(())
 }
 
 pub fn launch_game(game: Game) -> Result<()> {
@@ -308,10 +306,20 @@ pub async fn handle_external_download(
     })
     .initialization_script(
         r#"
+            // Override window.open
             window.open = function (url, ...args) {
                 window.location.href = url;
                 return null;
-            }
+            };
+
+            // Intercept links with target="_blank"
+            document.addEventListener('click', function (event) {
+                const link = event.target.closest('a');
+                if (link && link.target === '_blank') {
+                    event.preventDefault();
+                    window.location.href = link.href;
+                }
+            });
         "#,
     )
     .title("itch.io External Download")

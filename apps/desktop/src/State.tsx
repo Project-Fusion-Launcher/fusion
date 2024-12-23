@@ -129,6 +129,16 @@ const ContextProvider = (props: StateProps) => {
           i.downloaded = payload.downloadSize;
         }),
       );
+      setState(
+        "externalDownloads",
+        (i) =>
+          i.gameId === payload.gameId && i.gameSource === payload.gameSource,
+        produce((i) => {
+          console.log("found");
+          i.downloadSize = payload.downloadSize;
+          i.downloaded = payload.downloadSize;
+        }),
+      );
     },
   );
 
