@@ -85,7 +85,7 @@ const Library = () => {
   function handleMainAction(game: Game) {
     if (game.status === "installed") {
       invoke("launch_game", { gameId: game.id, gameSource: game.source });
-    } else {
+    } else if (game.status === "notInstalled") {
       setSelectedGame(game);
       setIsDialogOpen(true);
     }
@@ -141,7 +141,8 @@ const Library = () => {
         games={state.games.filter(
           (game) =>
             game.status === currentGameStatus() ||
-            currentGameStatus() === "all",
+            currentGameStatus() === "all" ||
+            game.status === "uninstalling",
         )}
         onMainAction={handleMainAction}
       />

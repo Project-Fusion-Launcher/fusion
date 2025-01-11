@@ -14,7 +14,15 @@ CREATE TABLE `games` (
   `launch_target` TEXT,
   `path` TEXT,
   `version` TEXT,
-  `status` TEXT CHECK (status IN ('installed', 'not_installed')) NOT NULL,
+  `status` TEXT CHECK (
+    status IN (
+      'installed',
+      'not_installed',
+      'downloading',
+      'installing',
+      'uninstalling'
+    )
+  ) NOT NULL,
   `favorite` BOOLEAN NOT NULL DEFAULT FALSE,
   `hidden` BOOLEAN NOT NULL DEFAULT FALSE,
   `cover_url` TEXT,

@@ -27,7 +27,7 @@ where
     while let Some(entry) = entries.next_entry().await? {
         let entry_path = entry.path();
 
-        if entry_path.is_file() && entry_path.extension().map_or(false, |ext| ext == "exe") {
+        if entry_path.is_file() && entry_path.extension().is_some_and(|ext| ext == "exe") {
             if !BLACKLISTED_LAUNCH_TARGETS.contains(
                 &entry_path
                     .file_name()

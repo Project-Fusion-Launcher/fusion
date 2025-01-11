@@ -145,4 +145,7 @@ pub enum GameSource {
 pub enum GameStatus {
     Installed,
     NotInstalled,
+    Downloading,
+    Installing,
+    Uninstalling,
 }

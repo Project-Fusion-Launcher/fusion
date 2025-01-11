@@ -10,7 +10,12 @@ export interface Game {
   coverUrl?: string;
 }
 
-export type GameStatus = "installed" | "notInstalled";
+export type GameStatus =
+  | "installed"
+  | "notInstalled"
+  | "downloading"
+  | "installing"
+  | "uninstalling";
 export type GameSource = "legacyGames" | "itchio";
 
 export interface GameFilters {

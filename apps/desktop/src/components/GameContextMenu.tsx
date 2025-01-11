@@ -21,7 +21,6 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
 } from "@repo/ui";
-import { invoke } from "@tauri-apps/api/core";
 import { AppContext } from "../State";
 
 interface GameContextMenuProps {
@@ -35,10 +34,7 @@ const GameContextMenu = (props: GameContextMenuProps) => {
 
   function handleUninstall() {
     if (props.game === null) return;
-    invoke("uninstall_game", {
-      gameId: props.game.id,
-      gameSource: props.game.source,
-    });
+    state.uninstallGame(props.game);
   }
 
   function handleHide() {

@@ -17,6 +17,7 @@ export const AppContext = createContext<{
     installed: number;
     hideGame: (game: Game) => void;
     getGames: (refetch?: boolean, filters?: GameFilters) => void;
+    uninstallGame: (game: Game) => void;
   };
   setState: SetStoreFunction<{
     games: Game[];
@@ -36,6 +37,7 @@ export const AppContext = createContext<{
     installed: 0,
     hideGame: () => {},
     getGames: () => {},
+    uninstallGame: () => {},
   },
   setState: () => {},
 });
@@ -54,6 +56,7 @@ const ContextProvider = (props: StateProps) => {
     installed: 0,
     hideGame,
     getGames,
+    uninstallGame,
   });
 
   // Helper function to update the game count of currently active games
@@ -83,6 +86,21 @@ const ContextProvider = (props: StateProps) => {
       );
       refreshGameCount();
     });
+  }
+
+  function uninstallGame(game: Game) {
+    setState(
+      "games",
+      (g) => g.id === game.id && g.source === game.source,
+      produce((g) => {
+        g.status = "uninstalling";
+      }),
+    );
+
+    invoke<void>("uninstall_game", {
+      gameId: game.id,
+      gameSource: game.source,
+    }).then(() => {});
   }
 
   /* LISTENERS */

@@ -137,6 +137,7 @@ pub async fn download_game(
         .install_location
         .join(game.title.replace(" :", " -").replace(":", " -"));
 
+    game.status = GameStatus::Downloading;
     game.path = Some(complete_install_location.to_string_lossy().to_string());
     download_options.install_location = complete_install_location;
 
@@ -200,6 +201,8 @@ pub async fn uninstall_game(
     let mut connection = database::create_connection()?;
 
     let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
+    game.status = GameStatus::Uninstalling;
+    game.update(&mut connection)?;
 
     match game_source {
         GameSource::Itchio => {

@@ -1,5 +1,5 @@
 import { Button } from "@kobalte/core/button";
-import { ArrowDownToLine, Play } from "lucide-solid";
+import { ArrowDownToLine, LoaderCircle, Play } from "lucide-solid";
 import { Match, Switch } from "solid-js";
 import { type Game } from "../models/types";
 
@@ -22,8 +22,13 @@ const GameCard = (props: GameCardProps) => {
           src={props.game.coverUrl}
           loading="lazy"
         />
-        <div class="bg-background absolute z-10 flex h-full w-full items-center justify-center bg-opacity-60 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100">
+        <div
+          class={`bg-background absolute z-10 flex h-full w-full items-center justify-center bg-opacity-60 backdrop-blur-sm transition-opacity group-hover:opacity-100 ${props.game.status === "uninstalling" ? "opacity-100" : "opacity-0"}`}
+        >
           <Switch>
+            <Match when={props.game.status === "uninstalling"}>
+              <LoaderCircle class="stroke-primary size-1/3 animate-spin" />
+            </Match>
             <Match when={props.game.status === "installed"}>
               <Play class="stroke-primary size-1/3" />
             </Match>
