@@ -3,6 +3,7 @@ import {
   Download,
   Joystick,
   Library,
+  Settings,
   Store,
   UsersRound,
 } from "lucide-solid";
@@ -20,4 +21,5 @@ export const pages = {
   storefronts: { name: "storefronts", icon: Store },
   friends: { name: "friends", icon: UsersRound },
   downloads: { name: "downloads", icon: Download },
+  settings: { name: "Settings", icon: Settings },
 };
