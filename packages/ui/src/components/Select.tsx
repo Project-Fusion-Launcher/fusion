@@ -5,13 +5,25 @@ import { tv } from "tailwind-variants";
 import "./styles.css";
 import { Show } from "solid-js";
 
-const triggerVariants = tv({
-  base: "min-w-136 flex h-40 items-center gap-8 rounded px-16",
+const select = tv({
+  slots: {
+    trigger: "min-w-136 flex h-40 items-center gap-8 rounded px-16",
+    portal: "overflow-hidden rounded p-8",
+  },
   variants: {
     variant: {
-      primary: "bg-primary",
-      secondary: "bg-secondary",
-      outline: "border-border text-primary border bg-transparent",
+      primary: {
+        trigger: "bg-primary",
+        portal: "bg-primary",
+      },
+      secondary: {
+        trigger: "bg-secondary",
+        portal: "bg-secondary",
+      },
+      outline: {
+        trigger: "border-border text-primary border bg-transparent",
+        portal: "border-border text-primary bg-background border",
+      },
     },
   },
   defaultVariants: {
@@ -19,24 +31,9 @@ const triggerVariants = tv({
   },
 });
 
-const portalVariants = tv({
-  base: "overflow-hidden rounded p-8",
-  variants: {
-    variant: {
-      primary: "bg-primary",
-      secondary: "bg-secondary",
-      outline: "border-border text-primary bg-background border",
-    },
-  },
-  defaultVariants: {
-    variant: "primary",
-  },
-});
+type Variants = VariantProps<typeof select>;
 
-type SelectVariants = VariantProps<typeof triggerVariants>;
-type PortalVariants = VariantProps<typeof portalVariants>;
-
-interface SelectProps extends SelectVariants, PortalVariants {
+interface SelectProps extends Variants {
   options?: string[];
   placeholder?: string;
   ariaLabel?: string;
@@ -86,7 +83,7 @@ const Select = (props: SelectProps) => {
         </Show>
         <KSelect.Trigger
           aria-label={props.ariaLabel}
-          class={triggerVariants({ variant: props.variant })}
+          class={select({ variant: props.variant }).trigger()}
         >
           <KSelect.Value<string> class="flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-left">
             {(state) => state.selectedOption()}
@@ -98,7 +95,9 @@ const Select = (props: SelectProps) => {
       </div>
       <KSelect.Portal>
         <KSelect.Content class="select__content z-50">
-          <KSelect.Listbox class={portalVariants({ variant: props.variant })} />
+          <KSelect.Listbox
+            class={select({ variant: props.variant }).portal()}
+          />
         </KSelect.Content>
       </KSelect.Portal>
     </KSelect>

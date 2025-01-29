@@ -6,45 +6,58 @@ import { Dynamic } from "solid-js/web";
 import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
-const variants = tv({
-  base: "focus-within:ring-accent flex cursor-text items-center rounded focus-within:ring-2",
+const textField = tv({
+  slots: {
+    base: "flex w-full flex-col gap-8 transition-all",
+    field:
+      "focus-within:ring-accent flex cursor-text items-center gap-8 rounded transition-all focus-within:ring-2",
+    icon: "stroke-primary shrink-0",
+  },
   variants: {
     variant: {
-      default: "bg-secondary",
-      outline: "border-border border bg-transparent",
+      primary: {
+        field: "bg-primary",
+      },
+      secondary: {
+        field: "bg-secondary",
+      },
+      outline: {
+        field: "border-border border bg-transparent",
+      },
     },
     size: {
-      sm: "h-32 gap-8 px-8",
-      md: "h-40 gap-12 px-16",
-      lg: "h-48 gap-16 px-16",
+      sm: {
+        field: "h-32 gap-8 px-8",
+        icon: "size-16",
+      },
+      md: {
+        field: "h-40 gap-12 px-16",
+        icon: "size-16",
+      },
+      lg: {
+        field: "h-48 gap-16 px-16",
+        icon: "size-20",
+      },
     },
     width: {
-      full: "w-full flex-grow",
+      half: {
+        base: "w-1/2",
+      },
+      full: {
+        base: "w-full flex-grow",
+      },
     },
   },
   defaultVariants: {
-    variant: "default",
+    variant: "primary",
     size: "md",
+    width: "full",
   },
 });
 
-const iconVariants = tv({
-  base: "stroke-primary shrink-0",
-  variants: {
-    size: {
-      sm: "size-16",
-      md: "size-16",
-      lg: "size-20",
-    },
-  },
-  defaultVariants: {
-    size: "md",
-  },
-});
+type Variants = VariantProps<typeof textField>;
 
-type TextFieldVariants = VariantProps<typeof variants>;
-
-export interface TextFieldProps extends TextFieldVariants {
+export interface TextFieldProps extends Variants {
   placeholder?: string;
   value: string;
   onInput?: (value: string) => void;
@@ -68,23 +81,25 @@ const TextField = (props: TextFieldProps) => {
   };
 
   return (
-    <KTextField onClick={handleClick} class="flex w-full flex-col gap-8">
+    <KTextField
+      onClick={handleClick}
+      class={textField({ width: props.width }).base()}
+    >
       <Show when={props.label}>
         <KTextField.Label class="text-secondary text-base font-light">
           {props.label}
         </KTextField.Label>
       </Show>
       <div
-        class={variants({
-          width: props.width,
+        class={textField({
           variant: props.variant,
           size: props.size,
-        })}
+        }).field()}
       >
         <Dynamic
           component={props.icon}
           // @ts-ignore
-          class={iconVariants({ size: props.size })}
+          class={textField({ size: props.size }).icon()}
         />
         <KTextField.Input
           spellcheck={false}
@@ -104,7 +119,7 @@ const TextField = (props: TextFieldProps) => {
           ref={(el) => {
             clearButtonRef = el;
           }}
-          class={iconVariants({ size: props.size }) + " cursor-pointer"}
+          class={textField({ size: props.size }).icon() + " cursor-pointer"}
           classList={{ invisible: !props.value }}
         />
       </div>
