@@ -57,6 +57,8 @@ const InstallDialog = (props: InstallDialogProps) => {
   // Refetch the versions when the selected game changes
   createEffect(() => {
     if (props.selectedGame) {
+      console.log("Refetching versions");
+      setSelectedVersion(null);
       refetchVersions();
     }
   });
@@ -104,7 +106,6 @@ const InstallDialog = (props: InstallDialogProps) => {
 
   // Handle the closing of the dialog
   function handleDialogClose() {
-    setSelectedVersion(null);
     props.onDialogClose();
   }
 
