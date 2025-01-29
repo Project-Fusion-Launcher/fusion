@@ -4,7 +4,7 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const variants = tv({
-  base: "flex items-center justify-center rounded",
+  base: "flex items-center justify-center",
   variants: {
     variant: {
       primary: "bg-primary text-bg",
@@ -21,11 +21,16 @@ const variants = tv({
       md: "size-40 flex-shrink-0 [&>*]:size-16",
       lg: "size-48 flex-shrink-0 [&>*]:size-20",
     },
+    shape: {
+      circle: "rounded-full",
+      square: "rounded",
+    },
   },
   compoundVariants: [{ variant: "ghost", class: "px-0" }],
   defaultVariants: {
     variant: "primary",
     size: "md",
+    shape: "square",
   },
 });
 
@@ -43,6 +48,7 @@ const IconButton = (props: IconButtonProps) => {
         variant: props.variant,
         size: props.size,
         disabled: props.disabled,
+        shape: props.shape,
       })}
       onClick={props.onClick}
     >
