@@ -132,7 +132,7 @@ const Library = () => {
             onClick={setCurrentGameStatus}
             number={state.total - state.installed}
           />
-          <Button variant="outline" onClick={() => getGames(true)}>
+          <Button variant="outline" size="sm" onClick={() => getGames(true)}>
             <RefreshCcw class="text-primary" />
           </Button>
         </div>
