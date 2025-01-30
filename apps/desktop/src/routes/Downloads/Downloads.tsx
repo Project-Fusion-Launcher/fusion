@@ -1,4 +1,4 @@
-import type { JSX } from "solid-js";
+import type { JSXElement } from "solid-js";
 import { For, useContext, Show, Switch, Match } from "solid-js";
 import Header from "../../components/Header";
 import DownloadItem from "./DownloadItem";
@@ -11,7 +11,7 @@ import DownloadDetails from "./DownloadDetails";
 
 interface SectionProps {
   title: string;
-  children: JSX.Element;
+  children: JSXElement;
   count: number;
   onRemoveAll?: () => void;
 }

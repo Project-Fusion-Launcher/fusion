@@ -12,6 +12,7 @@ import {
   ContextMenuSubContent,
   ContextMenuSeparator,
 } from "./src/components/ContextMenu";
+import Tooltip from "./src/components/Tooltip";
 
 export {
   TextField,
@@ -26,4 +27,5 @@ export {
   ContextMenuContent,
   ContextMenuSubContent,
   ContextMenuSeparator,
+  Tooltip,
 };

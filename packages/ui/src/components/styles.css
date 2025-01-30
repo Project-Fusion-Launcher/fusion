@@ -29,6 +29,14 @@
   animation: contextMenuContentShow 250ms ease-out;
 }
 
+.tooltip__content {
+  transform-origin: var(--kb-tooltip-content-transform-origin);
+  animation: tooltipContentHide 200ms ease-in forwards;
+}
+.tooltip__content[data-expanded] {
+  animation: tooltipContentShow 200ms ease-out;
+}
+
 @keyframes selectContentShow {
   from {
     opacity: 0;
@@ -99,6 +107,27 @@
   }
 }
 @keyframes contextMenuContentHide {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes tooltipContentShow {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes tooltipContentHide {
   from {
     opacity: 1;
     transform: scale(1);

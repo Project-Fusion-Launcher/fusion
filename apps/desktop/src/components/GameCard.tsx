@@ -2,6 +2,7 @@ import { Button } from "@kobalte/core/button";
 import { ArrowDownToLine, LoaderCircle, Play } from "lucide-solid";
 import { Match, Switch } from "solid-js";
 import { type Game } from "../models/types";
+import { Tooltip } from "@repo/ui";
 
 interface GameCardProps {
   game: Game;
@@ -48,9 +49,14 @@ const GameCard = (props: GameCardProps) => {
           </div>
         </div>
       </div>
-      <span class="text-primary mb-8 mt-16 w-full overflow-hidden text-ellipsis text-nowrap text-left text-base font-medium">
+      <Tooltip
+        variant="outline"
+        content={props.game.title}
+        as="span"
+        class="text-primary mb-8 mt-16 w-full overflow-hidden text-ellipsis text-nowrap text-left text-base font-medium"
+      >
         {props.game.title}
-      </span>
+      </Tooltip>
       <span class="text-secondary w-full overflow-hidden text-ellipsis text-nowrap text-left text-[14px] font-medium leading-[14px]">
         {props.game.developer}
       </span>

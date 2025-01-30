@@ -1,4 +1,4 @@
-import type { JSX } from "solid-js";
+import type { JSXElement } from "solid-js";
 import { createContext, onCleanup } from "solid-js";
 import type { DownloadItem, Game, GameFilters } from "./models/types";
 import type { SetStoreFunction } from "solid-js/store";
@@ -43,7 +43,7 @@ export const AppContext = createContext<{
 });
 
 interface StateProps {
-  children: JSX.Element;
+  children: JSXElement;
 }
 
 const ContextProvider = (props: StateProps) => {

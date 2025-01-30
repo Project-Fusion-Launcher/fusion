@@ -1,5 +1,5 @@
 import { ContextMenu as KContextMenu } from "@kobalte/core/context-menu";
-import { type JSX } from "solid-js";
+import type { JSXElement } from "solid-js";
 import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
@@ -21,7 +21,7 @@ const itemVariants = tv({
 type ItemVariants = VariantProps<typeof itemVariants>;
 
 export interface ContextMenuItemProps extends ItemVariants {
-  children: JSX.Element;
+  children: JSXElement;
   onSelect?: () => void;
 }
 
@@ -37,7 +37,7 @@ const ContextMenuItem = (props: ContextMenuItemProps) => {
 };
 
 export interface ContextMenuSubTriggerProps extends ItemVariants {
-  children: JSX.Element;
+  children: JSXElement;
 }
 
 const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => {
@@ -52,7 +52,7 @@ const contentVariants = tv({
   base: "border-border text-primary bg-background context-menu__content overflow-hidden rounded border p-8",
 });
 
-const ContextMenuContent = (props: { children: JSX.Element }) => {
+const ContextMenuContent = (props: { children: JSXElement }) => {
   return (
     <KContextMenu.Content class={contentVariants()}>
       {props.children}
@@ -60,7 +60,7 @@ const ContextMenuContent = (props: { children: JSX.Element }) => {
   );
 };
 
-const ContextMenuSubContent = (props: { children: JSX.Element }) => {
+const ContextMenuSubContent = (props: { children: JSXElement }) => {
   return (
     <KContextMenu.SubContent class={contentVariants()}>
       {props.children}

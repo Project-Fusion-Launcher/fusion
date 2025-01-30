@@ -1,5 +1,5 @@
 import { Button as KButton } from "@kobalte/core/button";
-import type { JSX } from "solid-js";
+import type { JSXElement } from "solid-js";
 import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
@@ -37,7 +37,7 @@ const variants = tv({
 type IconButtonVariants = VariantProps<typeof variants>;
 
 export interface IconButtonProps extends IconButtonVariants {
-  children: JSX.Element;
+  children: JSXElement;
   onClick?: () => void;
 }
 

@@ -1,6 +1,7 @@
 import { Button as KButton } from "@kobalte/core/button";
 import { LoaderCircle } from "lucide-solid";
-import { Show, type JSX } from "solid-js";
+import type { JSXElement } from "solid-js";
+import { Show } from "solid-js";
 import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
@@ -32,7 +33,7 @@ const variants = tv({
 type ButtonVariants = VariantProps<typeof variants>;
 
 export interface ButtonProps extends ButtonVariants {
-  children: JSX.Element;
+  children: JSXElement;
   onClick?: () => void;
   loading?: boolean;
 }

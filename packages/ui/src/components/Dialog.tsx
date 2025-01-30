@@ -1,10 +1,10 @@
 import { Dialog as KDialog } from "@kobalte/core/dialog";
 import { X } from "lucide-solid";
-import type { JSX } from "solid-js";
+import type { JSXElement } from "solid-js";
 
 export interface DialogProps {
   title: string;
-  children?: JSX.Element;
+  children?: JSXElement;
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (isOpen: boolean) => void;

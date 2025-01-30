@@ -6,13 +6,13 @@ const variants = tv({
   base: "bg-border m-8 h-1 border-none",
   variants: {
     width: {
-      "50": "w-1/2",
+      half: "w-1/2",
       "75": "w-3/4",
       full: "w-full flex-grow",
     },
   },
   defaultVariants: {
-    width: "50",
+    width: "half",
   },
 });
 

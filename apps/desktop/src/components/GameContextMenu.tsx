@@ -1,5 +1,6 @@
 import { ContextMenu } from "@kobalte/core/context-menu";
-import { Match, Show, Switch, useContext, type JSX } from "solid-js";
+import type { JSXElement } from "solid-js";
+import { Match, Show, Switch, useContext } from "solid-js";
 import type { Game } from "../models/types";
 import {
   ArrowDownToLine,
@@ -25,7 +26,7 @@ import { AppContext } from "../State";
 
 interface GameContextMenuProps {
   game: Game | null;
-  children: JSX.Element;
+  children: JSXElement;
   onMainAction?: () => void;
 }
 
