@@ -13,6 +13,8 @@ import {
   ContextMenuSeparator,
 } from "./src/components/ContextMenu";
 import Tooltip from "./src/components/Tooltip";
+import Itchio from "./src/icons/logos/Itchio";
+import LegacyGames from "./src/icons/logos/LegacyGames";
 
 export {
   TextField,
@@ -28,4 +30,8 @@ export {
   ContextMenuSubContent,
   ContextMenuSeparator,
   Tooltip,
+
+  // Icons
+  Itchio,
+  LegacyGames,
 };

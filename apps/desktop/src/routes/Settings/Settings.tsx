@@ -3,7 +3,8 @@ import Header from "../../components/Header";
 import { createSignal, type Component } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { Download, Globe, Store } from "lucide-solid";
-import { Button } from "@kobalte/core/button";
+import GridItem from "./GridItem";
+import { Itchio, LegacyGames } from "@repo/ui";
 
 interface SettingsTriggerProps {
   value: string;
@@ -66,13 +67,9 @@ const Settings = () => {
             />
           </Tabs.List>
           <Tabs.Content value="storefronts" class="text-primary w-full">
-            <div class="flex gap-16">
-              <Button class="h-136 w-136 border-border border-sm rounded bg-gray-200 p-4">
-                itch.io
-              </Button>
-              <Button class="h-136 w-136 border-border border-sm rounded bg-gray-200 p-4">
-                Legacy Games
-              </Button>
+            <div class="fill-primary flex gap-16">
+              <GridItem icon={Itchio} name="itchio" />
+              <GridItem icon={LegacyGames} name="Legacy Games" />
             </div>
           </Tabs.Content>
           <Tabs.Content value="general" />
