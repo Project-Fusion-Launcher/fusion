@@ -9,7 +9,7 @@ import { Itchio, LegacyGames } from "@repo/ui";
 interface SettingsTriggerProps {
   value: string;
   name: string;
-  icon: Component;
+  icon: Component<{ class?: string }>;
   selectedTab: string;
 }
 
@@ -22,11 +22,7 @@ const SettingsTrigger = (props: SettingsTriggerProps) => {
         "text-primary": props.selectedTab === props.value,
       }}
     >
-      <Dynamic
-        component={props.icon}
-        // @ts-ignore
-        class="size-20"
-      />
+      <Dynamic component={props.icon} class="size-20" />
       {props.name}
     </Tabs.Trigger>
   );

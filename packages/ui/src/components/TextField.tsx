@@ -62,7 +62,7 @@ export interface TextFieldProps extends Variants {
   value: string;
   onInput?: (value: string) => void;
   onChange?: (value: string) => void;
-  icon?: Component;
+  icon?: Component<{ class?: string }>;
   autocomplete?: string;
   label?: string;
 }
@@ -98,7 +98,6 @@ const TextField = (props: TextFieldProps) => {
       >
         <Dynamic
           component={props.icon}
-          // @ts-ignore
           class={textField({ size: props.size }).icon()}
         />
         <KTextField.Input

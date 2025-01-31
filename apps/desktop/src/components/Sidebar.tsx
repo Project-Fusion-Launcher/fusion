@@ -24,7 +24,6 @@ const SidebarTrigger = (props: SidebarTriggerProps) => {
     >
       <Dynamic
         component={props.page.icon}
-        // @ts-ignore
         class="size-32 transition-all"
         classList={{
           "stroke-white scale-105": props.page.name == props.currentTab,
