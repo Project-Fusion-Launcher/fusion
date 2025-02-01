@@ -14,11 +14,11 @@ const Tabs = (props: TabsProps) => {
   return (
     <KTabs
       orientation="horizontal"
-      class="flex h-28 flex-col"
+      class="flex flex-col"
       value={props.value}
       onChange={props.onChange}
     >
-      <KTabs.List class="text-secondary relative mb-40 flex w-min flex-row justify-start gap-40 text-left font-medium">
+      <KTabs.List class="text-secondary relative flex h-28 w-min flex-row justify-start gap-40 text-left font-medium">
         <For each={props.children}>
           {(tab, i) => (
             <KTabs.Trigger
