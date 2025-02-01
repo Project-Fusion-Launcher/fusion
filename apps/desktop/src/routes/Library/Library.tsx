@@ -1,11 +1,9 @@
-import { Badge, Button } from "@repo/ui";
+import { Badge, Button, Tabs } from "@repo/ui";
 import Header from "../../components/Header";
 import {
   createRenderEffect,
   createSignal,
-  Match,
   onCleanup,
-  Switch,
   useContext,
 } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
@@ -21,34 +19,20 @@ import { AppContext } from "../../State";
 import { createStore } from "solid-js/store";
 
 interface StatusFilterButtonProps {
-  selectedStatus?: GameFiltersStatus;
   status: GameFiltersStatus;
+  value: string;
+  name: string;
   number: number;
-  onClick: (status: GameFiltersStatus) => void;
 }
 
 const StatusFilterButton = (props: StatusFilterButtonProps) => {
   return (
-    <Button variant="ghost" onClick={() => props.onClick(props.status)}>
-      <span
-        class="whitespace-nowrap transition-all"
-        classList={{
-          "text-primary": props.selectedStatus === props.status,
-          "text-secondary": props.selectedStatus !== props.status,
-        }}
-      >
-        <Switch>
-          <Match when={props.status === "all"}>All Games</Match>
-          <Match when={props.status === "installed"}>Installed</Match>
-          <Match when={props.status === "notInstalled"}>Not Installed</Match>
-        </Switch>
-      </span>
-      <Badge
-        variant={props.selectedStatus === props.status ? "accent" : "outline"}
-      >
+    <span class="flex items-center gap-8 text-nowrap">
+      {props.name}
+      <Badge variant={props.status === props.value ? "accent" : "outline"}>
         {props.number}
       </Badge>
-    </Button>
+    </span>
   );
 };
 
@@ -112,30 +96,34 @@ const Library = () => {
         query={filters.query}
         setQuery={handleQueryChange}
       />
-      <div class="mb-16 h-28 px-40">
-        <div class="flex h-full w-min items-center gap-40">
+      <div class="mb-16 flex h-28 items-center justify-between px-40">
+        <Tabs
+          values={["all", "installed", "notInstalled"]}
+          onChange={setCurrentGameStatus}
+          value={currentGameStatus()}
+        >
           <StatusFilterButton
-            selectedStatus={currentGameStatus()}
-            status="all"
-            onClick={setCurrentGameStatus}
+            status={currentGameStatus()}
+            value="all"
+            name="All games"
             number={state.total}
           />
           <StatusFilterButton
-            selectedStatus={currentGameStatus()}
-            status="installed"
-            onClick={setCurrentGameStatus}
+            status={currentGameStatus()}
+            value="installed"
+            name="Installed"
             number={state.installed}
           />
           <StatusFilterButton
-            selectedStatus={currentGameStatus()}
-            status="notInstalled"
-            onClick={setCurrentGameStatus}
+            status={currentGameStatus()}
+            value="notInstalled"
+            name="Not Installed"
             number={state.total - state.installed}
           />
-          <Button variant="outline" size="sm" onClick={() => getGames(true)}>
-            <RefreshCcw class="text-primary" />
-          </Button>
-        </div>
+        </Tabs>
+        <Button variant="outline" size="sm" onClick={() => getGames(true)}>
+          <RefreshCcw class="text-primary" />
+        </Button>
       </div>
       <GameGrid
         games={state.games.filter(
