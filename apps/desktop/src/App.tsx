@@ -21,10 +21,15 @@ const App = (props: RouteSectionProps) => {
 
   // Update the current tab when the URL changes (webview navigation)
   createEffect(() => {
-    const path = location.pathname.slice(1);
+    const path = location.pathname.split("/")[0];
+    console.log(":" + path);
     if (path && path !== currentTab()) {
       setCurrentTab(path);
     }
+  });
+
+  createEffect(() => {
+    console.log(location.pathname);
   });
 
   return (

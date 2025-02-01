@@ -8,6 +8,9 @@ import Library from "./routes/Library/Library";
 import Retro from "./routes/Retro";
 import Downloads from "./routes/Downloads/Downloads";
 import Settings from "./routes/Settings/Settings";
+import StorefrontsSettings from "./routes/Settings/pages/StorefrontsSettings/StorefrontsSettings";
+import GeneralSettings from "./routes/Settings/pages/GeneralSettings";
+import DownloadsSettings from "./routes/Settings/pages/DownloadsSettings";
 
 render(
   () => (
@@ -16,7 +19,12 @@ render(
       <Route path="/library" component={Library} />
       <Route path="/retro" component={Retro} />
       <Route path="/downloads" component={Downloads} />
-      <Route path="/settings" component={Settings} />
+      <Route path="/settings" component={Settings}>
+        <Route path="/" component={() => <Navigate href={"storefronts"} />} />
+        <Route path="/storefronts" component={StorefrontsSettings} />
+        <Route path="/general" component={GeneralSettings} />
+        <Route path="/downloads" component={DownloadsSettings} />
+      </Route>
     </Router>
   ),
   document.getElementById("root") as HTMLElement,

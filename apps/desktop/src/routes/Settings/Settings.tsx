@@ -1,77 +1,47 @@
-import { Tabs } from "@kobalte/core/tabs";
 import Header from "../../components/Header";
-import { createSignal, type Component } from "solid-js";
+import { createSignal } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { Download, Globe, Store } from "lucide-solid";
-import GridItem from "./GridItem";
-import { Itchio, LegacyGames } from "@repo/ui";
+import { Tabs } from "@repo/ui";
+import type { RouteSectionProps } from "@solidjs/router";
+import { useNavigate } from "@solidjs/router";
 
-interface SettingsTriggerProps {
-  value: string;
-  name: string;
-  icon: Component<{ class?: string }>;
-  selectedTab: string;
-}
-
-const SettingsTrigger = (props: SettingsTriggerProps) => {
-  return (
-    <Tabs.Trigger
-      value={props.value}
-      class="flex items-center gap-8 transition-colors"
-      classList={{
-        "text-primary": props.selectedTab === props.value,
-      }}
-    >
-      <Dynamic component={props.icon} class="size-20" />
-      {props.name}
-    </Tabs.Trigger>
-  );
-};
-
-const Settings = () => {
+const Settings = (props: RouteSectionProps) => {
   const [selectedTab, setSelectedTab] = createSignal("storefronts");
+
+  const navigate = useNavigate();
+
+  function onTabChange(tab: string) {
+    console.log(tab);
+    setSelectedTab(tab);
+    navigate(`${tab}`);
+  }
 
   return (
     <>
       <Header title="Settings" hideSearch />
       <div class="px-40">
         <Tabs
-          orientation="horizontal"
-          class="flex flex-col"
+          values={["storefronts", "general", "downloads"]}
           value={selectedTab()}
-          onChange={setSelectedTab}
+          onChange={onTabChange}
+          indicator
         >
-          <Tabs.List class="text-secondary relative mb-40 flex h-28 w-min flex-row justify-start gap-40 text-left font-medium">
-            <SettingsTrigger
-              value="storefronts"
-              name="Storefronts"
-              icon={Store}
-              selectedTab={selectedTab()}
-            />
-            <Tabs.Indicator class="border-b-md border-accent absolute -bottom-1 z-20 h-full w-full transition-all" />
-            <SettingsTrigger
-              value="general"
-              name="General"
-              icon={Globe}
-              selectedTab={selectedTab()}
-            />
-            <SettingsTrigger
-              value="downloads"
-              name="Downloads"
-              icon={Download}
-              selectedTab={selectedTab()}
-            />
-          </Tabs.List>
-          <Tabs.Content value="storefronts" class="text-primary w-full">
-            <div class="fill-primary flex gap-16">
-              <GridItem icon={Itchio} name="itchio" />
-              <GridItem icon={LegacyGames} name="Legacy Games" />
-            </div>
-          </Tabs.Content>
-          <Tabs.Content value="general" />
-          <Tabs.Content value="downloads" />
+          <span class="flex items-center gap-8">
+            <Dynamic component={Store} class="size-20" />
+            Storefronts
+          </span>
+          <span class="flex items-center gap-8">
+            <Dynamic component={Globe} class="size-20" />
+            General
+          </span>
+          <span class="flex items-center gap-8">
+            <Dynamic component={Download} class="size-20" />
+            Downloads
+          </span>
         </Tabs>
       </div>
+      <div class="p-40">{props.children}</div>
     </>
   );
 };

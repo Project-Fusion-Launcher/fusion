@@ -24,5 +24,5 @@ export const pages = {
   storefronts: { name: "storefronts", icon: Store },
   friends: { name: "friends", icon: UsersRound },
   downloads: { name: "downloads", icon: Download },
-  settings: { name: "Settings", icon: Settings },
+  settings: { name: "settings", icon: Settings },
 };

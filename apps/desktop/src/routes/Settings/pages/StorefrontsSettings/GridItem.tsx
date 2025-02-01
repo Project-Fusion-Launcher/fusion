@@ -9,8 +9,8 @@ interface GridItemProps {
 
 const GridItem = (props: GridItemProps) => {
   return (
-    <Button class="border-border border-sm flex h-[152px] w-[152px] flex-col items-center justify-center gap-8 rounded bg-gray-200 p-4">
-      <Dynamic component={props.icon} class="size-72" />
+    <Button class="border-border border-sm text-primary flex h-[152px] w-[152px] flex-col items-center justify-center gap-8 rounded bg-gray-200 p-4">
+      <Dynamic component={props.icon} class="fill-primary size-72" />
       {props.name}
     </Button>
   );

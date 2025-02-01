@@ -13,6 +13,8 @@ import {
   ContextMenuSeparator,
 } from "./src/components/ContextMenu";
 import Tooltip from "./src/components/Tooltip";
+import Tabs from "./src/components/Tabs";
+
 import Itchio from "./src/icons/logos/Itchio";
 import LegacyGames from "./src/icons/logos/LegacyGames";
 
@@ -30,6 +32,7 @@ export {
   ContextMenuSubContent,
   ContextMenuSeparator,
   Tooltip,
+  Tabs,
 
   // Icons
   Itchio,
