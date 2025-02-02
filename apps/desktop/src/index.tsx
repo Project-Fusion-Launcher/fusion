@@ -3,7 +3,7 @@ import { render } from "solid-js/web";
 import App from "./App";
 import "./styles.css";
 import "@repo/ui/fonts";
-import { Navigate, Route, Router } from "@solidjs/router";
+import { HashRouter, Navigate, Route } from "@solidjs/router";
 import Library from "./routes/Library/Library";
 import Retro from "./routes/Retro";
 import Downloads from "./routes/Downloads/Downloads";
@@ -14,9 +14,8 @@ import DownloadsSettings from "./routes/Settings/pages/DownloadsSettings";
 
 render(
   () => (
-    <Router root={App}>
-      <Route path="/" component={() => <Navigate href={"/library"} />} />
-      <Route path="/library" component={Library} />
+    <HashRouter root={App}>
+      <Route path={["/", "/library"]} component={Library} />
       <Route path="/retro" component={Retro} />
       <Route path="/downloads" component={Downloads} />
       <Route path="/settings" component={Settings}>
@@ -25,7 +24,7 @@ render(
         <Route path="/general" component={GeneralSettings} />
         <Route path="/downloads" component={DownloadsSettings} />
       </Route>
-    </Router>
+    </HashRouter>
   ),
   document.getElementById("root") as HTMLElement,
 );

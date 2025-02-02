@@ -9,7 +9,7 @@ import { getVersion } from "@tauri-apps/api/app";
 
 interface SidebarTriggerProps {
   page: Page;
-  currentTab: string;
+  selectedTab: string;
   disabled?: boolean;
   moveBottom?: boolean;
 }
@@ -26,7 +26,7 @@ const SidebarTrigger = (props: SidebarTriggerProps) => {
         component={props.page.icon}
         class="size-32 transition-all"
         classList={{
-          "stroke-white scale-105": props.page.name == props.currentTab,
+          "stroke-white scale-105": props.page.name == props.selectedTab,
         }}
       />
     </Tabs.Trigger>
@@ -34,7 +34,7 @@ const SidebarTrigger = (props: SidebarTriggerProps) => {
 };
 
 interface SidebarProps {
-  currentTab: string;
+  selectedTab: string;
   onTabChange: (tab: string) => void;
 }
 
@@ -45,35 +45,38 @@ const Sidebar = (props: SidebarProps) => {
     <Tabs.Root
       orientation="vertical"
       class="bg-background border-border z-50 flex h-full w-72 flex-shrink-0 flex-col items-center border-r"
-      value={props.currentTab}
+      value={props.selectedTab}
       onChange={props.onTabChange}
     >
       <div class="flex items-center py-44">
         <Box class="text-primary size-48" style={{ "stroke-width": "2px" }} />
       </div>
       <Tabs.List class="text-secondary relative mb-32 flex h-full w-full flex-col items-center">
-        <SidebarTrigger page={pages.library} currentTab={props.currentTab} />
-        <SidebarTrigger page={pages.retro} currentTab={props.currentTab} />
+        <SidebarTrigger page={pages.library} selectedTab={props.selectedTab} />
+        <SidebarTrigger page={pages.retro} selectedTab={props.selectedTab} />
         <SidebarTrigger
           page={pages.collections}
-          currentTab={props.currentTab}
+          selectedTab={props.selectedTab}
           disabled
         />
         <Separator />
-        <SidebarTrigger page={pages.downloads} currentTab={props.currentTab} />
+        <SidebarTrigger
+          page={pages.downloads}
+          selectedTab={props.selectedTab}
+        />
         <SidebarTrigger
           page={pages.storefronts}
-          currentTab={props.currentTab}
+          selectedTab={props.selectedTab}
           disabled
         />
         <SidebarTrigger
           page={pages.friends}
-          currentTab={props.currentTab}
+          selectedTab={props.selectedTab}
           disabled
         />
         <SidebarTrigger
           page={pages.settings}
-          currentTab={props.currentTab}
+          selectedTab={props.selectedTab}
           moveBottom
         />
         <Tabs.Indicator class="border-r-md border-accent absolute w-full transition-transform" />
