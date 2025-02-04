@@ -1,10 +1,11 @@
 import Header from "../../components/Header";
 import { createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
-import { Download, Globe, Store } from "lucide-solid";
 import { Tabs } from "@repo/ui";
 import type { RouteSectionProps } from "@solidjs/router";
 import { useLocation, useNavigate } from "@solidjs/router";
+import { settingsTabs } from "../../models/pages";
+import { capitalizeFirstLetter } from "../../util/string";
 
 const Settings = (props: RouteSectionProps) => {
   const location = useLocation();
@@ -23,22 +24,29 @@ const Settings = (props: RouteSectionProps) => {
       <Header title="Settings" hideSearch />
       <div class="px-40">
         <Tabs
-          values={["storefronts", "general", "downloads"]}
+          values={[
+            settingsTabs.storefronts.name,
+            settingsTabs.general.name,
+            settingsTabs.downloads.name,
+          ]}
           value={selectedTab()}
           onChange={changeTab}
           indicator
         >
           <span class="flex items-center gap-8">
-            <Dynamic component={Store} class="size-20" />
-            Storefronts
+            <Dynamic
+              component={settingsTabs.storefronts.icon}
+              class="size-20"
+            />
+            {capitalizeFirstLetter(settingsTabs.storefronts.name)}
           </span>
           <span class="flex items-center gap-8">
-            <Dynamic component={Globe} class="size-20" />
-            General
+            <Dynamic component={settingsTabs.general.icon} class="size-20" />
+            {capitalizeFirstLetter(settingsTabs.general.name)}
           </span>
           <span class="flex items-center gap-8">
-            <Dynamic component={Download} class="size-20" />
-            Downloads
+            <Dynamic component={settingsTabs.downloads.icon} class="size-20" />
+            {capitalizeFirstLetter(settingsTabs.downloads.name)}
           </span>
         </Tabs>
       </div>

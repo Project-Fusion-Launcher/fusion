@@ -1,6 +1,7 @@
 import {
   Boxes,
   Download,
+  Globe,
   Joystick,
   Library,
   Settings,
@@ -17,7 +18,7 @@ export interface Page {
   }>;
 }
 
-export const pages = {
+export const pages: Record<string, Page> = {
   library: { name: "library", icon: Library },
   retro: { name: "retro", icon: Joystick },
   collections: { name: "collections", icon: Boxes },
@@ -25,4 +26,10 @@ export const pages = {
   friends: { name: "friends", icon: UsersRound },
   downloads: { name: "downloads", icon: Download },
   settings: { name: "settings", icon: Settings },
+};
+
+export const settingsTabs: Record<string, Page> = {
+  storefronts: { name: "storefronts", icon: Store },
+  general: { name: "general", icon: Globe },
+  downloads: { name: "downloads", icon: Download },
 };
