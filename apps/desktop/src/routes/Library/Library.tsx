@@ -96,7 +96,11 @@ const Library = () => {
 
   return (
     <>
-      <Header title="Library" query={query()} setQuery={handleQueryChange} />
+      <Header
+        title="Library"
+        query={query()}
+        onQueryInput={handleQueryChange}
+      />
       <div class="mb-16 flex h-28 items-center justify-between px-40">
         <Tabs
           values={["all", "installed", "notInstalled"]}

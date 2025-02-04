@@ -6,7 +6,7 @@ interface HeaderProps {
   title: string;
   hideSearch?: boolean;
   query?: string;
-  setQuery?: (query: string) => void;
+  onQueryInput?: (query: string) => void;
 }
 
 const Header = (props: HeaderProps) => {
@@ -22,7 +22,7 @@ const Header = (props: HeaderProps) => {
             width="full"
             autocomplete="off"
             value={props.query || ""}
-            onInput={props.setQuery}
+            onInput={props.onQueryInput}
             icon={Search}
           />
         </Show>
