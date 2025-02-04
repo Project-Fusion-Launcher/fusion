@@ -3,7 +3,7 @@ import { render } from "solid-js/web";
 import App from "./App";
 import "./styles.css";
 import "@repo/ui/fonts";
-import { HashRouter, Navigate, Route } from "@solidjs/router";
+import { HashRouter, Route } from "@solidjs/router";
 import Library from "./routes/Library/Library";
 import Retro from "./routes/Retro";
 import Downloads from "./routes/Downloads/Downloads";
@@ -19,8 +19,7 @@ render(
       <Route path="/retro" component={Retro} />
       <Route path="/downloads" component={Downloads} />
       <Route path="/settings" component={Settings}>
-        <Route path="/" component={() => <Navigate href={"storefronts"} />} />
-        <Route path="/storefronts" component={StorefrontsSettings} />
+        <Route path={["/", "/storefronts"]} component={StorefrontsSettings} />
         <Route path="/general" component={GeneralSettings} />
         <Route path="/downloads" component={DownloadsSettings} />
       </Route>
