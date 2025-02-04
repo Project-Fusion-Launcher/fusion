@@ -1,6 +1,7 @@
 import { Badge, Button, Tabs } from "@repo/ui";
 import Header from "../../components/Header";
 import {
+  createMemo,
   createRenderEffect,
   createSignal,
   onCleanup,
@@ -9,14 +10,11 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { RefreshCcw } from "lucide-solid";
 import InstallDialog from "../../components/InstallDialog";
-import {
-  type GameFilters,
-  type GameFiltersStatus,
-  type Game,
-} from "../../models/types";
+import { type GameFiltersStatus, type Game } from "../../models/types";
 import GameGrid from "./GameGrid";
 import { AppContext } from "../../State";
-import { createStore } from "solid-js/store";
+import { useSearchParams } from "@solidjs/router";
+import { parseSearchParam } from "../../util/string";
 
 interface StatusFilterButtonProps {
   status: GameFiltersStatus;
@@ -38,16 +36,18 @@ const StatusFilterButton = (props: StatusFilterButtonProps) => {
 
 const Library = () => {
   const { state, setState } = useContext(AppContext);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [isDialogOpen, setIsDialogOpen] = createSignal(false);
   const [selectedGame, setSelectedGame] = createSignal<Game | null>(null);
 
-  const [currentGameStatus, setCurrentGameStatus] =
-    createSignal<GameFiltersStatus>("all");
+  const selectedGameStatus = createMemo<GameFiltersStatus>(
+    () => parseSearchParam(searchParams.status) || "all",
+  );
 
-  const [filters, setFilters] = createStore<GameFilters>({
-    query: "",
-  });
+  const query = createMemo<string | undefined>(() =>
+    parseSearchParam(searchParams.query),
+  );
 
   // Fetch the games on component mount
   createRenderEffect(() => {
@@ -62,7 +62,7 @@ const Library = () => {
 
   // Fetch the games from the backend
   function getGames(refetch: boolean) {
-    state.getGames(refetch, filters);
+    state.getGames(refetch, { query: query() });
   }
 
   // Handle the main action button click event (launch or install)
@@ -85,37 +85,38 @@ const Library = () => {
 
   // Handle the query change event
   function handleQueryChange(query: string) {
-    setFilters("query", query);
-    getGames(false);
+    setSearchParams({ query });
+  }
+
+  // Handle the game status change event
+  function handleGameStatusChange(value: string) {
+    const status = value as GameFiltersStatus;
+    setSearchParams({ status });
   }
 
   return (
     <>
-      <Header
-        title="Library"
-        query={filters.query}
-        setQuery={handleQueryChange}
-      />
+      <Header title="Library" query={query()} setQuery={handleQueryChange} />
       <div class="mb-16 flex h-28 items-center justify-between px-40">
         <Tabs
           values={["all", "installed", "notInstalled"]}
-          onChange={setCurrentGameStatus}
-          value={currentGameStatus()}
+          onChange={handleGameStatusChange}
+          value={selectedGameStatus()}
         >
           <StatusFilterButton
-            status={currentGameStatus()}
+            status={selectedGameStatus()}
             value="all"
             name="All games"
             number={state.total}
           />
           <StatusFilterButton
-            status={currentGameStatus()}
+            status={selectedGameStatus()}
             value="installed"
             name="Installed"
             number={state.installed}
           />
           <StatusFilterButton
-            status={currentGameStatus()}
+            status={selectedGameStatus()}
             value="notInstalled"
             name="Not Installed"
             number={state.total - state.installed}
@@ -128,8 +129,8 @@ const Library = () => {
       <GameGrid
         games={state.games.filter(
           (game) =>
-            game.status === currentGameStatus() ||
-            currentGameStatus() === "all" ||
+            game.status === selectedGameStatus() ||
+            selectedGameStatus() === "all" ||
             game.status === "uninstalling",
         )}
         onMainAction={handleMainAction}

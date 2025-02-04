@@ -10,3 +10,10 @@ export function bytesToSize(bytes: number | null | undefined) {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
 }
+
+export function parseSearchParam<T>(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return (value[0] as T) || undefined;
+  }
+  return (value as T) || undefined;
+}
