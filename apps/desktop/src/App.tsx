@@ -17,10 +17,10 @@ const App = (props: RouteSectionProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleTabChange = (tab: string) => {
+  function handleTabChange(tab: string) {
     setSelectedTab(tab);
     navigate("/" + tab);
-  };
+  }
 
   // Update the current tab when the URL changes (webview navigation)
   createEffect(() => {
