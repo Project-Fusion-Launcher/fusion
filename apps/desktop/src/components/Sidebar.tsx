@@ -4,8 +4,9 @@ import { Box } from "lucide-solid";
 import type { Page } from "../models/pages";
 import { pages } from "../models/pages";
 import { Dynamic } from "solid-js/web";
-import { createResource } from "solid-js";
+import { createMemo, createResource } from "solid-js";
 import { getVersion } from "@tauri-apps/api/app";
+import { useLocation, useNavigate } from "@solidjs/router";
 
 interface SidebarTriggerProps {
   page: Page;
@@ -33,50 +34,53 @@ const SidebarTrigger = (props: SidebarTriggerProps) => {
   );
 };
 
-interface SidebarProps {
-  selectedTab: string;
-  onTabChange: (tab: string) => void;
-}
-
-const Sidebar = (props: SidebarProps) => {
+const Sidebar = () => {
   const [appVersion] = createResource(getVersion);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const selectedTab = createMemo(
+    () => location.pathname.split("/")[1] || pages.library.name,
+  );
+
+  function changeTab(tab: string) {
+    navigate("/" + tab);
+  }
 
   return (
     <Tabs.Root
       orientation="vertical"
       class="bg-background border-border z-50 flex h-full w-72 flex-shrink-0 flex-col items-center border-r"
-      value={props.selectedTab}
-      onChange={props.onTabChange}
+      value={selectedTab()}
+      onChange={changeTab}
     >
       <div class="flex items-center py-44">
         <Box class="text-primary size-48" style={{ "stroke-width": "2px" }} />
       </div>
       <Tabs.List class="text-secondary relative mb-32 flex h-full w-full flex-col items-center">
-        <SidebarTrigger page={pages.library} selectedTab={props.selectedTab} />
-        <SidebarTrigger page={pages.retro} selectedTab={props.selectedTab} />
+        <SidebarTrigger page={pages.library} selectedTab={selectedTab()} />
+        <SidebarTrigger page={pages.retro} selectedTab={selectedTab()} />
         <SidebarTrigger
           page={pages.collections}
-          selectedTab={props.selectedTab}
+          selectedTab={selectedTab()}
           disabled
         />
         <Separator />
-        <SidebarTrigger
-          page={pages.downloads}
-          selectedTab={props.selectedTab}
-        />
+        <SidebarTrigger page={pages.downloads} selectedTab={selectedTab()} />
         <SidebarTrigger
           page={pages.storefronts}
-          selectedTab={props.selectedTab}
+          selectedTab={selectedTab()}
           disabled
         />
         <SidebarTrigger
           page={pages.friends}
-          selectedTab={props.selectedTab}
+          selectedTab={selectedTab()}
           disabled
         />
         <SidebarTrigger
           page={pages.settings}
-          selectedTab={props.selectedTab}
+          selectedTab={selectedTab()}
           moveBottom
         />
         <Tabs.Indicator class="border-r-md border-accent absolute w-full transition-transform" />
