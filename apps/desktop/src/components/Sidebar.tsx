@@ -12,7 +12,6 @@ interface SidebarTriggerProps {
   page: Page;
   selectedTab: string;
   disabled?: boolean;
-  moveBottom?: boolean;
 }
 
 const SidebarTrigger = (props: SidebarTriggerProps) => {
@@ -20,7 +19,6 @@ const SidebarTrigger = (props: SidebarTriggerProps) => {
     <Tabs.Trigger
       value={props.page.name}
       class="relative flex h-52 w-full items-center justify-center"
-      classList={{ "mt-auto  ": props.moveBottom }}
       disabled={props.disabled}
     >
       <Dynamic
@@ -78,11 +76,9 @@ const Sidebar = () => {
           selectedTab={selectedTab()}
           disabled
         />
-        <SidebarTrigger
-          page={pages.settings}
-          selectedTab={selectedTab()}
-          moveBottom
-        />
+        <div class="mt-auto">
+          <SidebarTrigger page={pages.settings} selectedTab={selectedTab()} />
+        </div>
         <Tabs.Indicator class="border-r-md border-accent absolute w-full transition-transform" />
       </Tabs.List>
       <span class="text-secondary absolute bottom-8 text-sm">

@@ -1,20 +1,21 @@
 import Header from "../../components/Header";
-import { createSignal } from "solid-js";
+import { createMemo } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { Download, Globe, Store } from "lucide-solid";
 import { Tabs } from "@repo/ui";
 import type { RouteSectionProps } from "@solidjs/router";
-import { useNavigate } from "@solidjs/router";
+import { useLocation, useNavigate } from "@solidjs/router";
 
 const Settings = (props: RouteSectionProps) => {
-  const [selectedTab, setSelectedTab] = createSignal("storefronts");
-
+  const location = useLocation();
   const navigate = useNavigate();
 
-  function onTabChange(tab: string) {
-    console.log(tab);
-    setSelectedTab(tab);
-    navigate(`${tab}`);
+  const selectedTab = createMemo(
+    () => location.pathname.split("/")[2] || "storefronts",
+  );
+
+  function changeTab(tab: string) {
+    navigate(tab);
   }
 
   return (
@@ -24,7 +25,7 @@ const Settings = (props: RouteSectionProps) => {
         <Tabs
           values={["storefronts", "general", "downloads"]}
           value={selectedTab()}
-          onChange={onTabChange}
+          onChange={changeTab}
           indicator
         >
           <span class="flex items-center gap-8">
