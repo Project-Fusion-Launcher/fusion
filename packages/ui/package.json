@@ -27,7 +27,7 @@
     "eslint": "^9.19.0",
     "eslint-plugin-storybook": "^0.11.2",
     "postcss": "^8.5.1",
-    "storybook": "8.5.2",
+    "storybook": "8.5.3",
     "storybook-solidjs": "1.0.0-beta.6",
     "storybook-solidjs-vite": "1.0.0-beta.6",
     "tailwind-variants": "^0.3.1",
