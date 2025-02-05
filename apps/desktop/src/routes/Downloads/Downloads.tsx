@@ -21,7 +21,7 @@ const Section = (props: SectionProps) => {
     <div class="flex flex-col gap-40">
       <div class="flex h-24 items-center justify-between">
         <span
-          class="text-primary opacity-1 text-2xl font-medium transition-opacity"
+          class="text-primary text-2xl font-medium opacity-100 transition-opacity"
           classList={{
             "opacity-0": props.title === "Completed" && props.count === 0,
           }}
