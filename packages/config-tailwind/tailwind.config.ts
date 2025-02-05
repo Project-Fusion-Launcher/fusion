@@ -56,7 +56,8 @@ const config: Omit<Config, "content"> = {
     },
     fontSize: {
       DEFAULT: ["1rem", "1rem"],
-      sm: ["0.75rem", "0.75rem"],
+      xm: ["0.75rem", "0.75rem"],
+      sm: ["0.875rem", "0.875rem"],
       base: ["1rem", "1rem"],
       md: ["1.25rem", "1.25rem"],
       lg: ["1.5rem", "1.5rem"],

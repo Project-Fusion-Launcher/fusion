@@ -27,7 +27,7 @@ const StatusFilterButton = (props: StatusFilterButtonProps) => {
   return (
     <span class="flex items-center gap-8 text-nowrap">
       {props.name}
-      <Badge variant={props.status === props.value ? "accent" : "outline"}>
+      <Badge variant={props.status === props.value ? "primary" : "outline"}>
         {props.number}
       </Badge>
     </span>

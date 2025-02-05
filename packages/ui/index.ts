@@ -18,6 +18,10 @@ import Tabs from "./src/components/Tabs";
 import Itchio from "./src/icons/logos/Itchio";
 import LegacyGames from "./src/icons/logos/LegacyGames";
 
+import { defaultConfig } from "tailwind-variants";
+
+defaultConfig.twMerge = true;
+
 export {
   TextField,
   Separator,

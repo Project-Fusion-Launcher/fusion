@@ -24,6 +24,7 @@
     "@storybook/docs-tools": "^8.5.2",
     "@storybook/test": "^8.5.2",
     "autoprefixer": "^10.4.20",
+    "clsx": "^2.1.1",
     "eslint": "^9.19.0",
     "eslint-plugin-storybook": "^0.11.2",
     "postcss": "^8.5.1",

@@ -16,6 +16,7 @@ export const PrimaryMedium: Story = {
     variant: "primary",
     size: "md",
     children: "Badge",
+    round: true,
   },
 };
 
