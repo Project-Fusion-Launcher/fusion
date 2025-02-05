@@ -66,7 +66,7 @@ const Select = (props: SelectProps) => {
       itemComponent={(props) => (
         <KSelect.Item
           item={props.item}
-          class="focus:bg-highlighted focus:outline-hidden flex h-32 cursor-pointer select-none items-center gap-8 rounded-md px-8"
+          class="focus:bg-highlight focus:outline-hidden flex h-32 cursor-pointer select-none items-center gap-8 rounded-md px-8"
         >
           <KSelect.ItemLabel>{props.item.rawValue}</KSelect.ItemLabel>
           <KSelect.ItemIndicator class="ml-auto">

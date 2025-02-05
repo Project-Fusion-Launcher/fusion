@@ -7,10 +7,10 @@ const itemVariants = tv({
   base: "focus:outline-hidden flex h-32 cursor-pointer select-none items-center gap-8 rounded-md px-8",
   variants: {
     variant: {
-      default: "focus:bg-highlighted text-primary",
+      default: "focus:bg-highlight text-primary",
       accent: "bg-accent text-primary",
       primary: "bg-primary text-background",
-      danger: "focus:bg-highlighted text-danger",
+      danger: "focus:bg-highlight text-danger",
     },
   },
   defaultVariants: {

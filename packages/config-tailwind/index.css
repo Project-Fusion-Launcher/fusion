@@ -5,15 +5,21 @@
   --color-*: initial;
   --color-transparent: transparent;
   --color-current: currentColor;
-  --color-white: #ffffff;
-  --color-black: #000000;
+  --color-white: white;
+  --color-black: black;
+
   --color-border: #373737;
+  --color-highlight: #bab6be3a;
+
   --color-background: black;
   --color-primary: #bab6be;
+  --color-primary-foreground: black;
   --color-secondary: #726f76;
+  --color-secondary-foreground: black;
   --color-accent: #874295;
-  --color-highlighted: #bab6be3a;
+  --color-accent-foreground: #bab6be;
   --color-danger: #e83333;
+  --color-danger-foreground: black;
 
   /* SIZING */
   --spacing-*: initial;
@@ -61,7 +67,8 @@
   /* BORDER RADIUS */
   --radius-*: initial;
   --radius-none: 0px;
-  --radius-md: 5px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
   --radius-lg: 10px;
   --radius-full: 100%;
 }
