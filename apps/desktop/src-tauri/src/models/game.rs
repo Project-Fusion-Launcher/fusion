@@ -106,7 +106,9 @@ impl ReducedGame {
 
         if let Some(filters) = filters {
             if let Some(query) = filters.query {
-                statement = statement.filter(title.like(format!("%{}%", query)));
+                for query in query.split_whitespace() {
+                    statement = statement.filter(title.like(format!("%{}%", query)));
+                }
             }
         }
 
