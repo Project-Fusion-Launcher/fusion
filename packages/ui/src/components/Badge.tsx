@@ -5,13 +5,13 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const badgeVariants = tv({
-  base: "flex w-min items-center justify-center rounded-md border font-light font-medium transition-colors",
+  base: "flex w-min items-center justify-center rounded-md border border-transparent font-light font-medium transition-colors",
   variants: {
     variant: {
-      primary: "bg-primary text-background border-transparent",
-      secondary: "bg-secondary text-background border-transparent",
+      primary: "bg-primary text-background",
+      secondary: "bg-secondary text-background",
       outline: "border-border text-secondary",
-      accent: "bg-accent text-primary border-transparent",
+      accent: "bg-accent text-primary",
     },
     size: {
       sm: "text-xm h-24 px-[6px]",
