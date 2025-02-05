@@ -76,7 +76,7 @@ const Sidebar = () => {
           selectedTab={selectedTab()}
           disabled
         />
-        <div class="mt-auto">
+        <div class="mt-auto w-full">
           <SidebarTrigger page={pages.settings} selectedTab={selectedTab()} />
         </div>
         <Tabs.Indicator class="border-accent absolute w-full border-r-2 transition-transform" />
