@@ -109,7 +109,7 @@ const TextField = (props: TextFieldProps) => {
           }
           autocomplete={props.autocomplete}
           placeholder={props.placeholder}
-          class="placeholder-secondary text-primary focus:outline-hidden h-full w-full rounded-md bg-transparent"
+          class="placeholder-secondary text-primary focus:outline-hidden h-full w-full rounded-md bg-transparent placeholder:font-light"
           ref={(el: HTMLInputElement) => {
             inputRef = el;
           }}

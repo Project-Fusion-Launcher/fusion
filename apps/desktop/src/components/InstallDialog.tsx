@@ -200,7 +200,6 @@ const InstallDialog = (props: InstallDialogProps) => {
           variant="accent"
           disabled={selectedVersion() === null || !installLocation()}
           onClick={handleInstall}
-          loading={preparingToInstall()}
         >
           Install
         </Button>
