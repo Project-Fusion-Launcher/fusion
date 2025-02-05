@@ -1,5 +1,4 @@
 import type { Config } from "tailwindcss";
-import kobaltePlugin from "@kobalte/tailwindcss";
 
 // We want each package to be responsible for its own content.
 /** @type {import('tailwindcss').Config} */
@@ -56,7 +55,7 @@ const config: Omit<Config, "content"> = {
     },
     fontSize: {
       DEFAULT: ["1rem", "1rem"],
-      xm: ["0.75rem", "0.75rem"],
+      xs: ["0.75rem", "0.75rem"],
       sm: ["0.875rem", "0.875rem"],
       base: ["1rem", "1rem"],
       md: ["1.25rem", "1.25rem"],
@@ -70,7 +69,6 @@ const config: Omit<Config, "content"> = {
       lg: "10px",
     },
   },
-  plugins: [kobaltePlugin],
   darkMode: "selector",
 };
 export default config;

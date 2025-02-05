@@ -66,7 +66,7 @@ const Select = (props: SelectProps) => {
       itemComponent={(props) => (
         <KSelect.Item
           item={props.item}
-          class="focus:bg-highlighted flex h-32 cursor-pointer select-none items-center gap-8 rounded px-8 focus:outline-none"
+          class="focus:bg-highlighted focus:outline-hidden flex h-32 cursor-pointer select-none items-center gap-8 rounded px-8"
         >
           <KSelect.ItemLabel>{props.item.rawValue}</KSelect.ItemLabel>
           <KSelect.ItemIndicator class="ml-auto">
@@ -85,7 +85,7 @@ const Select = (props: SelectProps) => {
           aria-label={props.ariaLabel}
           class={select({ variant: props.variant }).trigger()}
         >
-          <KSelect.Value<string> class="flex-grow overflow-hidden text-ellipsis whitespace-nowrap text-left">
+          <KSelect.Value<string> class="grow overflow-hidden text-ellipsis whitespace-nowrap text-left">
             {(state) => state.selectedOption()}
           </KSelect.Value>
           <KSelect.Icon class="ml-auto text-wrap">

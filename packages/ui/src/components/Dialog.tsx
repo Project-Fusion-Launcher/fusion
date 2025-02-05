@@ -18,7 +18,7 @@ const Dialog = (props: DialogProps) => {
       onOpenChange={props.onOpenChange}
     >
       <KDialog.Portal>
-        <KDialog.Overlay class="dialog__overlay fixed inset-0 z-50 h-full w-full bg-black bg-opacity-55" />
+        <KDialog.Overlay class="dialog__overlay fixed inset-0 z-50 h-full w-full bg-black/55" />
         <div class="fixed inset-0 z-50 flex h-full w-full items-center justify-center">
           <KDialog.Content
             class="dialog__content min-h-288 bg-background border-border relative z-50 flex flex-col overflow-hidden rounded-lg border p-40 font-medium"
@@ -32,7 +32,7 @@ const Dialog = (props: DialogProps) => {
                 <X class="size-24" />
               </KDialog.CloseButton>
             </div>
-            <div class="relative w-full flex-grow">{props.children}</div>
+            <div class="relative w-full grow">{props.children}</div>
           </KDialog.Content>
         </div>
       </KDialog.Portal>

@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "@repo/config-tailwind";
 
 .lucide {
   stroke-width: 1.5px;
@@ -11,16 +9,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: theme(colors.transparent);
+  background: var(--color-transparent);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: theme(colors.secondary.DEFAULT);
-  border-radius: theme(borderRadius.DEFAULT);
+  background: var(--color-secondary);
+  border-radius: var(--radius-md);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: theme(colors.accent.DEFAULT);
+  background: var(--color-accent);
 }
 
 .indeterminate {

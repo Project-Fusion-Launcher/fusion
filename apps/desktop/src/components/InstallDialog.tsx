@@ -130,7 +130,7 @@ const InstallDialog = (props: InstallDialogProps) => {
       onOpenChange={handleDialogClose}
     >
       <div class="mb-40 flex min-w-[300px] gap-32">
-        <div class="w-192 h-288 border-border flex flex-shrink-0 overflow-hidden rounded border">
+        <div class="w-192 h-288 border-border flex shrink-0 overflow-hidden rounded-md border">
           <img
             src={props.selectedGame?.coverUrl}
             class="h-auto w-auto object-cover"

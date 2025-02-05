@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  /* COLORS */
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-border: #373737;
+  --color-background: black;
+  --color-primary: #bab6be;
+  --color-secondary: #726f76;
+  --color-accent: #874295;
+  --color-highlighted: #bab6be3a;
+  --color-danger: #e83333;
+
+  /* SIZING */
+  --spacing-*: initial;
+  --spacing-0: 0px;
+  --spacing-1: 1px;
+  --spacing-2: 0.125rem;
+  --spacing-8: 0.5rem;
+  --spacing-12: 0.75rem;
+  --spacing-16: 1rem;
+  --spacing-20: 1.25rem;
+  --spacing-24: 1.5rem;
+  --spacing-28: 1.75rem;
+  --spacing-32: 2rem;
+  --spacing-40: 2.5rem;
+  --spacing-44: 2.75rem;
+  --spacing-48: 3rem;
+  --spacing-52: 3.25rem;
+  --spacing-72: 4.5rem;
+  --spacing-136: 8.5rem;
+  --spacing-192: 12rem;
+  --spacing-288: 18rem;
+
+  /* TYPOGRAPHY */
+  --font-*: initial;
+  --font-sans: "Metropolis";
+
+  --text-*: initial;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 0.875rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 1.875rem;
+  --text-4xl: 2rem;
+  --text-4xl--line-height: 2rem;
+
+  /* BORDER RADIUS */
+  --radius-*: initial;
+  --radius-none: 0px;
+  --radius-md: 5px;
+  --radius-lg: 10px;
+  --radius-full: 100%;
+}
+
+@layer base {
+  button {
+    cursor: pointer;
+  }
+}

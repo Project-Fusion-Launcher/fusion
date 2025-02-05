@@ -13,7 +13,9 @@ const Header = (props: HeaderProps) => {
   return (
     <div class="px-40 py-44">
       <div class="flex h-48 grow items-center gap-40">
-        <span class="text-primary w-auto text-xl font-bold">{props.title}</span>
+        <span class="text-primary w-auto text-4xl font-bold">
+          {props.title}
+        </span>
         <Show when={!props.hideSearch}>
           <TextField
             variant="outline"

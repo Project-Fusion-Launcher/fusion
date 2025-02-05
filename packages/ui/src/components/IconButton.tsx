@@ -17,9 +17,9 @@ const variants = tv({
       true: "disabled cursor-not-allowed opacity-50",
     },
     size: {
-      sm: "size-32 flex-shrink-0 [&>*]:size-12",
-      md: "size-40 flex-shrink-0 [&>*]:size-16",
-      lg: "size-48 flex-shrink-0 [&>*]:size-20",
+      sm: "size-32 shrink-0 [&>*]:size-12",
+      md: "size-40 shrink-0 [&>*]:size-16",
+      lg: "size-48 shrink-0 [&>*]:size-20",
     },
     shape: {
       circle: "rounded-full",

@@ -49,7 +49,7 @@ const Sidebar = () => {
   return (
     <Tabs.Root
       orientation="vertical"
-      class="bg-background border-border z-50 flex h-full w-72 flex-shrink-0 flex-col items-center border-r"
+      class="bg-background border-border z-50 flex h-full w-72 shrink-0 flex-col items-center border-r"
       value={selectedTab()}
       onChange={changeTab}
     >
@@ -79,9 +79,9 @@ const Sidebar = () => {
         <div class="mt-auto">
           <SidebarTrigger page={pages.settings} selectedTab={selectedTab()} />
         </div>
-        <Tabs.Indicator class="border-r-md border-accent absolute w-full transition-transform" />
+        <Tabs.Indicator class="border-accent absolute w-full border-r-2 transition-transform" />
       </Tabs.List>
-      <span class="text-secondary absolute bottom-8 text-sm">
+      <span class="text-secondary absolute bottom-8 text-xs">
         {appVersion()}
       </span>
     </Tabs.Root>

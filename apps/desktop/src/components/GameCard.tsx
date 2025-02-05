@@ -13,21 +13,21 @@ interface GameCardProps {
 const GameCard = (props: GameCardProps) => {
   return (
     <Button
-      class="w-192 group flex flex-shrink-0 flex-col hover:cursor-pointer"
+      class="w-192 group flex shrink-0 flex-col hover:cursor-pointer"
       onClick={props.onClick}
       onContextMenu={props.onContextMenu}
     >
-      <div class="bg-secondary h-288 group-hover:outline-accent relative w-full overflow-hidden rounded outline-none outline-2 transition-all group-hover:shadow-[0_0_1.5rem_rgba(255,255,255,0.25)]">
+      <div class="bg-secondary h-288 group-hover:outline-accent relative w-full overflow-hidden rounded-md outline-2 outline-transparent transition-all group-hover:shadow-[0_0_1rem_rgba(255,255,255,0.25)]">
         <img
           class="absolute h-full object-cover"
           src={props.game.coverUrl}
           loading="lazy"
         />
         <div
-          class={`bg-background absolute z-10 flex h-full w-full items-center justify-center bg-opacity-60 backdrop-blur-sm transition-opacity group-hover:opacity-100 ${props.game.status === "uninstalling" ? "opacity-100" : "opacity-0"}`}
+          class={`bg-background/60 backdrop-blur-xs absolute z-10 flex h-full w-full items-center justify-center transition-opacity group-hover:opacity-100 ${props.game.status === "uninstalling" ? "opacity-100" : "opacity-0"}`}
         >
           <div
-            class={`bg-accent absolute size-72 rounded-full p-20 drop-shadow-sm transition-all group-hover:translate-y-0 ${props.game.status === "uninstalling" ? "translate-y-0" : "translate-y-[200%]"}`}
+            class={`bg-accent drop-shadow-xs absolute size-72 rounded-full p-20 transition-all group-hover:translate-y-0 ${props.game.status === "uninstalling" ? "translate-y-0" : "translate-y-[200%]"}`}
           >
             <Switch>
               <Match

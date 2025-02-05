@@ -10,7 +10,7 @@ const textField = tv({
   slots: {
     base: "flex w-full flex-col gap-8 transition-all",
     field:
-      "focus-within:ring-accent flex cursor-text items-center gap-8 rounded transition-all focus-within:ring-2",
+      "focus-within:ring-accent flex cursor-text items-center gap-8 rounded-md transition-all focus-within:ring-2",
     icon: "stroke-primary shrink-0",
   },
   variants: {
@@ -44,7 +44,7 @@ const textField = tv({
         base: "w-1/2",
       },
       full: {
-        base: "w-full flex-grow",
+        base: "w-full grow",
       },
     },
   },
@@ -109,7 +109,7 @@ const TextField = (props: TextFieldProps) => {
           }
           autocomplete={props.autocomplete}
           placeholder={props.placeholder}
-          class="placeholder-secondary text-primary h-full w-full rounded bg-transparent focus:outline-none"
+          class="placeholder-secondary text-primary focus:outline-hidden h-full w-full rounded bg-transparent"
           ref={(el: HTMLInputElement) => {
             inputRef = el;
           }}

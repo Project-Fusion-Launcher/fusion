@@ -19,7 +19,7 @@ const DownloadItem = (props: DownloadItemProps) => {
   }
   return (
     <div
-      class="border-border h-136 text-primary relative flex w-full items-center gap-16 rounded border p-12"
+      class="border-border h-136 text-primary relative flex w-full items-center gap-16 rounded-md border p-12"
       classList={{ "border overflow-hidden": !props.noBorder }}
     >
       <img

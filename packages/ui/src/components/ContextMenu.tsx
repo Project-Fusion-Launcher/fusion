@@ -4,7 +4,7 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const itemVariants = tv({
-  base: "flex h-32 cursor-pointer select-none items-center gap-8 rounded px-8 focus:outline-none",
+  base: "focus:outline-hidden flex h-32 cursor-pointer select-none items-center gap-8 rounded px-8",
   variants: {
     variant: {
       default: "focus:bg-highlighted text-primary",

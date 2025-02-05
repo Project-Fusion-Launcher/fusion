@@ -5,7 +5,7 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const badgeVariants = tv({
-  base: "flex w-min items-center justify-center rounded border font-light font-medium transition-colors",
+  base: "flex w-min items-center justify-center rounded-md border font-light font-medium transition-colors",
   variants: {
     variant: {
       primary: "bg-primary text-background border-transparent",

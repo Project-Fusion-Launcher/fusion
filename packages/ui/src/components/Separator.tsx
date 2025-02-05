@@ -8,7 +8,7 @@ const variants = tv({
     width: {
       half: "w-1/2",
       "75": "w-3/4",
-      full: "w-full flex-grow",
+      full: "w-full grow",
     },
   },
   defaultVariants: {

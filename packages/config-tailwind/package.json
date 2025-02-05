@@ -3,11 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
-    ".": "./tailwind.config.ts"
+    ".": "./index.css"
   },
   "devDependencies": {
-    "@kobalte/tailwindcss": "^0.9.0",
     "@repo/config-typescript": "workspace:*",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^4.0.3"
   }
 }
