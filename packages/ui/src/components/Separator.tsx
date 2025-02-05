@@ -1,25 +1,30 @@
-import { Separator as KSeparator } from "@kobalte/core/separator";
-import type { VariantProps } from "tailwind-variants";
-import { tv } from "tailwind-variants";
+import type { ValidComponent } from "solid-js";
+import { splitProps } from "solid-js";
+import type { PolymorphicProps } from "@kobalte/core/polymorphic";
+import * as SeparatorPrimitive from "@kobalte/core/separator";
+import { cn } from "../utils";
 
-const variants = tv({
-  base: "bg-border m-8 h-1 border-none",
-  variants: {
-    width: {
-      half: "w-1/2",
-      "75": "w-3/4",
-      full: "w-full grow",
-    },
-  },
-  defaultVariants: {
-    width: "half",
-  },
-});
+type SeparatorRootProps<T extends ValidComponent = "hr"> =
+  SeparatorPrimitive.SeparatorRootProps<T> & { class?: string | undefined };
 
-type SeparatorProps = VariantProps<typeof variants>;
-
-const Separator = (props: SeparatorProps) => {
-  return <KSeparator class={variants({ width: props.width })} />;
+const Separator = <T extends ValidComponent = "hr">(
+  props: PolymorphicProps<T, SeparatorRootProps<T>>,
+) => {
+  const [local, others] = splitProps(props as SeparatorRootProps, [
+    "class",
+    "orientation",
+  ]);
+  return (
+    <SeparatorPrimitive.Root
+      orientation={local.orientation ?? "horizontal"}
+      class={cn(
+        "bg-border shrink-0 border-0",
+        local.orientation === "vertical" ? "h-full w-px" : "h-px w-full",
+        local.class,
+      )}
+      {...others}
+    />
+  );
 };
 
 export default Separator;

@@ -64,7 +64,7 @@ const Sidebar = () => {
           selectedTab={selectedTab()}
           disabled
         />
-        <Separator />
+        <Separator class="my-8 w-1/2" />
         <SidebarTrigger page={pages.downloads} selectedTab={selectedTab()} />
         <SidebarTrigger
           page={pages.storefronts}
