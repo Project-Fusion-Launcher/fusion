@@ -8,13 +8,13 @@ const badgeVariants = tv({
   base: "flex w-min items-center justify-center rounded-md border border-transparent font-medium transition-colors",
   variants: {
     variant: {
-      primary: "bg-primary text-background",
-      secondary: "bg-secondary text-background",
+      primary: "bg-primary text-primary-foreground",
+      secondary: "bg-secondary text-secondary-foreground",
       outline: "border-border text-secondary",
       accent: "bg-accent text-primary",
     },
     size: {
-      sm: "text-xm h-24 px-[6px]",
+      sm: "h-24 px-[6px] text-xs",
       md: "h-28 px-8 text-sm",
     },
   },

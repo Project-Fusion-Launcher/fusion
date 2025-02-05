@@ -12,7 +12,11 @@ import {
   ContextMenuSubContent,
   ContextMenuSeparator,
 } from "./src/components/ContextMenu";
-import Tooltip from "./src/components/Tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "./src/components/Tooltip";
 import Tabs from "./src/components/Tabs";
 
 import Itchio from "./src/icons/logos/Itchio";
@@ -36,6 +40,8 @@ export {
   ContextMenuSubContent,
   ContextMenuSeparator,
   Tooltip,
+  TooltipContent,
+  TooltipTrigger,
   Tabs,
 
   // Icons

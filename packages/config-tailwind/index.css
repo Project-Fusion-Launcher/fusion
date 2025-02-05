@@ -18,6 +18,8 @@
   --color-secondary-foreground: black;
   --color-accent: #874295;
   --color-accent-foreground: #bab6be;
+  --color-popover: black;
+  --color-popover-foreground: #bab6be;
   --color-danger: #e83333;
   --color-danger-foreground: black;
 
@@ -71,6 +73,34 @@
   --radius-md: 6px;
   --radius-lg: 10px;
   --radius-full: 100%;
+
+  /* ANIMATIONS */
+
+  --animate-content-show: content-show 200ms ease-in forwards;
+
+  @keyframes content-show {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  --animate-content-hide: content-hide 200ms ease-out;
+
+  @keyframes content-hide {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
 }
 
 @layer base {

@@ -1,45 +1,35 @@
-import { Tooltip as KTooltip } from "@kobalte/core/tooltip";
-import type { JSXElement } from "solid-js";
-import type { VariantProps } from "tailwind-variants";
-import { tv } from "tailwind-variants";
+import type { ValidComponent } from "solid-js";
+import { splitProps, type Component } from "solid-js";
+import type { PolymorphicProps } from "@kobalte/core/polymorphic";
+import * as TooltipPrimitive from "@kobalte/core/tooltip";
+import { cn } from "../utils";
 
-const variants = tv({
-  base: "fixed z-50 flex h-40 items-center gap-12 rounded-md px-16",
-  variants: {
-    variant: {
-      outline: "border-border text-primary bg-background border",
-    },
-  },
-  defaultVariants: {
-    variant: "outline",
-  },
-});
+const TooltipTrigger = TooltipPrimitive.Trigger;
 
-type Variants = VariantProps<typeof variants>;
-
-interface TooltipProps extends Variants {
-  children: JSXElement;
-  content: string;
-  class?: string;
-  as?: string;
-}
-
-const Tooltip = (props: TooltipProps) => {
+const Tooltip: Component<TooltipPrimitive.TooltipRootProps> = (props) => {
   return (
-    <KTooltip openDelay={200} overflowPadding={40}>
-      <KTooltip.Trigger class={props.class} as={props.as}>
-        {props.children}
-      </KTooltip.Trigger>
-      <KTooltip.Portal>
-        <KTooltip.Content
-          class={"tooltip__content " + variants({ variant: props.variant })}
-        >
-          <KTooltip.Arrow />
-          {props.content}
-        </KTooltip.Content>
-      </KTooltip.Portal>
-    </KTooltip>
+    <TooltipPrimitive.Root openDelay={300} overflowPadding={40} {...props} />
   );
 };
 
-export default Tooltip;
+type TooltipContentProps<T extends ValidComponent = "div"> =
+  TooltipPrimitive.TooltipContentProps<T> & { class?: string | undefined };
+
+const TooltipContent = <T extends ValidComponent = "div">(
+  props: PolymorphicProps<T, TooltipContentProps<T>>,
+) => {
+  const [local, others] = splitProps(props as TooltipContentProps, ["class"]);
+  return (
+    <TooltipPrimitive.Portal>
+      <TooltipPrimitive.Content
+        class={cn(
+          "bg-popover text-popover-foreground animate-content-hide border-border data-[expanded]:animate-content-show z-50 inline-flex origin-[var(--kb-popover-content-transform-origin)] items-center justify-center overflow-hidden rounded-md border px-12 py-8 text-sm font-medium shadow-md",
+          local.class,
+        )}
+        {...others}
+      />
+    </TooltipPrimitive.Portal>
+  );
+};
+
+export { Tooltip, TooltipTrigger, TooltipContent };
