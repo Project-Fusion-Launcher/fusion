@@ -4,7 +4,7 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const variants = tv({
-  base: "fixed z-50 flex h-40 items-center gap-12 rounded px-16",
+  base: "fixed z-50 flex h-40 items-center gap-12 rounded-md px-16",
   variants: {
     variant: {
       outline: "border-border text-primary bg-background border",

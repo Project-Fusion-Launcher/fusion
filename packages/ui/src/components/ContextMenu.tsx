@@ -4,7 +4,7 @@ import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 
 const itemVariants = tv({
-  base: "focus:outline-hidden flex h-32 cursor-pointer select-none items-center gap-8 rounded px-8",
+  base: "focus:outline-hidden flex h-32 cursor-pointer select-none items-center gap-8 rounded-md px-8",
   variants: {
     variant: {
       default: "focus:bg-highlighted text-primary",
@@ -49,7 +49,7 @@ const ContextMenuSubTrigger = (props: ContextMenuSubTriggerProps) => {
 };
 
 const contentVariants = tv({
-  base: "border-border text-primary bg-background context-menu__content overflow-hidden rounded border p-8",
+  base: "border-border text-primary bg-background context-menu__content overflow-hidden rounded-md border p-8",
 });
 
 const ContextMenuContent = (props: { children: JSXElement }) => {

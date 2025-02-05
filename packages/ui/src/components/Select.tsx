@@ -7,8 +7,8 @@ import { Show } from "solid-js";
 
 const select = tv({
   slots: {
-    trigger: "min-w-136 flex h-40 items-center gap-8 rounded px-16",
-    portal: "overflow-hidden rounded p-8",
+    trigger: "min-w-136 flex h-40 items-center gap-8 rounded-md px-16",
+    portal: "overflow-hidden rounded-md p-8",
   },
   variants: {
     variant: {
@@ -66,7 +66,7 @@ const Select = (props: SelectProps) => {
       itemComponent={(props) => (
         <KSelect.Item
           item={props.item}
-          class="focus:bg-highlighted focus:outline-hidden flex h-32 cursor-pointer select-none items-center gap-8 rounded px-8"
+          class="focus:bg-highlighted focus:outline-hidden flex h-32 cursor-pointer select-none items-center gap-8 rounded-md px-8"
         >
           <KSelect.ItemLabel>{props.item.rawValue}</KSelect.ItemLabel>
           <KSelect.ItemIndicator class="ml-auto">

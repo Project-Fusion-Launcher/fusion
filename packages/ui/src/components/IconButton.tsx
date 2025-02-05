@@ -23,7 +23,7 @@ const variants = tv({
     },
     shape: {
       circle: "rounded-full",
-      square: "rounded",
+      square: "rounded-md",
     },
   },
   compoundVariants: [{ variant: "ghost", class: "px-0" }],
