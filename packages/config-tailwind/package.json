@@ -6,7 +6,6 @@
     ".": "./index.css"
   },
   "devDependencies": {
-    "@repo/config-typescript": "workspace:*",
     "tailwindcss": "^4.0.3"
   }
 }
