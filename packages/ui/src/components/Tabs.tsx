@@ -33,7 +33,7 @@ const Tabs = (props: TabsProps) => {
           )}
         </For>
         <Show when={props.indicator}>
-          <KTabs.Indicator class="border-b-md border-accent absolute -bottom-8 z-20 h-full w-full transition-all" />
+          <KTabs.Indicator class="border-accent absolute -bottom-8 z-20 h-full w-full border-b-2 transition-all" />
         </Show>
       </KTabs.List>
     </KTabs>

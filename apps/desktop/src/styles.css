@@ -1,9 +1,5 @@
 @import "@repo/config-tailwind";
 
-.lucide {
-  stroke-width: 1.5px;
-}
-
 ::-webkit-scrollbar {
   width: 6px;
 }
