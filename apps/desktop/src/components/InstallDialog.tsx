@@ -1,4 +1,14 @@
-import { Button, Dialog, IconButton, Select, TextField } from "@repo/ui";
+import {
+  Button,
+  Dialog,
+  IconButton,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  TextField,
+} from "@repo/ui";
 import {
   createResource,
   createEffect,
@@ -138,15 +148,24 @@ const InstallDialog = (props: InstallDialogProps) => {
         </div>
         <div class="flex w-full flex-col gap-20">
           <Select
-            variant="outline"
             placeholder={getPlaceholder()}
-            loading={versions.loading}
+            /*loading={versions.loading}*/
             options={getMappedVersions()}
-            label="Version to install"
+            /*label="Version to install"*/
             value={selectedVersion()?.name}
             onChange={handleVersionSelect}
             disallowEmptySelection
-          />
+            itemComponent={(props) => (
+              <SelectItem item={props.item}>{props.item.rawValue}</SelectItem>
+            )}
+          >
+            <SelectTrigger aria-label="Version">
+              <SelectValue<string>>
+                {(state) => state.selectedOption()}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent />
+          </Select>
           <div class="flex items-end gap-8">
             <TextField
               value={installLocation()}
