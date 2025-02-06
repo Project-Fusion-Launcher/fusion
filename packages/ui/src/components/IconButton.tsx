@@ -1,59 +1,60 @@
-import { Button as KButton } from "@kobalte/core/button";
-import type { JSXElement } from "solid-js";
+import type { JSXElement, ValidComponent } from "solid-js";
+import { splitProps } from "solid-js";
 import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
+import * as ButtonPrimitive from "@kobalte/core/button";
+import type { PolymorphicProps } from "@kobalte/core";
+import { cn } from "../utils";
 
-const variants = tv({
-  base: "flex items-center justify-center",
+const iconButtonVariants = tv({
+  base: "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium disabled:pointer-events-none disabled:opacity-50",
   variants: {
     variant: {
-      primary: "bg-primary text-bg",
-      secondary: "bg-secondary text-bg",
-      accent: "bg-accent text-primary",
+      primary: "bg-primary text-primary-foreground",
+      secondary: "bg-secondary text-secondary-foreground",
+      accent: "bg-accent text-accent-foreground",
       ghost: "bg-transparent",
       outline: "border-border text-primary border",
-    },
-    disabled: {
-      true: "disabled cursor-not-allowed opacity-50",
     },
     size: {
       sm: "size-32 shrink-0 [&>*]:size-12",
       md: "size-40 shrink-0 [&>*]:size-16",
       lg: "size-48 shrink-0 [&>*]:size-20",
     },
-    shape: {
-      circle: "rounded-full",
-      square: "rounded-md",
-    },
   },
   compoundVariants: [{ variant: "ghost", class: "px-0" }],
   defaultVariants: {
     variant: "primary",
     size: "md",
-    shape: "square",
   },
 });
 
-type IconButtonVariants = VariantProps<typeof variants>;
+type IconButtonProps<T extends ValidComponent = "button"> =
+  ButtonPrimitive.ButtonRootProps<T> &
+    VariantProps<typeof iconButtonVariants> & {
+      class?: string | undefined;
+      children?: JSXElement;
+      circle?: boolean;
+    };
 
-export interface IconButtonProps extends IconButtonVariants {
-  children: JSXElement;
-  onClick?: () => void;
-}
-
-const IconButton = (props: IconButtonProps) => {
+const IconButton = <T extends ValidComponent = "button">(
+  props: PolymorphicProps<T, IconButtonProps<T>>,
+) => {
+  const [local, others] = splitProps(props as IconButtonProps, [
+    "variant",
+    "size",
+    "class",
+    "circle",
+  ]);
   return (
-    <KButton
-      class={variants({
-        variant: props.variant,
-        size: props.size,
-        disabled: props.disabled,
-        shape: props.shape,
-      })}
-      onClick={props.onClick}
-    >
-      {props.children}
-    </KButton>
+    <ButtonPrimitive.Root
+      class={cn(
+        iconButtonVariants({ variant: local.variant, size: local.size }),
+        local.class,
+        local.circle && "rounded-full",
+      )}
+      {...others}
+    />
   );
 };
 
