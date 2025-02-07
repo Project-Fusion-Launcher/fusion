@@ -76,9 +76,9 @@
 
   /* ANIMATIONS */
 
-  --animate-content-show: content-show 200ms ease-in forwards;
+  --animate-pop-in: pop-in 200ms ease-in forwards;
 
-  @keyframes content-show {
+  @keyframes pop-in {
     from {
       opacity: 0;
       transform: scale(0.96);
@@ -89,9 +89,9 @@
     }
   }
 
-  --animate-content-hide: content-hide 200ms ease-out;
+  --animate-pop-out: pop-out 200ms ease-out;
 
-  @keyframes content-hide {
+  @keyframes pop-out {
     from {
       opacity: 1;
       transform: scale(1);
@@ -99,6 +99,32 @@
     to {
       opacity: 0;
       transform: scale(0.96);
+    }
+  }
+
+  --animate-in: in 150ms ease-in forwards;
+
+  @keyframes in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  --animate-out: out 150ms ease-out;
+
+  @keyframes out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
     }
   }
 }

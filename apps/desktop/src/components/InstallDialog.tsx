@@ -128,7 +128,13 @@ const InstallDialog = (props: InstallDialogProps) => {
 
   // Get the placeholder for the version select
   function getPlaceholder() {
-    if (versions.loading) return "Fetching versions";
+    if (versions.loading)
+      return (
+        <span class="inline-flex h-full items-center gap-8">
+          <LoaderCircle class="size-16 animate-spin" />
+          Fetching versions
+        </span>
+      );
     if ((versions()?.length || 0) === 0) return "No versions available";
     return "Select a version";
   }
@@ -152,6 +158,7 @@ const InstallDialog = (props: InstallDialogProps) => {
             /*loading={versions.loading}*/
             options={getMappedVersions()}
             /*label="Version to install"*/
+            disabled={versions.loading}
             value={selectedVersion()?.name}
             onChange={handleVersionSelect}
             disallowEmptySelection
@@ -160,7 +167,7 @@ const InstallDialog = (props: InstallDialogProps) => {
             )}
           >
             <SelectTrigger aria-label="Version">
-              <SelectValue<string>>
+              <SelectValue<string> class="text-sm">
                 {(state) => state.selectedOption()}
               </SelectValue>
             </SelectTrigger>
