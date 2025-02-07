@@ -5,9 +5,34 @@ import * as SelectPrimitive from "@kobalte/core/select";
 import { cn } from "../utils";
 import { Check, ChevronsUpDown } from "lucide-solid";
 
-const Select = SelectPrimitive.Root;
 const SelectValue = SelectPrimitive.Value;
 const SelectHiddenSelect = SelectPrimitive.HiddenSelect;
+
+type SelectProps<
+  Option,
+  OptGroup = never,
+  T extends ValidComponent = "div",
+> = SelectPrimitive.SelectRootProps<Option, OptGroup, T> & {
+  class?: string | undefined;
+  children?: JSXElement;
+};
+
+const Select = <Option, OptGroup = never, T extends ValidComponent = "div">(
+  props: PolymorphicProps<T, SelectProps<Option, OptGroup, T>>,
+) => {
+  const [local, others] = splitProps(
+    props as SelectProps<Option, OptGroup, T>,
+    ["class", "children"],
+  );
+  return (
+    <SelectPrimitive.Root
+      class={cn("flex flex-col gap-12", local.class)}
+      {...others}
+    >
+      {local.children}
+    </SelectPrimitive.Root>
+  );
+};
 
 type SelectTriggerProps<T extends ValidComponent = "button"> =
   SelectPrimitive.SelectTriggerProps<T> & {
@@ -33,6 +58,29 @@ const SelectTrigger = <T extends ValidComponent = "button">(
       {local.children}
       <SelectPrimitive.Icon as={ChevronsUpDown} class="ml-auto h-16 w-auto" />
     </SelectPrimitive.Trigger>
+  );
+};
+
+type SelectLabelProps<T extends ValidComponent = "span"> =
+  SelectPrimitive.SelectLabelProps<T> & {
+    class?: string | undefined;
+    children?: JSXElement;
+  };
+
+const SelectLabel = <T extends ValidComponent = "span">(
+  props: PolymorphicProps<T, SelectLabelProps<T>>,
+) => {
+  const [local, others] = splitProps(props as SelectLabelProps, [
+    "class",
+    "children",
+  ]);
+  return (
+    <SelectPrimitive.Label
+      class={cn("text-secondary text-base font-light", local.class)}
+      {...others}
+    >
+      {local.children}
+    </SelectPrimitive.Label>
   );
 };
 
@@ -94,4 +142,5 @@ export {
   SelectTrigger,
   SelectContent,
   SelectItem,
+  SelectLabel,
 };

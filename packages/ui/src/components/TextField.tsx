@@ -8,7 +8,7 @@ import { tv } from "tailwind-variants";
 
 const textField = tv({
   slots: {
-    base: "flex w-full flex-col gap-8 transition-all",
+    base: "flex w-full flex-col gap-12 transition-all",
     field:
       "focus-within:ring-accent flex cursor-text items-center gap-8 rounded-md transition-all focus-within:ring-2",
     icon: "stroke-primary shrink-0",

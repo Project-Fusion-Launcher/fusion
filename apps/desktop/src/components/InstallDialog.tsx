@@ -5,6 +5,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
   TextField,
@@ -74,8 +75,7 @@ const InstallDialog = (props: InstallDialogProps) => {
   });
 
   // Handle the selection of a version
-  function handleVersionSelect(value: string | null) {
-    const version = versions()?.find((v) => v.name === value) || null;
+  function handleVersionSelect(version: GameVersion | null) {
     setSelectedVersion(version);
     if (version && !version.external) {
       refetchVersionDownloadInfo();
@@ -121,16 +121,11 @@ const InstallDialog = (props: InstallDialogProps) => {
 
   /* HELPER FUNCTIONS */
 
-  // Get the mapped version names
-  function getMappedVersions() {
-    return versions()?.map((version) => version.name) || [];
-  }
-
   // Get the placeholder for the version select
   function getPlaceholder() {
     if (versions.loading)
       return (
-        <span class="inline-flex h-full items-center gap-8">
+        <span class="flex h-full items-center gap-8">
           <LoaderCircle class="size-16 animate-spin" />
           Fetching versions
         </span>
@@ -153,22 +148,25 @@ const InstallDialog = (props: InstallDialogProps) => {
           />
         </div>
         <div class="flex w-full flex-col gap-20">
-          <Select
+          <Select<GameVersion>
             placeholder={getPlaceholder()}
-            /*loading={versions.loading}*/
-            options={getMappedVersions()}
-            /*label="Version to install"*/
+            options={versions() || []}
+            optionValue="name"
+            optionTextValue="name"
             disabled={versions.loading}
-            value={selectedVersion()?.name}
+            value={selectedVersion()}
             onChange={handleVersionSelect}
             disallowEmptySelection
             itemComponent={(props) => (
-              <SelectItem item={props.item}>{props.item.rawValue}</SelectItem>
+              <SelectItem item={props.item}>
+                {props.item.rawValue.name}
+              </SelectItem>
             )}
           >
+            <SelectLabel>Version to install</SelectLabel>
             <SelectTrigger aria-label="Version">
-              <SelectValue<string> class="text-sm">
-                {(state) => state.selectedOption()}
+              <SelectValue<GameVersion> class="text-sm">
+                {(state) => state.selectedOption().name}
               </SelectValue>
             </SelectTrigger>
             <SelectContent />

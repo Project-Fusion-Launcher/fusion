@@ -9,6 +9,7 @@ import {
   SelectContent,
   SelectTrigger,
   SelectHiddenSelect,
+  SelectLabel,
 } from "./src/components/Select";
 import Dialog from "./src/components/Dialog";
 import IconButton from "./src/components/IconButton";
@@ -55,6 +56,7 @@ export {
   SelectContent,
   SelectTrigger,
   SelectHiddenSelect,
+  SelectLabel,
 
   // Icons
   Itchio,
