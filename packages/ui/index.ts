@@ -1,5 +1,9 @@
 import Separator from "./src/components/Separator";
-import TextField from "./src/components/TextField";
+import {
+  TextField,
+  TextFieldInput,
+  TextFieldLabel,
+} from "./src/components/TextField";
 import Button from "./src/components/Button";
 import Badge from "./src/components/Badge";
 import {
@@ -36,6 +40,8 @@ defaultConfig.twMerge = true;
 
 export {
   TextField,
+  TextFieldInput,
+  TextFieldLabel,
   Separator,
   Button,
   Badge,

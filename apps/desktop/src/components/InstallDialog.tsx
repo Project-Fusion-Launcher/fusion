@@ -9,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
   TextField,
+  TextFieldInput,
+  TextFieldLabel,
 } from "@repo/ui";
 import {
   createResource,
@@ -172,13 +174,10 @@ const InstallDialog = (props: InstallDialogProps) => {
             <SelectContent />
           </Select>
           <div class="flex items-end gap-8">
-            <TextField
-              value={installLocation()}
-              onInput={setInstallLocation}
-              variant="outline"
-              label="Install location"
-              placeholder="C:\Users\jorge\Desktop"
-            />
+            <TextField value={installLocation()} onChange={setInstallLocation}>
+              <TextFieldLabel>Install location</TextFieldLabel>
+              <TextFieldInput placeholder="C:\Users\jorge\Desktop" />
+            </TextField>
             <IconButton variant="outline" onClick={handleDirectorySelect}>
               <Folder />
             </IconButton>

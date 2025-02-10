@@ -1,5 +1,4 @@
-import { TextField } from "@repo/ui";
-import { Search } from "lucide-solid";
+import { TextField, TextFieldInput } from "@repo/ui";
 import { Show } from "solid-js";
 
 interface HeaderProps {
@@ -18,15 +17,12 @@ const Header = (props: HeaderProps) => {
         </span>
         <Show when={!props.hideSearch}>
           <TextField
-            variant="outline"
-            size="lg"
-            placeholder="Search"
-            width="full"
-            autocomplete="off"
-            value={props.query || ""}
-            onInput={props.onQueryInput}
-            icon={Search}
-          />
+            class="w-full"
+            value={props.query}
+            onChange={props.onQueryInput}
+          >
+            <TextFieldInput placeholder="Search" size="lg" autocomplete="off" />
+          </TextField>
         </Show>
       </div>
     </div>
