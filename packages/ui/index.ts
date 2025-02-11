@@ -29,7 +29,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "./src/components/Tooltip";
-import Tabs from "./src/components/Tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsContent,
+  TabsTrigger,
+  TabsIndicator,
+} from "./src/components/Tabs";
 
 import Itchio from "./src/icons/logos/Itchio";
 import LegacyGames from "./src/icons/logos/LegacyGames";
@@ -57,6 +63,10 @@ export {
   TooltipContent,
   TooltipTrigger,
   Tabs,
+  TabsList,
+  TabsContent,
+  TabsTrigger,
+  TabsIndicator,
   SelectItem,
   SelectValue,
   SelectContent,

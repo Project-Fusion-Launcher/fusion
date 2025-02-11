@@ -23,7 +23,7 @@ const TextField = <T extends ValidComponent = "div">(
 };
 
 const textFieldInputVariants = tv({
-  base: "focus-within:ring-accent border-radi border-border border-1 flex w-full cursor-text items-center gap-8 rounded-md transition-all placeholder:font-light focus-within:ring-2 focus:outline-none",
+  base: "focus-within:ring-accent border-border border-1 flex w-full cursor-text items-center gap-8 rounded-md transition-all placeholder:font-light focus-within:ring-2 focus:outline-none",
   variants: {
     size: {
       md: "h-40 gap-12 px-16 text-sm",

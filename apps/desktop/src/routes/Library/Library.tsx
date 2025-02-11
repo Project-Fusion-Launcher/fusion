@@ -1,4 +1,4 @@
-import { Badge, Button, Tabs } from "@repo/ui";
+import { Badge, Button, Tabs, TabsList, TabsTrigger } from "@repo/ui";
 import Header from "../../components/Header";
 import {
   createMemo,
@@ -102,29 +102,33 @@ const Library = () => {
         onQueryInput={handleQueryChange}
       />
       <div class="mb-16 flex h-28 items-center justify-between px-40">
-        <Tabs
-          values={["all", "installed", "notInstalled"]}
-          onChange={handleGameStatusChange}
-          value={selectedGameStatus()}
-        >
-          <StatusFilterButton
-            status={selectedGameStatus()}
-            value="all"
-            name="All games"
-            number={state.total}
-          />
-          <StatusFilterButton
-            status={selectedGameStatus()}
-            value="installed"
-            name="Installed"
-            number={state.installed}
-          />
-          <StatusFilterButton
-            status={selectedGameStatus()}
-            value="notInstalled"
-            name="Not Installed"
-            number={state.total - state.installed}
-          />
+        <Tabs onChange={handleGameStatusChange} value={selectedGameStatus()}>
+          <TabsList>
+            <TabsTrigger value="all">
+              <StatusFilterButton
+                status={selectedGameStatus()}
+                value="all"
+                name="All games"
+                number={state.total}
+              />
+            </TabsTrigger>
+            <TabsTrigger value="installed">
+              <StatusFilterButton
+                status={selectedGameStatus()}
+                value="installed"
+                name="Installed"
+                number={state.installed}
+              />
+            </TabsTrigger>
+            <TabsTrigger value="notInstalled">
+              <StatusFilterButton
+                status={selectedGameStatus()}
+                value="notInstalled"
+                name="Not Installed"
+                number={state.total - state.installed}
+              />
+            </TabsTrigger>
+          </TabsList>
         </Tabs>
         <Button variant="outline" size="sm" onClick={() => getGames(true)}>
           <RefreshCcw class="text-primary" />
