@@ -1,12 +1,3 @@
-.select__content {
-  transform-origin: var(--kb-select-content-transform-origin);
-  animation: selectContentHide 150ms ease-in forwards;
-}
-
-.select__content[data-expanded] {
-  animation: selectContentShow 150ms ease-out;
-}
-
 .dialog__overlay {
   animation: dialogOverlayHide 250ms ease 100ms forwards;
 }
@@ -27,14 +18,6 @@
 
 .context-menu__content[data-expanded] {
   animation: contextMenuContentShow 250ms ease-out;
-}
-
-.tooltip__content {
-  transform-origin: var(--kb-tooltip-content-transform-origin);
-  animation: tooltipContentHide 200ms ease-in forwards;
-}
-.tooltip__content[data-expanded] {
-  animation: tooltipContentShow 200ms ease-out;
 }
 
 @keyframes selectContentShow {

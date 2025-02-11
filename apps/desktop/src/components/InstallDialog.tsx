@@ -173,8 +173,12 @@ const InstallDialog = (props: InstallDialogProps) => {
             </SelectTrigger>
             <SelectContent />
           </Select>
-          <div class="flex items-end gap-8">
-            <TextField value={installLocation()} onChange={setInstallLocation}>
+          <div class="flex w-full items-end gap-8">
+            <TextField
+              value={installLocation()}
+              onChange={setInstallLocation}
+              class="w-full"
+            >
               <TextFieldLabel>Install location</TextFieldLabel>
               <TextFieldInput placeholder="C:\Users\jorge\Desktop" />
             </TextField>
