@@ -207,13 +207,11 @@ const TextFieldInput = <T extends ValidComponent = "input">(
     "class",
   ]);
   return (
-    <div class="relative flex items-center">
-      <TextFieldPrimitive.Input
-        type={local.type}
-        class={cn(textFieldInputVariants({ size: local.size }), local.class)}
-        {...others}
-      />
-    </div>
+    <TextFieldPrimitive.Input
+      type={local.type}
+      class={cn(textFieldInputVariants({ size: local.size }), local.class)}
+      {...others}
+    />
   );
 };
 
