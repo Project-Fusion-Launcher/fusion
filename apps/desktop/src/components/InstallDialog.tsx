@@ -168,7 +168,7 @@ const InstallDialog = (props: InstallDialogProps) => {
             <SelectLabel>Version to install</SelectLabel>
             <SelectTrigger aria-label="Version">
               <SelectValue<GameVersion> class="text-sm">
-                {(state) => state.selectedOption().name}
+                {(state) => state.selectedOption()?.name}
               </SelectValue>
             </SelectTrigger>
             <SelectContent />
