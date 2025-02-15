@@ -8,7 +8,12 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 
 const Tooltip: Component<TooltipPrimitive.TooltipRootProps> = (props) => {
   return (
-    <TooltipPrimitive.Root openDelay={300} overflowPadding={40} {...props} />
+    <TooltipPrimitive.Root
+      openDelay={300}
+      overflowPadding={40}
+      gutter={8}
+      {...props}
+    />
   );
 };
 
@@ -23,7 +28,7 @@ const TooltipContent = <T extends ValidComponent = "div">(
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         class={cn(
-          "bg-popover text-popover-foreground animate-pop-out border-border data-[expanded]:animate-pop-in z-50 inline-flex origin-[var(--kb-popover-content-transform-origin)] items-center justify-center overflow-hidden rounded-md border px-12 py-8 text-sm font-medium shadow-md",
+          "bg-popover text-popover-foreground animate-pop-out border-border data-[expanded]:animate-pop-in z-50 inline-flex origin-[var(--kb-popover-content-transform-origin)] items-center justify-center overflow-hidden rounded-md border p-8 text-sm font-medium shadow-md",
           local.class,
         )}
         {...others}

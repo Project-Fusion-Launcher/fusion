@@ -95,7 +95,7 @@ const SelectContent = <T extends ValidComponent = "div">(
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         class={cn(
-          "bg-popover popover-foreground animate-out data-[expanded]:animate-in border-1 border-border relative z-50 min-w-32 origin-[var(--kb-select-content-transform-origin)] overflow-hidden rounded-md p-8 text-sm shadow-md",
+          "bg-popover popover-foreground data-[expanded]:animate-in border-1 border-border relative z-50 min-w-32 origin-[var(--kb-select-content-transform-origin)] overflow-hidden rounded-md p-4 text-sm shadow-md",
           local.class,
         )}
         {...others}

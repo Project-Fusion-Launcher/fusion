@@ -37,6 +37,7 @@ const Header = (props: HeaderProps) => {
                 autocomplete="off"
                 class="pr-44"
                 ref={(el) => (ref = el)}
+                onContextMenu={clearQuery}
               />
               <Show when={props.query}>
                 <IconButton
