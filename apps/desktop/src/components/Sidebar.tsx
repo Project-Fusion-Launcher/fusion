@@ -10,7 +10,6 @@ import { useLocation, useNavigate } from "@solidjs/router";
 
 interface SidebarTriggerProps {
   page: Page;
-  selectedTab: string;
   disabled?: boolean;
 }
 
@@ -18,16 +17,10 @@ const SidebarTrigger = (props: SidebarTriggerProps) => {
   return (
     <Tabs.Trigger
       value={props.page.name}
-      class="relative flex h-52 w-full items-center justify-center"
+      class="relative flex h-52 w-full items-center justify-center data-[selected]:[&>*]:scale-105 data-[selected]:[&>*]:stroke-white"
       disabled={props.disabled}
     >
-      <Dynamic
-        component={props.page.icon}
-        class="size-32 transition-all"
-        classList={{
-          "stroke-white scale-105": props.page.name == props.selectedTab,
-        }}
-      />
+      <Dynamic component={props.page.icon} class="size-32 transition-all" />
     </Tabs.Trigger>
   );
 };
@@ -57,27 +50,15 @@ const Sidebar = () => {
         <Box class="text-primary size-48" style={{ "stroke-width": "2px" }} />
       </div>
       <Tabs.List class="text-secondary relative mb-32 flex h-full w-full flex-col items-center">
-        <SidebarTrigger page={pages.library} selectedTab={selectedTab()} />
-        <SidebarTrigger page={pages.retro} selectedTab={selectedTab()} />
-        <SidebarTrigger
-          page={pages.collections}
-          selectedTab={selectedTab()}
-          disabled
-        />
+        <SidebarTrigger page={pages.library} />
+        <SidebarTrigger page={pages.retro} />
+        <SidebarTrigger page={pages.collections} disabled />
         <Separator class="my-8 w-1/2" />
-        <SidebarTrigger page={pages.downloads} selectedTab={selectedTab()} />
-        <SidebarTrigger
-          page={pages.storefronts}
-          selectedTab={selectedTab()}
-          disabled
-        />
-        <SidebarTrigger
-          page={pages.friends}
-          selectedTab={selectedTab()}
-          disabled
-        />
+        <SidebarTrigger page={pages.downloads} />
+        <SidebarTrigger page={pages.storefronts} disabled />
+        <SidebarTrigger page={pages.friends} disabled />
         <div class="mt-auto w-full">
-          <SidebarTrigger page={pages.settings} selectedTab={selectedTab()} />
+          <SidebarTrigger page={pages.settings} />
         </div>
         <Tabs.Indicator class="border-accent absolute w-full border-r-2 transition-transform" />
       </Tabs.List>
