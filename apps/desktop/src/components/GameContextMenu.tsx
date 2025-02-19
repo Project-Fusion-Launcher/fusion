@@ -1,26 +1,29 @@
-import { ContextMenu } from "@kobalte/core/context-menu";
 import type { JSXElement } from "solid-js";
 import { Match, Show, Switch, useContext } from "solid-js";
 import type { Game } from "../models/types";
 import {
   ArrowDownToLine,
-  ChevronRight,
   Eye,
   EyeOff,
   Folder,
   Pen,
   Play,
+  Plus,
+  RefreshCcw,
   Star,
   StarOff,
   Trash2,
   Wrench,
 } from "lucide-solid";
 import {
+  ContextMenu,
+  ContextMenuTrigger,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuSubContent,
+  ContextMenuSub,
   ContextMenuSubTrigger,
+  ContextMenuSubContent,
+  ContextMenuSeparator,
 } from "@repo/ui";
 import { AppContext } from "../State";
 
@@ -45,10 +48,10 @@ const GameContextMenu = (props: GameContextMenuProps) => {
 
   return (
     <ContextMenu>
-      <ContextMenu.Trigger>{props.children}</ContextMenu.Trigger>
-      <ContextMenu.Portal>
-        <Show when={props.game !== null}>
-          <ContextMenuContent>
+      <ContextMenuTrigger>{props.children}</ContextMenuTrigger>
+      <ContextMenuContent>
+        <Switch>
+          <Match when={props.game}>
             <Switch>
               <Match when={props.game?.status === "installed"}>
                 <ContextMenuItem variant="accent" onSelect={props.onMainAction}>
@@ -78,52 +81,59 @@ const GameContextMenu = (props: GameContextMenuProps) => {
                 </Match>
               </Switch>
             </ContextMenuItem>
-            <ContextMenu.Sub gutter={4}>
+            <ContextMenuSub gutter={4}>
               <ContextMenuSubTrigger>
                 <Wrench class="size-16" />
                 Manage
-                <ChevronRight class="size-16" />
               </ContextMenuSubTrigger>
-              <ContextMenu.Portal>
-                <ContextMenuSubContent>
-                  <Switch>
-                    <Match when={props.game?.hidden}>
-                      <ContextMenuItem>
-                        <Eye class="size-16" />
-                        Unhide game
-                      </ContextMenuItem>
-                    </Match>
-                    <Match when={!props.game?.hidden}>
-                      <ContextMenuItem onSelect={handleHide}>
-                        <EyeOff class="size-16" />
-                        Hide game
-                      </ContextMenuItem>
-                    </Match>
-                  </Switch>
-                  <Show when={props.game?.status === "installed"}>
+              <ContextMenuSubContent>
+                <Switch>
+                  <Match when={props.game?.hidden}>
                     <ContextMenuItem>
-                      <Folder class="size-16" />
-                      Open install folder
+                      <Eye class="size-16" />
+                      Unhide game
                     </ContextMenuItem>
-                    <ContextMenuItem
-                      variant="danger"
-                      onSelect={handleUninstall}
-                    >
-                      <Trash2 class="size-16" />
-                      Uninstall
+                  </Match>
+                  <Match when={!props.game?.hidden}>
+                    <ContextMenuItem onSelect={handleHide}>
+                      <EyeOff class="size-16" />
+                      Hide game
                     </ContextMenuItem>
-                  </Show>
-                </ContextMenuSubContent>
-              </ContextMenu.Portal>
-            </ContextMenu.Sub>
+                  </Match>
+                </Switch>
+                <Show when={props.game?.status === "installed"}>
+                  <ContextMenuItem>
+                    <Folder class="size-16" />
+                    Open install folder
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    variant="destructive"
+                    onSelect={handleUninstall}
+                  >
+                    <Trash2 class="size-16" />
+                    Uninstall
+                  </ContextMenuItem>
+                </Show>
+              </ContextMenuSubContent>
+            </ContextMenuSub>
             <ContextMenuSeparator />
             <ContextMenuItem>
               <Pen class="size-16" />
               Properties
             </ContextMenuItem>
-          </ContextMenuContent>
-        </Show>
-      </ContextMenu.Portal>
+          </Match>
+          <Match when={!props.game}>
+            <ContextMenuItem>
+              <Plus class="size-16" />
+              Add game
+            </ContextMenuItem>
+            <ContextMenuItem>
+              <RefreshCcw class="size-16" />
+              Refresh games
+            </ContextMenuItem>
+          </Match>
+        </Switch>
+      </ContextMenuContent>
     </ContextMenu>
   );
 };

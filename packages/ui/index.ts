@@ -18,11 +18,14 @@ import {
 import Dialog from "./src/components/Dialog";
 import IconButton from "./src/components/IconButton";
 import {
-  ContextMenuItem,
-  ContextMenuSubTrigger,
+  ContextMenu,
+  ContextMenuTrigger,
   ContextMenuContent,
-  ContextMenuSubContent,
+  ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
 } from "./src/components/ContextMenu";
 import {
   Tooltip,
@@ -54,11 +57,14 @@ export {
   Select,
   Dialog,
   IconButton,
-  ContextMenuItem,
-  ContextMenuSubTrigger,
+  ContextMenu,
+  ContextMenuTrigger,
   ContextMenuContent,
-  ContextMenuSubContent,
+  ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
