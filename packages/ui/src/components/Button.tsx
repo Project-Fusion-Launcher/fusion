@@ -1,13 +1,15 @@
 import type { JSXElement, ValidComponent } from "solid-js";
-import { splitProps } from "solid-js";
+import { Match, splitProps, Switch } from "solid-js";
 import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
 import * as ButtonPrimitive from "@kobalte/core/button";
 import type { PolymorphicProps } from "@kobalte/core";
 import { cn } from "../utils";
+import { LoaderCircle } from "lucide-solid";
+import { Transition } from "solid-transition-group";
 
 const buttonVariants = tv({
-  base: "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium disabled:pointer-events-none disabled:opacity-50",
+  base: "relative inline-flex items-center justify-center overflow-hidden whitespace-nowrap rounded-md text-sm font-medium disabled:pointer-events-none disabled:opacity-50",
   variants: {
     variant: {
       primary: "bg-primary text-primary-foreground",
@@ -33,6 +35,7 @@ type ButtonProps<T extends ValidComponent = "button"> =
     VariantProps<typeof buttonVariants> & {
       class?: string | undefined;
       children?: JSXElement;
+      loading?: boolean;
     };
 
 const Button = <T extends ValidComponent = "button">(
@@ -42,6 +45,8 @@ const Button = <T extends ValidComponent = "button">(
     "variant",
     "size",
     "class",
+    "loading",
+    "children",
   ]);
   return (
     <ButtonPrimitive.Root
@@ -50,7 +55,25 @@ const Button = <T extends ValidComponent = "button">(
         local.class,
       )}
       {...others}
-    />
+    >
+      <Transition
+        enterActiveClass="transition-all ease-in duration-150"
+        exitActiveClass="transition-all ease-out duration-150"
+        enterClass="opacity-0 -translate-y-[100%] scale-95"
+        enterToClass="opacity-100 translate-y-0 scale-100"
+        exitClass="opacity-100 translate-y-0 scale-100"
+        exitToClass="opacity-0 translate-y-[100%] scale-95"
+      >
+        <Switch>
+          <Match when={props.loading}>
+            <LoaderCircle class="absolute animate-spin" />
+          </Match>
+          <Match when={!props.loading}>
+            <div class="absolute">{props.children}</div>
+          </Match>
+        </Switch>
+      </Transition>
+    </ButtonPrimitive.Root>
   );
 };
 
