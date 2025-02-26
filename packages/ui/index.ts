@@ -15,7 +15,15 @@ import {
   SelectHiddenSelect,
   SelectLabel,
 } from "./src/components/Select";
-import Dialog from "./src/components/Dialog";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from "./src/components/Dialog";
 import IconButton from "./src/components/IconButton";
 import {
   ContextMenu,
@@ -56,6 +64,12 @@ export {
   Badge,
   Select,
   Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
   IconButton,
   ContextMenu,
   ContextMenuTrigger,

@@ -1,6 +1,11 @@
 import {
   Button,
   Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   IconButton,
   Select,
   SelectContent,
@@ -137,107 +142,111 @@ const InstallDialog = (props: InstallDialogProps) => {
   }
 
   return (
-    <Dialog
-      title={"Install " + props.selectedGame?.title}
-      open={props.open}
-      onOpenChange={handleDialogClose}
-    >
-      <div class="mb-40 flex min-w-[300px] gap-32">
-        <div class="w-192 h-288 border-border flex shrink-0 overflow-hidden rounded-md border">
-          <img
-            src={props.selectedGame?.coverUrl}
-            class="h-auto w-auto object-cover"
-          />
-        </div>
-        <div class="flex w-full flex-col gap-20">
-          <Select<GameVersion>
-            placeholder={getPlaceholder()}
-            options={versions() || []}
-            optionValue="name"
-            optionTextValue="name"
-            disabled={versions.loading}
-            value={selectedVersion()}
-            onChange={handleVersionSelect}
-            disallowEmptySelection
-            itemComponent={(props) => (
-              <SelectItem item={props.item}>
-                {props.item.rawValue.name}
-              </SelectItem>
-            )}
-          >
-            <SelectLabel>Version to install</SelectLabel>
-            <SelectTrigger aria-label="Version">
-              <SelectValue<GameVersion> class="text-sm">
-                {(state) => state.selectedOption()?.name}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent />
-          </Select>
-          <div class="flex w-full items-end gap-8">
-            <TextField
-              value={installLocation()}
-              onChange={setInstallLocation}
-              class="w-full"
-            >
-              <TextFieldLabel>Install location</TextFieldLabel>
-              <TextFieldInput placeholder="C:\Users\jorge\Desktop" />
-            </TextField>
-            <IconButton variant="outline" onClick={handleDirectorySelect}>
-              <Folder />
-            </IconButton>
+    <Dialog open={props.open} onOpenChange={handleDialogClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Install Game</DialogTitle>
+          <DialogDescription>{props.selectedGame?.title}</DialogDescription>
+        </DialogHeader>
+        <div class="mb-40 flex min-w-[300px] gap-32">
+          <div class="w-192 h-288 border-border flex shrink-0 overflow-hidden rounded-md border">
+            <img
+              src={props.selectedGame?.coverUrl}
+              class="h-auto w-auto object-cover"
+            />
           </div>
-          <table
-            class="text-secondary flex-cole flex text-base"
-            classList={{ "opacity-0": !selectedVersion() }}
-          >
-            <tbody>
-              <tr>
-                <td class="flex items-center gap-8 pr-16 font-light">
-                  <Download class="size-16" /> Download size:
-                </td>
-                <td>
-                  {selectedVersion()?.external
-                    ? "Unknown"
-                    : bytesToSize(selectedVersion()?.downloadSize)}
-                </td>
-              </tr>
-              <tr>
-                <td class="flex items-center gap-8 pr-16 font-light">
-                  <HardDrive class="size-16" />
-                  Install size:
-                </td>
-                <td>
-                  <Switch>
-                    <Match when={selectedVersion()?.external}>Unknown</Match>
-                    <Match when={versionDownloadInfo.loading}>
-                      <LoaderCircle class="size-16 animate-spin" />
-                    </Match>
-                    <Match when={!versionDownloadInfo.loading}>
-                      {bytesToSize(versionDownloadInfo()?.installSize)}
-                    </Match>
-                  </Switch>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="flex w-full flex-col gap-20">
+            <Select<GameVersion>
+              placeholder={getPlaceholder()}
+              options={versions() || []}
+              optionValue="name"
+              optionTextValue="name"
+              disabled={versions.loading}
+              value={selectedVersion()}
+              onChange={handleVersionSelect}
+              disallowEmptySelection
+              itemComponent={(props) => (
+                <SelectItem item={props.item}>
+                  {props.item.rawValue.name}
+                </SelectItem>
+              )}
+            >
+              <SelectLabel>Version to install</SelectLabel>
+              <SelectTrigger aria-label="Version">
+                <SelectValue<GameVersion> class="text-sm">
+                  {(state) => state.selectedOption()?.name}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent />
+            </Select>
+            <div class="flex w-full items-end gap-8">
+              <TextField
+                value={installLocation()}
+                onChange={setInstallLocation}
+                class="w-full"
+              >
+                <TextFieldLabel>Install location</TextFieldLabel>
+                <TextFieldInput placeholder="C:\Users\jorge\Desktop" />
+              </TextField>
+              <IconButton variant="outline" onClick={handleDirectorySelect}>
+                <Folder />
+              </IconButton>
+            </div>
+            <table
+              class="text-secondary flex-cole flex text-base"
+              classList={{ "opacity-0": !selectedVersion() }}
+            >
+              <tbody>
+                <tr>
+                  <td class="flex items-center gap-8 pr-16 font-light">
+                    <Download class="size-16" /> Download size:
+                  </td>
+                  <td>
+                    {selectedVersion()?.external
+                      ? "Unknown"
+                      : bytesToSize(selectedVersion()?.downloadSize)}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="flex items-center gap-8 pr-16 font-light">
+                    <HardDrive class="size-16" />
+                    Install size:
+                  </td>
+                  <td>
+                    <Switch>
+                      <Match when={selectedVersion()?.external}>Unknown</Match>
+                      <Match when={versionDownloadInfo.loading}>
+                        <LoaderCircle class="size-16 animate-spin" />
+                      </Match>
+                      <Match when={!versionDownloadInfo.loading}>
+                        {bytesToSize(versionDownloadInfo()?.installSize)}
+                      </Match>
+                    </Switch>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-      <div class="flex flex-row-reverse gap-8">
-        <Button
-          variant="accent"
-          disabled={selectedVersion() === null || !installLocation()}
-          onClick={handleInstall}
-        >
-          Install
-        </Button>
-        <Button
-          variant="outline"
-          onClick={handleDialogClose}
-          disabled={preparingToInstall()}
-        >
-          Cancel
-        </Button>
-      </div>
+        <DialogFooter class="gap-8">
+          <Button
+            variant="accent"
+            disabled={selectedVersion() === null || !installLocation()}
+            onClick={handleInstall}
+            class="w-[170px]"
+          >
+            Install
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleDialogClose}
+            disabled={preparingToInstall()}
+            class="w-[170px]"
+          >
+            Cancel
+          </Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 };
