@@ -1,9 +1,11 @@
-import { mergeProps, splitProps, type ValidComponent } from "solid-js";
+import type { Component } from "solid-js";
+import { mergeProps, Show, splitProps, type ValidComponent } from "solid-js";
 import * as TextFieldPrimitive from "@kobalte/core/text-field";
 import type { PolymorphicProps } from "@kobalte/core";
 import { cn } from "../utils";
 import type { VariantProps } from "tailwind-variants";
 import { tv } from "tailwind-variants";
+import { Dynamic } from "solid-js/web";
 
 type TextFieldRootProps<T extends ValidComponent = "div"> =
   TextFieldPrimitive.TextFieldRootProps<T> & {
@@ -62,6 +64,9 @@ type TextFieldInputProps<T extends ValidComponent = "input"> =
         | "time"
         | "url"
         | "week";
+      icon?: Component<{
+        class?: string;
+      }>;
     };
 
 const TextFieldInput = <T extends ValidComponent = "input">(
@@ -75,13 +80,26 @@ const TextFieldInput = <T extends ValidComponent = "input">(
     "type",
     "size",
     "class",
+    "icon",
   ]);
   return (
-    <TextFieldPrimitive.Input
-      type={local.type}
-      class={cn(textFieldInputVariants({ size: local.size }), local.class)}
-      {...others}
-    />
+    <div class="flex w-full items-center">
+      <Show when={local.icon}>
+        <Dynamic
+          component={local.icon}
+          class="text-secondary pointer-events-none absolute ml-16 size-16"
+        />
+      </Show>
+      <TextFieldPrimitive.Input
+        type={local.type}
+        class={cn(
+          textFieldInputVariants({ size: local.size }),
+          local.class,
+          local.icon && "pl-48",
+        )}
+        {...others}
+      />
+    </div>
   );
 };
 

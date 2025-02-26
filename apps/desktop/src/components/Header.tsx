@@ -1,5 +1,5 @@
 import { IconButton, TextField, TextFieldInput } from "@repo/ui";
-import { X } from "lucide-solid";
+import { Search, X } from "lucide-solid";
 import { Show } from "solid-js";
 
 interface HeaderProps {
@@ -36,6 +36,7 @@ const Header = (props: HeaderProps) => {
                 class="pr-44"
                 ref={(el) => (ref = el)}
                 onContextMenu={clearQuery}
+                icon={Search}
               />
               <Show when={props.query}>
                 <IconButton
