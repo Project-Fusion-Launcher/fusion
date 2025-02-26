@@ -20,7 +20,7 @@
     "@tauri-apps/plugin-os": "2.2.0",
     "lucide-solid": "^0.474.0",
     "solid-js": "^1.9.4",
-    "solid-transition-group": "^0.2.3",
+    "solid-transition-group": "^0.3.0",
     "virtua": "^0.40.0"
   },
   "devDependencies": {
