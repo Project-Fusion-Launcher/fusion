@@ -34,7 +34,7 @@ const DialogOverlay = <T extends ValidComponent = "div">(
   return (
     <DialogPrimitive.Overlay
       class={cn(
-        "bg-background/80 data-[expanded]:animate-in data-[closed]:animate-out fixed inset-0 z-50",
+        "bg-background/80 data-[expanded]:animate-fade-in data-[closed]:animate-fade-out fixed inset-0 z-50",
         local.class,
       )}
       {...other}
