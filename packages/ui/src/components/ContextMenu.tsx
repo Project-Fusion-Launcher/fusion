@@ -114,7 +114,7 @@ const ContextMenuSubTrigger = <T extends ValidComponent = "div">(
   return (
     <ContextMenuPrimitive.SubTrigger
       class={cn(
-        "data-[expanded]:bg-highlight hover:bg-highlight focus:outline-hidden relative flex h-32 cursor-pointer select-none items-center gap-8 rounded-sm px-8 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "data-[expanded]:bg-highlight focus:bg-highlight hover:bg-highlight focus:outline-hidden relative flex h-32 cursor-pointer select-none items-center gap-8 rounded-sm px-8 data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         local.class,
       )}
       {...others}
