@@ -109,6 +109,13 @@ const ContextProvider = (props: StateProps) => {
     (event) => {
       const payload = event.payload;
       setState("downloadQueue", state.downloadQueue.length, payload);
+      setState(
+        "games",
+        (g) => g.id === payload.gameId && g.source === payload.gameSource,
+        produce((g) => {
+          g.status = "downloading";
+        }),
+      );
     },
   );
 
@@ -117,6 +124,13 @@ const ContextProvider = (props: StateProps) => {
     (event) => {
       const payload = event.payload;
       setState("externalDownloads", state.externalDownloads.length, payload);
+      setState(
+        "games",
+        (g) => g.id === payload.gameId && g.source === payload.gameSource,
+        produce((g) => {
+          g.status = "downloading";
+        }),
+      );
     },
   );
 
@@ -152,7 +166,6 @@ const ContextProvider = (props: StateProps) => {
         (i) =>
           i.gameId === payload.gameId && i.gameSource === payload.gameSource,
         produce((i) => {
-          console.log("found");
           i.downloadSize = payload.downloadSize;
           i.downloaded = payload.downloadSize;
         }),

@@ -1,13 +1,19 @@
+use super::storefront::Storefront;
 use crate::{
     common::{database, result::Result},
     managers::download::{Download, DownloadOptions},
     models::{
-        game::{Game, GameSource, GameStatus, GameVersion, VersionDownloadInfo},
+        config::Config,
+        game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
         payloads::DownloadPayload,
     },
     util, APP,
 };
-use std::path::{Path, PathBuf};
+use async_trait::async_trait;
+use std::{
+    path::{Path, PathBuf},
+    sync::RwLock,
+};
 use tauri::{webview::DownloadEvent, Emitter, Manager, Url, WebviewUrl, WebviewWindow};
 use tokio::fs;
 use wrapper_itchio::{
@@ -15,161 +21,236 @@ use wrapper_itchio::{
     ItchioClient,
 };
 
-pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
-    let client = ItchioClient::new(api_key);
-    let mut games = Vec::new();
-    let mut page = 1;
+#[derive(Default)]
+pub struct Itchio;
 
-    loop {
-        let owned_keys = client.fetch_owned_keys(page).await?;
-        let current_page_count = owned_keys.owned_keys.len() as u8;
+#[async_trait]
+impl Storefront for Itchio {
+    async fn fetch_games(&self) -> Result<Option<Vec<Game>>> {
+        let api_key = APP
+            .get()
+            .unwrap()
+            .state::<RwLock<Config>>()
+            .read()
+            .unwrap()
+            .itchio_api_key();
 
-        games.extend(owned_keys.owned_keys.into_iter().map(|key| {
-            let developer = key
-                .game
-                .user
-                .and_then(|user| user.display_name.or(Some(user.username)));
+        if api_key.is_none() {
+            return Ok(None);
+        }
 
-            Game {
-                id: key.game.id.to_string(),
-                title: key.game.title.clone(),
+        let client = ItchioClient::new(api_key.unwrap());
+        let mut games = Vec::new();
+        let mut page = 1;
+
+        loop {
+            let owned_keys = client.fetch_owned_keys(page).await?;
+            let current_page_count = owned_keys.owned_keys.len() as u8;
+
+            games.extend(owned_keys.owned_keys.into_iter().map(|key| {
+                let developer = key
+                    .game
+                    .user
+                    .and_then(|user| user.display_name.or(Some(user.username)));
+
+                Game {
+                    id: key.game.id.to_string(),
+                    title: key.game.title.clone(),
+                    source: GameSource::Itchio,
+                    key: Some(key.id.to_string()),
+                    developer,
+                    launch_target: None,
+                    path: None,
+                    version: None,
+                    status: GameStatus::NotInstalled,
+                    favorite: false,
+                    hidden: false,
+                    cover_url: key.game.still_cover_url.or(key.game.cover_url),
+                    sort_title: Some(key.game.title.to_lowercase()),
+                }
+            }));
+
+            if current_page_count < owned_keys.per_page {
+                break;
+            }
+
+            page += 1;
+        }
+
+        Ok(Some(games))
+    }
+
+    async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {
+        let api_key = APP
+            .get()
+            .unwrap()
+            .state::<RwLock<Config>>()
+            .read()
+            .unwrap()
+            .itchio_api_key();
+
+        if api_key.is_none() {
+            return Err("Missing API key".into());
+        }
+
+        let client = ItchioClient::new(api_key.unwrap());
+
+        let game_id: u32 = game.id.parse()?;
+        let game_key: u32 = game.key.unwrap().parse()?;
+        let uploads = client.fetch_game_uploads(game_id, game_key).await?;
+
+        #[cfg(unix)]
+        let os_trait = UploadTraits::PLinux;
+
+        #[cfg(windows)]
+        let os_trait = UploadTraits::PWindows;
+
+        let game_versions = uploads
+            .into_iter()
+            .filter(|upload| upload.traits.contains(&os_trait))
+            .map(|upload| GameVersion {
+                id: upload.id.to_string(),
+                game_id: game_id.to_string(),
                 source: GameSource::Itchio,
-                key: Some(key.id.to_string()),
-                developer,
-                launch_target: None,
-                path: None,
-                version: None,
-                status: GameStatus::NotInstalled,
-                favorite: false,
-                hidden: false,
-                cover_url: key.game.still_cover_url.or(key.game.cover_url),
-                sort_title: Some(key.game.title.to_lowercase()),
-            }
-        }));
+                name: upload.display_name.unwrap_or(upload.filename),
+                download_size: upload.size.unwrap_or(0),
+                external: upload.storage == UploadStorage::External,
+            })
+            .collect();
 
-        if current_page_count < owned_keys.per_page {
-            break;
+        Ok(game_versions)
+    }
+
+    async fn fetch_game_version_info(
+        &self,
+        game: Game,
+        version_id: String,
+    ) -> Result<GameVersionInfo> {
+        let api_key = APP
+            .get()
+            .unwrap()
+            .state::<RwLock<Config>>()
+            .read()
+            .unwrap()
+            .itchio_api_key();
+
+        if api_key.is_none() {
+            return Err("Missing API key".into());
         }
 
-        page += 1;
-    }
+        let client = ItchioClient::new(api_key.unwrap());
 
-    Ok(games)
-}
+        let upload_id: u32 = version_id.parse()?;
+        let game_key: u32 = game.key.unwrap().parse()?;
 
-pub async fn fetch_game_versions(
-    api_key: &str,
-    game_id: &str,
-    game_key: &str,
-) -> Result<Vec<GameVersion>> {
-    let client = ItchioClient::new(api_key);
+        let mut retries = 5;
 
-    let game_id: u32 = game_id.parse()?;
-    let game_key: u32 = game_key.parse()?;
-    let uploads = client.fetch_game_uploads(game_id, game_key).await?;
+        while retries > 0 {
+            let scanned_archive = client
+                .fetch_upload_scanned_archive(upload_id, game_key)
+                .await;
 
-    #[cfg(unix)]
-    let os_trait = UploadTraits::PLinux;
-
-    #[cfg(windows)]
-    let os_trait = UploadTraits::PWindows;
-
-    let game_versions = uploads
-        .into_iter()
-        .filter(|upload| upload.traits.contains(&os_trait))
-        .map(|upload| GameVersion {
-            id: upload.id.to_string(),
-            game_id: game_id.to_string(),
-            source: GameSource::Itchio,
-            name: upload.display_name.unwrap_or(upload.filename),
-            download_size: upload.size.unwrap_or(0),
-            external: upload.storage == UploadStorage::External,
-        })
-        .collect();
-
-    Ok(game_versions)
-}
-
-pub async fn fetch_version_info(
-    api_key: &str,
-    upload_id: &str,
-    game: Game,
-) -> Result<VersionDownloadInfo> {
-    let client = ItchioClient::new(api_key);
-
-    let upload_id: u32 = upload_id.parse()?;
-    let game_key: u32 = game.key.clone().unwrap().parse()?;
-
-    let mut retries = 5;
-
-    while retries > 0 {
-        let scanned_archive = client
-            .fetch_upload_scanned_archive(upload_id, game_key)
-            .await;
-
-        if let Ok(scanned_archive) = scanned_archive {
-            if scanned_archive.extracted_size.is_some() {
-                return Ok(VersionDownloadInfo {
-                    install_size: scanned_archive.extracted_size.unwrap(),
-                });
+            if let Ok(scanned_archive) = scanned_archive {
+                if scanned_archive.extracted_size.is_some() {
+                    return Ok(GameVersionInfo {
+                        install_size: scanned_archive.extracted_size.unwrap(),
+                    });
+                }
             }
+
+            retries -= 1;
+
+            tokio::time::sleep(std::time::Duration::from_secs(2_u64.pow(5 - retries))).await;
         }
 
-        retries -= 1;
-
-        tokio::time::sleep(std::time::Duration::from_secs(2_u64.pow(5 - retries))).await;
+        Err("Failed to fetch release info".into())
     }
 
-    Err("Failed to fetch release info".into())
-}
+    async fn pre_download(
+        &self,
+        game: &mut Game,
+        version_id: String,
+        download_options: DownloadOptions,
+    ) -> Result<Option<Download>> {
+        let api_key = APP
+            .get()
+            .unwrap()
+            .state::<RwLock<Config>>()
+            .read()
+            .unwrap()
+            .itchio_api_key();
 
-pub async fn pre_download(
-    api_key: &str,
-    upload_id: &str,
-    game: &mut Game,
-    download_options: DownloadOptions,
-) -> Result<Option<Download>> {
-    let client = ItchioClient::new(api_key);
+        if api_key.is_none() {
+            return Err("Missing API key".into());
+        }
 
-    let upload_id: u32 = upload_id.parse()?;
-    let game_key: u32 = game.key.clone().unwrap().parse()?;
+        let client = ItchioClient::new(api_key.unwrap());
 
-    let upload = client.fetch_game_upload(upload_id, game_key).await?;
+        let upload_id: u32 = version_id.parse()?;
+        let game_key: u32 = game.key.clone().unwrap().parse()?;
 
-    let download_request = client.fetch_upload_download_url(upload_id, game_key);
+        let upload = client.fetch_game_upload(upload_id, game_key).await?;
 
-    if upload.storage == UploadStorage::External {
-        let response = download_request.send().await?;
-        let url = response.url().to_owned();
-        handle_external_download(
-            url,
-            &download_options.install_location,
-            &game.id,
-            &game.title,
-        )
-        .await?;
-        return Ok(None);
+        let download_request = client.fetch_upload_download_url(upload_id, game_key);
+
+        if upload.storage == UploadStorage::External {
+            let response = download_request.send().await?;
+            let url = response.url().to_owned();
+            handle_external_download(
+                url,
+                &download_options.install_location,
+                &game.id,
+                &game.title,
+            )
+            .await?;
+            return Ok(None);
+        }
+
+        game.version = upload
+            .build
+            .as_ref()
+            .map(|build| build.version.to_string())
+            .or(upload.md5_hash.clone());
+
+        Ok(Some(Download {
+            request: download_request,
+            file_name: upload.filename,
+            download_options,
+            game_source: GameSource::Itchio,
+            game_id: game.id.clone(),
+            game_title: game.title.clone(),
+            md5: upload.md5_hash,
+            download_size: upload.size.unwrap_or(0) as u64,
+        }))
     }
 
-    game.version = upload
-        .build
-        .as_ref()
-        .map(|build| build.version.to_string())
-        .or(upload.md5_hash.clone());
+    fn launch_game(&self, game: Game) -> Result<()> {
+        let game_path = game.path.unwrap();
+        let launch_target = game.launch_target.unwrap();
 
-    Ok(Some(Download {
-        request: download_request,
-        file_name: upload.filename,
-        download_options,
-        game_source: GameSource::Itchio,
-        game_id: game.id.clone(),
-        game_title: game.title.clone(),
-        md5: upload.md5_hash,
-        download_size: upload.size.unwrap_or(0) as u64,
-    }))
+        let target_path = PathBuf::from(&game_path).join(&launch_target);
+
+        util::file::execute_file(&target_path)?;
+
+        Ok(())
+    }
+
+    async fn uninstall_game(&self, game: &Game) -> Result<()> {
+        let path = PathBuf::from(game.path.as_ref().unwrap());
+
+        if path.exists() {
+            fs::remove_dir_all(&path).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
+        post_download(game_id, path, file_name).await
+    }
 }
 
-pub async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
+async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
     let file_path = path.join(file_name);
 
     let mut connection = database::create_connection()?;
@@ -237,27 +318,6 @@ async fn post_download_external(
     Ok(())
 }
 
-pub fn launch_game(game: Game) -> Result<()> {
-    let game_path = game.path.unwrap();
-    let launch_target = game.launch_target.unwrap();
-
-    let target_path = PathBuf::from(&game_path).join(&launch_target);
-
-    util::file::execute_file(&target_path)?;
-
-    Ok(())
-}
-
-pub async fn uninstall_game(game: &Game) -> Result<()> {
-    let path = PathBuf::from(game.path.as_ref().unwrap());
-
-    if path.exists() {
-        fs::remove_dir_all(&path).await?;
-    }
-
-    Ok(())
-}
-
 pub async fn handle_external_download(
     url: Url,
     install_location: &Path,
@@ -286,6 +346,14 @@ pub async fn handle_external_download(
             DownloadEvent::Requested { url, destination } => {
                 webview.window().hide().unwrap();
                 println!("downloading {}", url);
+
+                let mut connection = database::create_connection().unwrap();
+                let mut game =
+                    Game::select_one(&mut connection, &GameSource::Itchio, &game_id).unwrap();
+
+                game.status = GameStatus::Downloading;
+                game.update(&mut connection).unwrap();
+
                 *destination = install_location
                     .clone()
                     .join(destination.file_name().unwrap());

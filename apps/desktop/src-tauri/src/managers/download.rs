@@ -1,6 +1,6 @@
 use crate::{
     models::{game::GameSource, payloads::DownloadPayload},
-    storefronts::{itchio, legacygames},
+    storefronts::get_storefront,
     APP,
 };
 use reqwest::RequestBuilder;
@@ -101,14 +101,9 @@ impl DownloadManager {
                         .emit("download-finished", &payload)
                         .unwrap();
 
-                    let result = match payload.game_source {
-                        GameSource::Itchio => {
-                            itchio::post_download(&payload.game_id, path, &file_name).await
-                        }
-                        GameSource::LegacyGames => {
-                            legacygames::post_download(&payload.game_id, path, &file_name).await
-                        }
-                    };
+                    let result = get_storefront(&payload.game_source)
+                        .post_download(&payload.game_id, path, &file_name)
+                        .await;
 
                     APP.get()
                         .unwrap()

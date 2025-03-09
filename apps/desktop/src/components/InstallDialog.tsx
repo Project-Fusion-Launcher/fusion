@@ -27,7 +27,7 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { Download, Folder, HardDrive, LoaderCircle } from "lucide-solid";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { GameVersion, VersionDownloadInfo } from "../models/types";
+import type { GameVersion, GameVersionInfo } from "../models/types";
 import { type Game } from "../models/types";
 import { bytesToSize } from "../util/string";
 
@@ -43,8 +43,8 @@ const InstallDialog = (props: InstallDialogProps) => {
   const [selectedVersion, setSelectedVersion] =
     createSignal<GameVersion | null>();
 
-  const [versionDownloadInfo, { refetch: refetchVersionDownloadInfo }] =
-    createResource<VersionDownloadInfo | null>(fetchVersionDownloadInfo);
+  const [gameVersionInfo, { refetch: refetchGameVersionInfo }] =
+    createResource<GameVersionInfo | null>(fetchGameVersionInfo);
 
   const [installLocation, setInstallLocation] = createSignal(
     "C:\\Users\\jorge\\Desktop",
@@ -63,9 +63,9 @@ const InstallDialog = (props: InstallDialogProps) => {
   }
 
   // Fetch the download info of the selected version
-  async function fetchVersionDownloadInfo(): Promise<VersionDownloadInfo | null> {
+  async function fetchGameVersionInfo(): Promise<GameVersionInfo | null> {
     if (selectedVersion() === null) return null;
-    return await invoke<VersionDownloadInfo>("fetch_version_info", {
+    return await invoke<GameVersionInfo>("fetch_version_info", {
       gameId: props.selectedGame?.id,
       gameSource: props.selectedGame?.source,
       versionId: selectedVersion()?.id,
@@ -85,7 +85,7 @@ const InstallDialog = (props: InstallDialogProps) => {
   function handleVersionSelect(version: GameVersion | null) {
     setSelectedVersion(version);
     if (version && !version.external) {
-      refetchVersionDownloadInfo();
+      refetchGameVersionInfo();
     }
   }
 
@@ -215,11 +215,11 @@ const InstallDialog = (props: InstallDialogProps) => {
                   <td>
                     <Switch>
                       <Match when={selectedVersion()?.external}>Unknown</Match>
-                      <Match when={versionDownloadInfo.loading}>
+                      <Match when={gameVersionInfo.loading}>
                         <LoaderCircle class="size-16 animate-spin" />
                       </Match>
-                      <Match when={!versionDownloadInfo.loading}>
-                        {bytesToSize(versionDownloadInfo()?.installSize)}
+                      <Match when={!gameVersionInfo.loading}>
+                        {bytesToSize(gameVersionInfo()?.installSize)}
                       </Match>
                     </Switch>
                   </td>

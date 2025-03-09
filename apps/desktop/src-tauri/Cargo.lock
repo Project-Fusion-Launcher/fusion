@@ -1141,6 +1141,7 @@ dependencies = [
 name = "fusion"
 version = "0.0.0"
 dependencies = [
+ "async-trait",
  "diesel",
  "diesel-derive-enum",
  "diesel_migrations",

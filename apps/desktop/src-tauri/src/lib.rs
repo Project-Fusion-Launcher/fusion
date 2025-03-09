@@ -11,11 +11,9 @@ pub mod schema;
 pub mod storefronts;
 pub mod util;
 
-/// A [`OnceLock`](OnceLock) containing a [`tauri`](tauri) [`AppHandle`](AppHandle) for easy access.
 static APP: OnceLock<AppHandle> = OnceLock::new();
 
 pub async fn run() {
-    // Share the current tokio runtime with tauri.
     tauri::async_runtime::set(tokio::runtime::Handle::current());
 
     tauri::Builder::default()

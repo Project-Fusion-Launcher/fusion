@@ -131,7 +131,7 @@ pub struct GameVersion {
 
 #[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct VersionDownloadInfo {
+pub struct GameVersionInfo {
     pub install_size: u32,
 }
 

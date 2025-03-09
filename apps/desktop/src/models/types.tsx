@@ -33,7 +33,7 @@ export interface GameVersion {
   external: boolean;
 }
 
-export interface VersionDownloadInfo {
+export interface GameVersionInfo {
   installSize: number;
 }
 
