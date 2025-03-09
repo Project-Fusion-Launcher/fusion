@@ -24,7 +24,7 @@ pub struct Game {
     pub favorite: bool,
     pub hidden: bool,
     pub cover_url: Option<String>,
-    pub sort_title: Option<String>,
+    pub sort_title: String,
 }
 
 impl Game {

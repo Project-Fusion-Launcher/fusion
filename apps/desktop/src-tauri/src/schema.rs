@@ -21,6 +21,6 @@ diesel::table! {
         favorite -> Bool,
         hidden -> Bool,
         cover_url -> Nullable<Text>,
-        sort_title -> Nullable<Text>,
+        sort_title -> Text,
     }
 }

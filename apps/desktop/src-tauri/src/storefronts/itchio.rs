@@ -66,7 +66,7 @@ impl Storefront for Itchio {
                     favorite: false,
                     hidden: false,
                     cover_url: key.game.still_cover_url.or(key.game.cover_url),
-                    sort_title: Some(key.game.title.to_lowercase()),
+                    sort_title: key.game.title.to_lowercase(),
                 }
             }));
 

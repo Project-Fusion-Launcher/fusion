@@ -278,7 +278,7 @@ fn create_games(products: Vec<Product>, is_giveaway: bool) -> Vec<Game> {
                     favorite: false,
                     hidden: false,
                     cover_url: Some(game.game_coverart),
-                    sort_title: Some(game.game_name.to_lowercase()),
+                    sort_title: game.game_name.to_lowercase(),
                 }
             })
         })
