@@ -21,21 +21,17 @@ where
         fs::create_dir_all(output_dir).await?;
     }
 
-    let os_specific_path = if cfg!(target_os = "windows") {
-        "thirdparty/7-Zip/windows/7z.exe"
-    } else if cfg!(target_os = "linux") {
-        "thirdparty/7-Zip/linux/7zzs"
-    } else {
-        return Err("Unsupported OS".into());
-    };
+    #[cfg(target_os = "windows")]
+    let os_specific_path = "thirdparty/7-Zip/windows/7z.exe";
+
+    #[cfg(target_os = "linux")]
+    let os_specific_path = "thirdparty/7-Zip/linux/7zzs";
 
     let seven_zip = APP
         .get()
         .unwrap()
         .path()
         .resolve(os_specific_path, BaseDirectory::Resource)?;
-
-    println!("7z path: {:?}", seven_zip);
 
     let mut command = tokio::process::Command::new(seven_zip);
     command
