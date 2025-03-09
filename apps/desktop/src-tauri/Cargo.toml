@@ -35,6 +35,7 @@ wrapper-itchio = { path = "../../../crates/wrapper-itchio" }
 wrapper-legacygames = { path = "../../../crates/wrapper-legacygames" }
 md5 = "0.7.0"
 async-trait = "0.1.87"
+tauri-plugin-opener = "2.2.6"
 
 [profile.release]
 panic = "abort"

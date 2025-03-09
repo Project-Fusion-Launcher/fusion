@@ -26,6 +26,7 @@ import {
   ContextMenuSeparator,
 } from "@repo/ui";
 import { AppContext } from "../State";
+import { openPath } from "@tauri-apps/plugin-opener";
 
 interface GameContextMenuProps {
   game: Game | null;
@@ -69,7 +70,7 @@ const GameContextMenu = (props: GameContextMenuProps) => {
                 </ContextMenuItem>
               </Match>
             </Switch>
-            <ContextMenuItem>
+            <ContextMenuItem disabled>
               <Switch>
                 <Match when={props.game?.favorite}>
                   <StarOff class="size-16" />
@@ -102,7 +103,9 @@ const GameContextMenu = (props: GameContextMenuProps) => {
                   </Match>
                 </Switch>
                 <Show when={props.game?.status === "installed"}>
-                  <ContextMenuItem>
+                  <ContextMenuItem
+                    onSelect={() => openPath(props.game?.path || "")}
+                  >
                     <Folder class="size-16" />
                     Open install folder
                   </ContextMenuItem>
@@ -117,17 +120,17 @@ const GameContextMenu = (props: GameContextMenuProps) => {
               </ContextMenuSubContent>
             </ContextMenuSub>
             <ContextMenuSeparator />
-            <ContextMenuItem>
+            <ContextMenuItem disabled>
               <Pen class="size-16" />
               Properties
             </ContextMenuItem>
           </Match>
           <Match when={!props.game}>
-            <ContextMenuItem>
+            <ContextMenuItem disabled>
               <Plus class="size-16" />
               Add game
             </ContextMenuItem>
-            <ContextMenuItem>
+            <ContextMenuItem disabled>
               <RefreshCcw class="size-16" />
               Refresh games
             </ContextMenuItem>

@@ -20,6 +20,11 @@
 
     "os:allow-os-type",
 
-    "dialog:allow-open"
+    "dialog:allow-open",
+
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [{ "path": "**/*" }]
+    }
   ]
 }
