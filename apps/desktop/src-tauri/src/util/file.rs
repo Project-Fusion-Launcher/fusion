@@ -1,5 +1,6 @@
-use crate::common::result::Result;
+use crate::{common::result::Result, APP};
 use std::path::Path;
+use tauri::{path::BaseDirectory, Manager};
 use tokio::fs;
 
 #[cfg(target_os = "windows")]
@@ -20,8 +21,21 @@ where
         fs::create_dir_all(output_dir).await?;
     }
 
-    let exe_path = std::env::current_exe()?;
-    let seven_zip = exe_path.parent().unwrap().join("thirdparty/7-Zip/7z.exe");
+    let os_specific_path = if cfg!(target_os = "windows") {
+        "thirdparty/7-Zip/windows/7z.exe"
+    } else if cfg!(target_os = "linux") {
+        "thirdparty/7-Zip/linux/7zzs"
+    } else {
+        return Err("Unsupported OS".into());
+    };
+
+    let seven_zip = APP
+        .get()
+        .unwrap()
+        .path()
+        .resolve(os_specific_path, BaseDirectory::Resource)?;
+
+    println!("7z path: {:?}", seven_zip);
 
     let mut command = tokio::process::Command::new(seven_zip);
     command
