@@ -331,7 +331,7 @@ pub enum GameTraits {
     HasDemo,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, PartialEq, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum UploadTraits {
     PWindows,

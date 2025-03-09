@@ -58,6 +58,9 @@ pub async fn fetch_game_versions(
     token: Option<String>,
     game: Game,
 ) -> Result<Vec<GameVersion>> {
+    #[cfg(unix)]
+    return Ok(vec![]);
+
     let client = match token {
         Some(token) => LegacyGamesClient::from_token(email, token),
         None => LegacyGamesClient::from_email(email),

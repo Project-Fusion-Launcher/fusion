@@ -10,7 +10,10 @@ use crate::{
 use std::path::{Path, PathBuf};
 use tauri::{webview::DownloadEvent, Emitter, Manager, Url, WebviewUrl, WebviewWindow};
 use tokio::fs;
-use wrapper_itchio::{api::models::UploadStorage, ItchioClient};
+use wrapper_itchio::{
+    api::models::{UploadStorage, UploadTraits},
+    ItchioClient,
+};
 
 pub async fn fetch_games(api_key: &str) -> Result<Vec<Game>> {
     let client = ItchioClient::new(api_key);
@@ -65,8 +68,15 @@ pub async fn fetch_game_versions(
     let game_key: u32 = game_key.parse()?;
     let uploads = client.fetch_game_uploads(game_id, game_key).await?;
 
+    #[cfg(unix)]
+    let os_trait = UploadTraits::PLinux;
+
+    #[cfg(windows)]
+    let os_trait = UploadTraits::PWindows;
+
     let game_versions = uploads
         .into_iter()
+        .filter(|upload| upload.traits.contains(&os_trait))
         .map(|upload| GameVersion {
             id: upload.id.to_string(),
             game_id: game_id.to_string(),
