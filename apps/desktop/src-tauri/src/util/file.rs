@@ -3,7 +3,7 @@ use std::path::Path;
 use tauri::{path::BaseDirectory, Manager};
 use tokio::fs;
 
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 const NO_WINDOW_FLAG: u32 = 0x08000000;
 
 pub async fn extract_file<P>(file_path: &P, output_dir: &P) -> Result<()>
@@ -21,10 +21,10 @@ where
         fs::create_dir_all(output_dir).await?;
     }
 
-    #[cfg(target_os = "windows")]
+    #[cfg(windows)]
     let os_specific_path = "thirdparty/7-Zip/windows/7z.exe";
 
-    #[cfg(target_os = "linux")]
+    #[cfg(unix)]
     let os_specific_path = "thirdparty/7-Zip/linux/7zzs";
 
     let seven_zip = APP
@@ -41,10 +41,8 @@ where
         .arg("-aoa")
         .arg("-x!$PLUGINSDIR/*");
 
-    #[cfg(target_os = "windows")]
-    {
-        command.creation_flags(NO_WINDOW_FLAG);
-    }
+    #[cfg(windows)]
+    command.creation_flags(NO_WINDOW_FLAG);
 
     let result = command.output().await?;
 
@@ -74,10 +72,8 @@ where
     let parent_dir = file_path.parent().unwrap();
     command.current_dir(parent_dir);
 
-    #[cfg(target_os = "windows")]
-    {
-        command.creation_flags(NO_WINDOW_FLAG);
-    }
+    #[cfg(windows)]
+    command.creation_flags(NO_WINDOW_FLAG);
 
     let result = command.spawn().map_err(|e| e.to_string())?;
 
