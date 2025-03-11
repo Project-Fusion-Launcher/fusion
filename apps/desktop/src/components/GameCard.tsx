@@ -17,7 +17,7 @@ const GameCard = (props: GameCardProps) => {
       onClick={props.onClick}
       onContextMenu={props.onContextMenu}
     >
-      <div class="bg-secondary h-288 group-hover:outline-accent relative w-full overflow-hidden rounded-md outline-2 outline-offset-4 outline-transparent transition-all group-hover:shadow-[0_0_2rem_rgba(255,255,255,0.25)]">
+      <div class="bg-secondary h-288 group-hover:outline-accent relative w-full overflow-hidden rounded-md outline-2 outline-offset-4 outline-transparent transition-all group-hover:shadow-[0_0_1.2rem_rgba(255,255,255,0.25)]">
         <img
           class="absolute h-full object-cover"
           src={props.game.coverUrl}
