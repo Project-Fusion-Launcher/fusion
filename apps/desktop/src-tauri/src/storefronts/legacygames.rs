@@ -243,6 +243,7 @@ impl Storefront for LegacyGames {
 
         // Strip base path from launch target
         if let Some(target) = &launch_target {
+            util::file::set_permissions(&target, 0o755).await?;
             launch_target = Some(target.strip_prefix(&path).unwrap().to_path_buf());
         }
 

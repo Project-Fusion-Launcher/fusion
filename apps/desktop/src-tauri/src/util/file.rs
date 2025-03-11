@@ -1,5 +1,7 @@
 use crate::{common::result::Result, APP};
 use std::path::Path;
+#[cfg(unix)]
+use std::{fs::Permissions, os::unix::fs::PermissionsExt};
 use tauri::{path::BaseDirectory, Manager};
 use tokio::fs;
 
@@ -78,6 +80,35 @@ where
     let result = command.spawn().map_err(|e| e.to_string())?;
 
     println!("{:?}", result);
+
+    Ok(())
+}
+
+pub async fn is_executable(file_path: &Path) -> bool {
+    #[cfg(unix)]
+    {
+        if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
+            return ["x86_64"].contains(&ext.to_lowercase().as_str());
+        }
+
+        if let Ok(metadata) = fs::metadata(file_path).await {
+            return metadata.permissions().mode() & 0o111 != 0;
+        }
+    }
+
+    #[cfg(windows)]
+    {
+        if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
+            return ["exe", "bat", "cmd", "com", "ps1"].contains(&ext.to_lowercase().as_str());
+        }
+    }
+
+    false
+}
+
+pub async fn set_permissions<P: AsRef<Path>>(file_path: P, mode: u32) -> Result<()> {
+    #[cfg(unix)]
+    fs::set_permissions(file_path, Permissions::from_mode(mode)).await?;
 
     Ok(())
 }

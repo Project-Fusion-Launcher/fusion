@@ -1,11 +1,11 @@
 use crate::common::result::Result;
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
 use std::{
     collections::VecDeque,
     path::{Path, PathBuf},
 };
 use tokio::fs;
+
+use super::file;
 
 const BLACKLISTED_LAUNCH_TARGETS: [&str; 6] = [
     "unitycrashhandler64.exe",
@@ -33,7 +33,7 @@ where
                 if path.is_file() {
                     if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
                         if !BLACKLISTED_LAUNCH_TARGETS.contains(&name.to_lowercase().as_str())
-                            && is_executable(&path).await
+                            && file::is_executable(&path).await
                         {
                             return Ok(Some(path));
                         }
@@ -47,22 +47,4 @@ where
     }
 
     Ok(None)
-}
-
-async fn is_executable(file_path: &Path) -> bool {
-    #[cfg(unix)]
-    {
-        if let Ok(metadata) = fs::metadata(file_path).await {
-            return metadata.permissions().mode() & 0o111 != 0;
-        }
-    }
-
-    #[cfg(windows)]
-    {
-        if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
-            return ["exe", "bat", "cmd", "com", "ps1"].contains(&ext.to_lowercase().as_str());
-        }
-    }
-
-    false
 }
