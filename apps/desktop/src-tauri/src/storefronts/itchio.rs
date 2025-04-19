@@ -268,6 +268,7 @@ async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Result<
 
     // Strip base path from launch target
     if let Some(target) = &launch_target {
+        #[cfg(unix)]
         util::file::set_permissions(&target, 0o755).await?;
         launch_target = Some(target.strip_prefix(&path).unwrap().to_path_buf());
     }

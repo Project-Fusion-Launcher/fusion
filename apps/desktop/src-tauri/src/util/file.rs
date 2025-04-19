@@ -106,8 +106,8 @@ pub async fn is_executable(file_path: &Path) -> bool {
     false
 }
 
+#[cfg(unix)]
 pub async fn set_permissions<P: AsRef<Path>>(file_path: P, mode: u32) -> Result<()> {
-    #[cfg(unix)]
     fs::set_permissions(file_path, Permissions::from_mode(mode)).await?;
 
     Ok(())
