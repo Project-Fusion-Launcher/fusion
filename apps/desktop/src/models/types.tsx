@@ -37,6 +37,10 @@ export interface GameVersionInfo {
   installSize: number;
 }
 
+export interface DownloadOptions {
+  installLocation: string;
+}
+
 export interface DownloadItem {
   gameId: string;
   gameSource: GameSource;

@@ -1,5 +1,5 @@
 import { createEffect, createSignal, For } from "solid-js";
-import { groupArrayElements } from "../../util/array";
+import { groupArrayElements } from "../../utils/array";
 import { WindowEventListener } from "@solid-primitives/event-listener";
 import { Virtualizer } from "virtua/solid";
 import GameCard from "../../components/GameCard";

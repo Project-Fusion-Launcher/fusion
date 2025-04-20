@@ -11,13 +11,6 @@ pub struct DownloadPayload {
     pub downloaded: u64,
 }
 
-#[derive(Serialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct GameUninstalledPayload {
-    pub game_id: String,
-    pub game_source: GameSource,
-}
-
 #[derive(Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GameFiltersPayload {

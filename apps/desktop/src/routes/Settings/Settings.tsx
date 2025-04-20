@@ -5,7 +5,7 @@ import { Tabs, TabsIndicator, TabsList, TabsTrigger } from "@repo/ui";
 import type { RouteSectionProps } from "@solidjs/router";
 import { useLocation, useNavigate } from "@solidjs/router";
 import { settingsTabs } from "../../models/pages";
-import { capitalizeFirstLetter } from "../../util/string";
+import { capitalizeFirstLetter } from "../../utils/string";
 import { For } from "solid-js";
 
 const Settings = (props: RouteSectionProps) => {

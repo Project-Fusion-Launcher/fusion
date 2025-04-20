@@ -1,5 +1,5 @@
 import type { JSXElement } from "solid-js";
-import { Match, Show, Switch, useContext } from "solid-js";
+import { Match, Show, Switch } from "solid-js";
 import type { Game } from "../models/types";
 import {
   ArrowDownToLine,
@@ -25,8 +25,8 @@ import {
   ContextMenuSubContent,
   ContextMenuSeparator,
 } from "@repo/ui";
-import { AppContext } from "../State";
 import { openPath } from "@tauri-apps/plugin-opener";
+import { hideGame, uninstallGame } from "../services/game";
 
 interface GameContextMenuProps {
   game: Game | null;
@@ -35,16 +35,14 @@ interface GameContextMenuProps {
 }
 
 const GameContextMenu = (props: GameContextMenuProps) => {
-  const { state } = useContext(AppContext);
-
   function handleUninstall() {
     if (props.game === null) return;
-    state.uninstallGame(props.game);
+    uninstallGame(props.game);
   }
 
   function handleHide() {
     if (props.game === null) return;
-    state.hideGame(props.game);
+    hideGame(props.game);
   }
 
   return (

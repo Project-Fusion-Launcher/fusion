@@ -24,12 +24,16 @@ import {
   Match,
   Switch,
 } from "solid-js";
-import { invoke } from "@tauri-apps/api/core";
 import { Download, Folder, HardDrive, LoaderCircle } from "lucide-solid";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { GameVersion, GameVersionInfo } from "../models/types";
 import { type Game } from "../models/types";
-import { bytesToSize } from "../util/string";
+import { bytesToSize } from "../utils/string";
+import {
+  downloadGame,
+  fetchGameVersionInfo,
+  fetchGameVersions,
+} from "../services/game";
 
 interface InstallDialogProps {
   selectedGame: Game | null;
@@ -44,44 +48,37 @@ const InstallDialog = (props: InstallDialogProps) => {
     createSignal<GameVersion | null>();
 
   const [gameVersionInfo, { refetch: refetchGameVersionInfo }] =
-    createResource<GameVersionInfo | null>(fetchGameVersionInfo);
+    createResource<GameVersionInfo | null>(fetchVersionInfo);
 
   const [installLocation, setInstallLocation] = createSignal(
     "C:\\Users\\jorge\\Desktop",
   );
   const [preparingToInstall, setPreparingToInstall] = createSignal(false);
 
-  // Fetch the versions of the selected game
   async function fetchVersions(): Promise<GameVersion[]> {
-    if (props.selectedGame === null) return [];
-    const versions = await invoke<GameVersion[]>("fetch_game_versions", {
-      gameId: props.selectedGame?.id,
-      gameSource: props.selectedGame?.source,
-    }).catch(() => []);
+    if (!props.selectedGame) return [];
+    const versions = await fetchGameVersions(props.selectedGame).catch(
+      () => [],
+    );
     if (versions.length === 1) setSelectedVersion(versions[0]);
     return versions;
   }
 
-  // Fetch the download info of the selected version
-  async function fetchGameVersionInfo(): Promise<GameVersionInfo | null> {
-    if (selectedVersion() === null) return null;
-    return await invoke<GameVersionInfo>("fetch_version_info", {
-      gameId: props.selectedGame?.id,
-      gameSource: props.selectedGame?.source,
-      versionId: selectedVersion()?.id,
-    }).catch(() => ({ installSize: 0 }));
+  async function fetchVersionInfo(): Promise<GameVersionInfo | null> {
+    const version = selectedVersion();
+    if (!props.selectedGame || !version) return null;
+    return await fetchGameVersionInfo(props.selectedGame, version).catch(
+      () => ({ installSize: 0 }),
+    );
   }
 
-  // Refetch the versions when the selected game changes
   createEffect(() => {
     if (props.selectedGame) {
-      console.log("Refetching versions");
       setSelectedVersion(null);
       refetchVersions();
     }
   });
 
-  // Handle the selection of a version
   function handleVersionSelect(version: GameVersion | null) {
     setSelectedVersion(version);
     if (version && !version.external) {
@@ -89,7 +86,6 @@ const InstallDialog = (props: InstallDialogProps) => {
     }
   }
 
-  // Open a dialog to select the install location
   function handleDirectorySelect() {
     open({
       multiple: false,
@@ -99,36 +95,26 @@ const InstallDialog = (props: InstallDialogProps) => {
     });
   }
 
-  // Handle the installation of the selected game
   function handleInstall() {
-    if (
-      selectedVersion() === null ||
-      !installLocation() ||
-      preparingToInstall()
-    )
+    const version = selectedVersion();
+    const location = installLocation();
+
+    if (!props.selectedGame || !version || !location || preparingToInstall())
       return;
     setPreparingToInstall(true);
-    invoke("download_game", {
-      gameId: props.selectedGame?.id,
-      gameSource: props.selectedGame?.source,
-      versionId: selectedVersion()?.id,
-      downloadOptions: {
-        installLocation: installLocation(),
-      },
+
+    downloadGame(props.selectedGame, version, {
+      installLocation: location,
     }).then(() => {
       handleDialogClose();
       setPreparingToInstall(false);
     });
   }
 
-  // Handle the closing of the dialog
   function handleDialogClose() {
     props.onDialogClose();
   }
 
-  /* HELPER FUNCTIONS */
-
-  // Get the placeholder for the version select
   function getPlaceholder() {
     if (versions.loading)
       return (

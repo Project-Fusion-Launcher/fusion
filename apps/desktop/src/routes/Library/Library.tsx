@@ -7,14 +7,14 @@ import {
   onCleanup,
   useContext,
 } from "solid-js";
-import { invoke } from "@tauri-apps/api/core";
 import { RefreshCcw } from "lucide-solid";
 import InstallDialog from "../../components/InstallDialog";
 import { type GameFiltersStatus, type Game } from "../../models/types";
 import GameGrid from "./GameGrid";
-import { AppContext } from "../../State";
 import { useSearchParams } from "@solidjs/router";
-import { parseSearchParam } from "../../util/string";
+import { parseSearchParam } from "../../utils/string";
+import { GameContext } from "../../state/GameContext";
+import { launchGame } from "../../services/game";
 
 interface StatusFilterButtonProps {
   status: GameFiltersStatus;
@@ -35,7 +35,7 @@ const StatusFilterButton = (props: StatusFilterButtonProps) => {
 };
 
 const Library = () => {
-  const { state, setState } = useContext(AppContext);
+  const { state, setState } = useContext(GameContext);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [isDialogOpen, setIsDialogOpen] = createSignal(false);
@@ -49,33 +49,27 @@ const Library = () => {
     parseSearchParam(searchParams.query),
   );
 
-  // Fetch the games on component mount
   createRenderEffect(() => {
     getGames(false);
   });
 
-  // Clear the games on component unmount as there's no point
-  // in keeping them in memory
   onCleanup(() => {
     setState("games", []);
   });
 
-  // Fetch the games from the backend
   function getGames(refetch: boolean) {
     state.getGames(refetch, { query: query() });
   }
 
-  // Handle the main action button click event (launch or install)
   function handleMainAction(game: Game) {
     if (game.status === "installed") {
-      invoke("launch_game", { gameId: game.id, gameSource: game.source });
+      launchGame(game);
     } else if (game.status === "notInstalled") {
       setSelectedGame(game);
       setIsDialogOpen(true);
     }
   }
 
-  // Handle the install dialog close event
   function handleDialogClose() {
     setIsDialogOpen(false);
     setTimeout(() => {
@@ -83,12 +77,10 @@ const Library = () => {
     }, 300);
   }
 
-  // Handle the query change event
   function handleQueryChange(query: string) {
     setSearchParams({ query });
   }
 
-  // Handle the game status change event
   function handleGameStatusChange(value: string) {
     const status = value as GameFiltersStatus;
     setSearchParams({ status });

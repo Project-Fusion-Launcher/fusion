@@ -2,12 +2,12 @@ import type { JSXElement } from "solid-js";
 import { For, useContext, Show, Switch, Match } from "solid-js";
 import Header from "../../components/Header";
 import DownloadItem from "./DownloadItem";
-import { AppContext } from "../../State";
 import type { GameSource } from "../../models/types";
 import { TransitionGroup } from "solid-transition-group";
 import { Info } from "lucide-solid";
 import { Button } from "@repo/ui";
 import DownloadDetails from "./DownloadDetails";
+import { GameContext } from "../../state/GameContext";
 
 interface SectionProps {
   title: string;
@@ -53,7 +53,7 @@ const Notice = (props: NoticeProps) => {
 };
 
 const Downloads = () => {
-  const { state, setState } = useContext(AppContext);
+  const { state, setState } = useContext(GameContext);
 
   // Handle removing a completed download
   function handleRemoveCompleted(gameId: string, gameSource: GameSource) {

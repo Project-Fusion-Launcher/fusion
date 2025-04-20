@@ -1,6 +1,6 @@
 import { X } from "lucide-solid";
 import type { GameSource, DownloadItem as Item } from "../../models/types";
-import { bytesToSize } from "../../util/string";
+import { bytesToSize } from "../../utils/string";
 import { IconButton } from "@repo/ui";
 import { Show } from "solid-js";
 import { Progress } from "@kobalte/core/progress";

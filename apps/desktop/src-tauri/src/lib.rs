@@ -4,6 +4,7 @@ use models::config::Config;
 use std::sync::{OnceLock, RwLock};
 use tauri::{AppHandle, Manager};
 
+pub mod commands;
 pub mod common;
 pub mod managers;
 pub mod models;
@@ -23,13 +24,13 @@ pub async fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            storefronts::get_games,
-            storefronts::fetch_game_versions,
-            storefronts::download_game,
-            storefronts::fetch_version_info,
-            storefronts::launch_game,
-            storefronts::uninstall_game,
-            storefronts::hide_game
+            commands::game::get_games,
+            commands::game::fetch_game_versions,
+            commands::game::fetch_game_version_info,
+            commands::game::download_game,
+            commands::game::launch_game,
+            commands::game::uninstall_game,
+            commands::game::hide_game
         ])
         .setup(|app| {
             APP.set(app.handle().clone())

@@ -1,13 +1,12 @@
 import type { JSXElement } from "solid-js";
-import { createContext, onCleanup } from "solid-js";
-import type { DownloadItem, Game, GameFilters } from "./models/types";
+import { createContext, createEffect, onCleanup } from "solid-js";
+import type { DownloadItem, Game, GameFilters } from "../models/types";
 import type { SetStoreFunction } from "solid-js/store";
 import { createStore, produce } from "solid-js/store";
 import { listen } from "@tauri-apps/api/event";
-import type { GameUninstalledPayload } from "./models/payloads";
-import { invoke } from "@tauri-apps/api/core";
+import { getGames as getGamesFromBackend } from "../services/game";
 
-export const AppContext = createContext<{
+export const GameContext = createContext<{
   state: {
     games: Game[];
     downloadQueue: DownloadItem[];
@@ -15,9 +14,7 @@ export const AppContext = createContext<{
     completedDownloads: DownloadItem[];
     total: number;
     installed: number;
-    hideGame: (game: Game) => void;
     getGames: (refetch?: boolean, filters?: GameFilters) => void;
-    uninstallGame: (game: Game) => void;
   };
   setState: SetStoreFunction<{
     games: Game[];
@@ -35,9 +32,7 @@ export const AppContext = createContext<{
     completedDownloads: [],
     total: 0,
     installed: 0,
-    hideGame: () => {},
     getGames: () => {},
-    uninstallGame: () => {},
   },
   setState: () => {},
 });
@@ -54,12 +49,13 @@ const ContextProvider = (props: StateProps) => {
     completedDownloads: [] as DownloadItem[],
     total: 0,
     installed: 0,
-    hideGame,
     getGames,
-    uninstallGame,
   });
 
-  // Helper function to update the game count of currently active games
+  createEffect(() => {
+    refreshGameCount();
+  });
+
   function refreshGameCount() {
     setState("total", state.games.length);
     setState(
@@ -68,42 +64,44 @@ const ContextProvider = (props: StateProps) => {
     );
   }
 
-  /* INVOKERS */
   function getGames(refetch = false, filters?: GameFilters) {
-    invoke<Game[]>("get_games", { refetch, filters }).then((games) => {
+    getGamesFromBackend(refetch, filters).then((games) => {
       setState("games", games);
-      refreshGameCount();
     });
   }
 
-  function hideGame(game: Game) {
-    invoke<void>("hide_game", {
-      gameId: game.id,
-      gameSource: game.source,
-    }).then(() => {
-      setState("games", (games) =>
-        games.filter((g) => !(g.id === game.id && g.source === game.source)),
+  const gameHiddenUnlisten = listen<Game>("game-hidden", (event) => {
+    const game = event.payload;
+    setState("games", (games) =>
+      games.filter((g) => !(g.id === game.id && g.source === game.source)),
+    );
+  });
+
+  const gameUninstallingUnlisten = listen<Game>(
+    "game-uninstalling",
+    (event) => {
+      const game = event.payload;
+      setState(
+        "games",
+        (g) => g.id === game.id && g.source === game.source,
+        produce((g) => {
+          g.status = "uninstalling";
+        }),
       );
-      refreshGameCount();
-    });
-  }
+    },
+  );
 
-  function uninstallGame(game: Game) {
+  const gameUninstalledUnlisten = listen<Game>("game-uninstalled", (event) => {
+    const game = event.payload;
     setState(
       "games",
       (g) => g.id === game.id && g.source === game.source,
       produce((g) => {
-        g.status = "uninstalling";
+        g.status = "notInstalled";
       }),
     );
+  });
 
-    invoke<void>("uninstall_game", {
-      gameId: game.id,
-      gameSource: game.source,
-    }).then(() => {});
-  }
-
-  /* LISTENERS */
   const downloadQueuedUnlisten = listen<DownloadItem>(
     "download-queued",
     (event) => {
@@ -202,40 +200,24 @@ const ContextProvider = (props: StateProps) => {
           g.status = "installed";
         }),
       );
-      refreshGameCount();
-    },
-  );
-
-  const gameUninstalledUnlisten = listen<GameUninstalledPayload>(
-    "game-uninstalled",
-    (event) => {
-      const payload = event.payload;
-      setState(
-        "games",
-        (game) =>
-          game.id === payload.gameId && game.source === payload.gameSource,
-        produce((game) => {
-          game.status = "notInstalled";
-        }),
-      );
-      refreshGameCount();
     },
   );
 
   onCleanup(() => {
-    // This component should never unmount, but unlisten just in case
+    gameHiddenUnlisten.then((u) => u());
+    gameUninstallingUnlisten.then((u) => u());
+    gameUninstalledUnlisten.then((u) => u());
     downloadQueuedUnlisten.then((u) => u());
     downloadExternalUnlisten.then((u) => u());
     downloadProgressUnlisten.then((u) => u());
     downloadFinishedUnlisten.then((u) => u());
     downloadInstalledUnlisten.then((u) => u());
-    gameUninstalledUnlisten.then((u) => u());
   });
 
   return (
-    <AppContext.Provider value={{ state, setState }}>
+    <GameContext.Provider value={{ state, setState }}>
       {props.children}
-    </AppContext.Provider>
+    </GameContext.Provider>
   );
 };
 
