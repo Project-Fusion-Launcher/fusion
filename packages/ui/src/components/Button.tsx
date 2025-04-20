@@ -69,7 +69,7 @@ const Button = <T extends ValidComponent = "button">(
             <LoaderCircle class="absolute animate-spin" />
           </Match>
           <Match when={!props.loading}>
-            <div class="absolute">{props.children}</div>
+            <div>{props.children}</div>
           </Match>
         </Switch>
       </Transition>
