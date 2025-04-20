@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Deserialize, Debug)]
 pub struct IsExistsByEmail {
@@ -82,6 +82,7 @@ pub struct Product {
 #[derive(Deserialize, Debug)]
 pub struct Game {
     pub game_id: String,
+    #[serde(deserialize_with = "deserialize_game_name")]
     pub game_name: String,
     pub game_description: String,
     pub game_coverart: String,
@@ -122,4 +123,16 @@ pub enum Status {
 pub enum CatalogVisibility {
     Hidden,
     Visible,
+}
+
+fn deserialize_game_name<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let game_name: String = Deserialize::deserialize(deserializer)?;
+    if game_name.is_empty() {
+        Ok(String::from("!noname"))
+    } else {
+        Ok(game_name)
+    }
 }
