@@ -9,6 +9,10 @@
       "path": "../apps/desktop",
     },
     {
+      "name": "crates/wrapper-epicgames",
+      "path": "../crates/wrapper-epicgames",
+    },
+    {
       "name": "crates/wrapper-itchio",
       "path": "../crates/wrapper-itchio",
     },
