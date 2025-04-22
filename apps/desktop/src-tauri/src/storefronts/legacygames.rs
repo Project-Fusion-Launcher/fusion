@@ -76,9 +76,8 @@ impl Storefront for LegacyGames {
             });
         }
 
-        let giveaway_client = Arc::clone(&client);
         join_set.spawn(async move {
-            giveaway_client
+            client
                 .fetch_giveaway_products()
                 .await
                 .map(|products| create_games(products, true))
@@ -101,13 +100,25 @@ impl Storefront for LegacyGames {
         #[cfg(unix)]
         return Ok(vec![]);
 
+        Ok(vec![GameVersion {
+            id: game.id.clone(),
+            name: game.title,
+            external: false,
+        }])
+    }
+
+    async fn fetch_game_version_info(
+        &self,
+        game: Game,
+        _version_id: String,
+    ) -> Result<GameVersionInfo> {
         if self.client.is_none() {
             return Err("Legacy Games client is not initialized".into());
         }
 
         let client = self.client.as_ref().unwrap();
 
-        let size = if let Some(ref key) = game.key {
+        let download_size = if let Some(ref key) = game.key {
             client
                 .fetch_wp_installer_size(key.parse()?, &game.id)
                 .await?
@@ -115,24 +126,12 @@ impl Storefront for LegacyGames {
             client.fetch_giveaway_installer_size(&game.id).await?
         };
 
-        Ok(vec![GameVersion {
-            id: game.id.clone(),
-            game_id: game.id,
-            source: GameSource::LegacyGames,
-            name: game.title,
-            download_size: size,
-            external: false,
-        }])
-    }
-
-    async fn fetch_game_version_info(
-        &self,
-        _game: Game,
-        _version_id: String,
-    ) -> Result<GameVersionInfo> {
         // There is no way to fetch the installed size that I know.
         // The game_installed_size in the API's resonse is actually the download size.
-        Ok(GameVersionInfo { install_size: 0 })
+        Ok(GameVersionInfo {
+            install_size: 0,
+            download_size,
+        })
     }
 
     async fn pre_download(

@@ -99,10 +99,7 @@ impl Storefront for EpicGames {
             .into_iter()
             .map(|v| GameVersion {
                 id: v.clone(),
-                game_id: game.id.clone(),
-                source: GameSource::EpicGames,
                 name: v,
-                download_size: 0,
                 external: false,
             })
             .collect())
@@ -113,7 +110,10 @@ impl Storefront for EpicGames {
         _game: Game,
         _version_id: String,
     ) -> Result<GameVersionInfo> {
-        Ok(GameVersionInfo { install_size: 0 })
+        Ok(GameVersionInfo {
+            install_size: 0,
+            download_size: 0,
+        })
     }
 
     async fn pre_download(

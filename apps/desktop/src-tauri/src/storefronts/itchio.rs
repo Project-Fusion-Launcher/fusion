@@ -12,7 +12,7 @@ use crate::{
 use async_trait::async_trait;
 use std::{
     path::{Path, PathBuf},
-    sync::RwLock,
+    sync::{Arc, RwLock},
 };
 use tauri::{webview::DownloadEvent, Emitter, Manager, Url, WebviewUrl, WebviewWindow};
 use tokio::fs;
@@ -23,7 +23,7 @@ use wrapper_itchio::{
 
 #[derive(Default)]
 pub struct Itchio {
-    client: Option<ItchioClient>,
+    client: Option<Arc<ItchioClient>>,
 }
 
 #[async_trait]
@@ -43,7 +43,7 @@ impl Storefront for Itchio {
 
         let client = ItchioClient::new(api_key.unwrap());
 
-        self.client = Some(client);
+        self.client = Some(Arc::new(client));
 
         Ok(())
     }
@@ -115,10 +115,8 @@ impl Storefront for Itchio {
             .filter(|upload| upload.traits.contains(&os_trait))
             .map(|upload| GameVersion {
                 id: upload.id.to_string(),
-                game_id: game_id.to_string(),
-                source: GameSource::Itchio,
                 name: upload.display_name.unwrap_or(upload.filename),
-                download_size: upload.size.unwrap_or(0),
+                //download_size: upload.size.unwrap_or(0),
                 external: upload.storage == UploadStorage::External,
             })
             .collect();
@@ -141,6 +139,10 @@ impl Storefront for Itchio {
 
         let mut retries = 5;
 
+        let client_clone = Arc::clone(client);
+        let upload =
+            tokio::spawn(async move { client_clone.fetch_game_upload(upload_id, game_key).await });
+
         while retries > 0 {
             let scanned_archive = client
                 .fetch_upload_scanned_archive(upload_id, game_key)
@@ -149,6 +151,7 @@ impl Storefront for Itchio {
             if let Ok(scanned_archive) = scanned_archive {
                 if scanned_archive.extracted_size.is_some() {
                     return Ok(GameVersionInfo {
+                        download_size: upload.await??.size.unwrap_or_default(),
                         install_size: scanned_archive.extracted_size.unwrap(),
                     });
                 }

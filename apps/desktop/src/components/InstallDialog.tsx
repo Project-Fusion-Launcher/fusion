@@ -68,7 +68,7 @@ const InstallDialog = (props: InstallDialogProps) => {
     const version = selectedVersion();
     if (!props.selectedGame || !version) return null;
     return await fetchGameVersionInfo(props.selectedGame, version).catch(
-      () => ({ installSize: 0 }),
+      () => ({ installSize: 0, downloadSize: 0 }),
     );
   }
 
@@ -188,9 +188,15 @@ const InstallDialog = (props: InstallDialogProps) => {
                     <Download class="size-16" /> Download size:
                   </td>
                   <td>
-                    {selectedVersion()?.external
-                      ? "Unknown"
-                      : bytesToSize(selectedVersion()?.downloadSize)}
+                    <Switch>
+                      <Match when={selectedVersion()?.external}>Unknown</Match>
+                      <Match when={gameVersionInfo.loading}>
+                        <LoaderCircle class="size-16 animate-spin" />
+                      </Match>
+                      <Match when={!gameVersionInfo.loading}>
+                        {bytesToSize(gameVersionInfo()?.downloadSize)}
+                      </Match>
+                    </Switch>
                   </td>
                 </tr>
                 <tr>

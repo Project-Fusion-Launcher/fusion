@@ -26,15 +26,13 @@ export type GameFiltersStatus = "all" | GameStatus;
 
 export interface GameVersion {
   id: string;
-  gameId: string;
-  source: GameSource;
   name: string;
-  downloadSize: number;
   external: boolean;
 }
 
 export interface GameVersionInfo {
   installSize: number;
+  downloadSize: number;
 }
 
 export interface DownloadOptions {

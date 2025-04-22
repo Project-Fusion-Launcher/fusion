@@ -123,10 +123,7 @@ impl ReducedGame {
 #[serde(rename_all = "camelCase")]
 pub struct GameVersion {
     pub id: String,
-    pub game_id: String,
-    pub source: GameSource,
     pub name: String,
-    pub download_size: u32,
     pub external: bool,
 }
 
@@ -134,6 +131,7 @@ pub struct GameVersion {
 #[serde(rename_all = "camelCase")]
 pub struct GameVersionInfo {
     pub install_size: u32,
+    pub download_size: u32,
 }
 
 #[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, EnumIter)]
