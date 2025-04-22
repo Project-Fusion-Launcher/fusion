@@ -103,7 +103,7 @@ pub struct Game {
     pub entitlement_name: String,
     pub entitlement_type: String,
     pub item_type: String,
-    // pub release_info
+    pub release_info: Vec<ReleaseInfo>,
     pub developer: String,
     pub developer_id: String,
     #[serde(default)]
@@ -159,6 +159,22 @@ pub enum CategoryPath {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ReleaseInfo {
+    pub id: String,
+    pub app_id: String,
+    pub platform: Vec<Platform>,
+}
+
+#[derive(Debug, Deserialize)]
+pub enum Platform {
+    Windows,
+    Win32,
+    Mac,
+    Android,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct KeyImage {
     #[serde(rename = "type")]
     pub image_type: KeyImageType,
@@ -188,6 +204,36 @@ pub enum KeyImageType {
     AndroidIcon,
     #[serde(rename = "CodeRedemption_340x440")]
     CodeRedemption340x440,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameManifestsResponse {
+    pub elements: Vec<GameManifestsElement>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameManifestsElement {
+    pub app_name: String,
+    pub label_name: String,
+    pub build_version: String,
+    pub hash: String,
+    pub use_signed_url: bool,
+    pub manifests: Vec<ManifestUrl>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ManifestUrl {
+    pub uri: String,
+    pub query_params: Vec<QueryParam>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct QueryParam {
+    pub name: String,
+    pub value: String,
 }
 
 fn deserialize_date<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>

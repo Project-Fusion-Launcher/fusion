@@ -1,7 +1,8 @@
 use api::{
     endpoints,
     models::{
-        AccessTokenResponse, Asset, CategoryPath, Game, GameInfoResponse, GrantType, LoginParams,
+        AccessTokenResponse, Asset, CategoryPath, Game, GameInfoResponse, GameManifestsResponse,
+        GrantType, LoginParams,
     },
 };
 use futures::{stream::FuturesUnordered, StreamExt};
@@ -103,6 +104,35 @@ impl EpicGamesClient {
         }
 
         Ok(games)
+    }
+
+    pub async fn fetch_game_versions(
+        &self,
+        catalog_item_id: &str,
+    ) -> Result<Vec<String>, &'static str> {
+        let assets: Vec<Asset> =
+            Self::make_get_request(&self.http, api::endpoints::assets(), &self.access_token)
+                .await
+                .map_err(|_| "Failed to fetch assets")?;
+
+        let asset = assets
+            .into_iter()
+            .find(|asset| asset.catalog_item_id == catalog_item_id)
+            .ok_or("Game not found in assets")?;
+
+        let response: GameManifestsResponse = Self::make_get_request(
+            &self.http,
+            &api::endpoints::game_manifests(&asset.namespace, catalog_item_id, &asset.app_name),
+            &self.access_token,
+        )
+        .await
+        .map_err(|_| "Failed to fetch game info")?;
+
+        Ok(response
+            .elements
+            .into_iter()
+            .map(|e| e.build_version)
+            .collect())
     }
 
     async fn make_get_request<D>(

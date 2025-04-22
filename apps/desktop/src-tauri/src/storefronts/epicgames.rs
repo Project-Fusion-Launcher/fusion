@@ -85,7 +85,27 @@ impl Storefront for EpicGames {
     }
 
     async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {
-        Ok(vec![])
+        let client = match &self.client {
+            Some(c) => c,
+            None => return Err("Epic Games client not initialized".into()),
+        };
+
+        let versions = client
+            .fetch_game_versions(&game.id)
+            .await
+            .map_err(|_| "Failed to fetch game versions")?;
+
+        Ok(versions
+            .into_iter()
+            .map(|v| GameVersion {
+                id: v.clone(),
+                game_id: game.id.clone(),
+                source: GameSource::EpicGames,
+                name: v,
+                download_size: 0,
+                external: false,
+            })
+            .collect())
     }
 
     async fn fetch_game_version_info(

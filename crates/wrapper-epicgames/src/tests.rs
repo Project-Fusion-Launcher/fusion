@@ -22,4 +22,16 @@ mod tests {
             println!("{:?}", game);
         }
     }
+
+    #[tokio::test]
+    async fn fetch_versions() {
+        let client = EpicGamesClient::from_access_token("asdf").await;
+        let versions = client
+            .unwrap()
+            .fetch_game_versions("d5326cb42d704158bab2dc1629295838")
+            .await
+            .unwrap();
+
+        println!("{:?}", versions);
+    }
 }
