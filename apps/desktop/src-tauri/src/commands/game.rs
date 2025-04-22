@@ -7,6 +7,7 @@ use crate::{
     },
     storefronts::get_storefront,
 };
+use strum::IntoEnumIterator;
 use tauri::{AppHandle, Emitter, State};
 use tokio::task::JoinSet;
 
@@ -21,8 +22,10 @@ pub async fn get_games(
         let mut tasks = JoinSet::new();
         let mut games_to_return = Vec::new();
 
-        tasks.spawn(async move { get_storefront(&GameSource::Itchio).fetch_games().await });
-        tasks.spawn(async move { get_storefront(&GameSource::LegacyGames).fetch_games().await });
+        for source in GameSource::iter() {
+            let store = get_storefront(&source);
+            tasks.spawn(async move { store.read().await.fetch_games().await });
+        }
 
         while let Some(res) = tasks.join_next().await {
             match res {
@@ -53,9 +56,9 @@ pub async fn fetch_game_versions(
     let game =
         Game::select_one(&mut connection, &game_source, &game_id).map_err(|e| e.to_string())?;
 
-    let store = get_storefront(&game_source);
-
-    store
+    get_storefront(&game_source)
+        .read()
+        .await
         .fetch_game_versions(game)
         .await
         .map_err(|e| e.to_string())
@@ -70,9 +73,9 @@ pub async fn fetch_game_version_info(
     let mut connection = database::create_connection()?;
     let game = Game::select_one(&mut connection, &game_source, &game_id)?;
 
-    let store = get_storefront(&game_source);
-
-    store
+    get_storefront(&game_source)
+        .read()
+        .await
         .fetch_game_version_info(game, version_id)
         .await
         .map_err(|e| e.to_string())
@@ -97,8 +100,9 @@ pub async fn download_game(
     game.path = Some(complete_install_location.to_string_lossy().to_string());
     download_options.install_location = complete_install_location;
 
-    let store = get_storefront(&game_source);
-    let download = store
+    let download = get_storefront(&game_source)
+        .read()
+        .await
         .pre_download(&mut game, version_id, download_options)
         .await
         .map_err(|e| e.to_string());
@@ -123,8 +127,11 @@ pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(),
     let mut connection = database::create_connection()?;
     let game = Game::select_one(&mut connection, &game_source, &game_id)?;
 
-    let store = get_storefront(&game_source);
-    store.launch_game(game).map_err(|e| e.to_string())
+    get_storefront(&game_source)
+        .read()
+        .await
+        .launch_game(game)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -142,8 +149,11 @@ pub async fn uninstall_game(
     app.emit("game-uninstalling", &game)
         .map_err(|e| e.to_string())?;
 
-    let store = get_storefront(&game_source);
-    store.uninstall_game(&game).await?;
+    get_storefront(&game_source)
+        .read()
+        .await
+        .uninstall_game(&game)
+        .await?;
 
     game.path = None;
     game.status = GameStatus::NotInstalled;

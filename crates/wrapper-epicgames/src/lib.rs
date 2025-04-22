@@ -1,6 +1,8 @@
 use api::{
     endpoints,
-    models::{AccessTokenResponse, Asset, Game, GameInfoResponse, GrantType, LoginParams},
+    models::{
+        AccessTokenResponse, Asset, CategoryPath, Game, GameInfoResponse, GrantType, LoginParams,
+    },
 };
 use futures::{stream::FuturesUnordered, StreamExt};
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, USER_AGENT};
@@ -47,6 +49,10 @@ impl EpicGamesClient {
         })
     }
 
+    pub fn refresh_token(&self) -> String {
+        self.refresh_token.clone()
+    }
+
     pub async fn fetch_games(&self) -> Result<Vec<Game>, reqwest::Error> {
         let assets: Vec<Asset> =
             Self::make_get_request(&self.http, api::endpoints::assets(), &self.access_token)
@@ -81,7 +87,16 @@ impl EpicGamesClient {
         let mut games = Vec::new();
         while let Some(result) = tasks.next().await {
             match result {
-                Ok(Ok(game)) => games.push(game),
+                Ok(Ok(game)) => {
+                    if game.main_game_item.is_none()
+                        && game
+                            .categories
+                            .iter()
+                            .any(|c| c.path == CategoryPath::Games)
+                    {
+                        games.push(game)
+                    }
+                }
                 Ok(Err(e)) => eprintln!("Error fetching game info: {:?}", e),
                 Err(e) => eprintln!("Task error: {:?}", e),
             }

@@ -45,6 +45,12 @@ pub async fn run() {
             ));
             app.manage(DownloadManager::init());
 
+            tauri::async_runtime::spawn(async {
+                storefronts::init_storefronts()
+                    .await
+                    .expect("Error initializing storefronts");
+            });
+
             Ok(())
         })
         .run(tauri::generate_context!())

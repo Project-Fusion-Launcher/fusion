@@ -92,7 +92,7 @@ pub struct Game {
     pub title: String,
     pub description: String,
     pub key_images: Vec<KeyImage>,
-    // pub categories
+    pub categories: Vec<Category>,
     pub namespace: String,
     pub status: String,
     #[serde(deserialize_with = "deserialize_date")]
@@ -111,7 +111,9 @@ pub struct Game {
     // pub install_modes
     pub end_of_support: bool,
     // pub dlc_item_list
-    // pub main_game_item_list
+    pub main_game_item: Option<Box<Game>>,
+    #[serde(default)]
+    pub main_game_item_list: Vec<Game>,
     // pub age_gatings
     pub application_id: Option<String>,
     #[serde(default)]
@@ -120,10 +122,46 @@ pub struct Game {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct Category {
+    pub path: CategoryPath,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum CategoryPath {
+    Public,
+    Addons,
+    Games,
+    Applications,
+    Editors,
+    Engines,
+    Developer,
+    Software,
+    #[serde(rename = "games/edition")]
+    GamesEdition,
+    #[serde(rename = "games/edition/base")]
+    GamesEditionBase,
+    #[serde(rename = "freegames")]
+    FreeGames,
+    #[serde(rename = "asset-format")]
+    AssetFormat,
+    #[serde(rename = "asset-format/game-engine")]
+    AssetFormatGameEngine,
+    #[serde(rename = "asset-format/game-engine/unreal-engine")]
+    AssetFormatGameEngineUnrealEngine,
+    #[serde(rename = "digitalextras")]
+    DigitalExtras,
+    #[serde(rename = "type")]
+    Type,
+    #[serde(rename = "type/format-item")]
+    TypeFormatItem,
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct KeyImage {
     #[serde(rename = "type")]
-    pub image_type: String,
+    pub image_type: KeyImageType,
     pub url: String,
     pub md5: String,
     pub width: u32,
@@ -132,6 +170,24 @@ pub struct KeyImage {
     #[serde(deserialize_with = "deserialize_date")]
     pub uploaded_date: NaiveDateTime,
     pub alt: Option<String>,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub enum KeyImageType {
+    DieselGameBox,
+    DieselGameBoxLogo,
+    DieselGameBoxTall,
+    DieselGameBoxWide,
+    DieselStoreFrontTall,
+    DieselStoreFrontWide,
+    OfferImageTall,
+    OfferImageWide,
+    Thumbnail,
+    ESRB,
+    Featured,
+    AndroidIcon,
+    #[serde(rename = "CodeRedemption_340x440")]
+    CodeRedemption340x440,
 }
 
 fn deserialize_date<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>

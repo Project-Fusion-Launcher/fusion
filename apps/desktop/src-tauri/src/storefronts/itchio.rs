@@ -22,11 +22,13 @@ use wrapper_itchio::{
 };
 
 #[derive(Default)]
-pub struct Itchio;
+pub struct Itchio {
+    client: Option<ItchioClient>,
+}
 
 #[async_trait]
 impl Storefront for Itchio {
-    async fn fetch_games(&self) -> Result<Option<Vec<Game>>> {
+    async fn init(&mut self) -> Result<()> {
         let api_key = APP
             .get()
             .unwrap()
@@ -36,10 +38,22 @@ impl Storefront for Itchio {
             .itchio_api_key();
 
         if api_key.is_none() {
-            return Ok(None);
-        }
+            return Ok(());
+        };
 
         let client = ItchioClient::new(api_key.unwrap());
+
+        self.client = Some(client);
+
+        Ok(())
+    }
+
+    async fn fetch_games(&self) -> Result<Option<Vec<Game>>> {
+        let client = match &self.client {
+            Some(c) => c,
+            None => return Ok(None),
+        };
+
         let mut games = Vec::new();
         let mut page = 1;
 
@@ -81,19 +95,10 @@ impl Storefront for Itchio {
     }
 
     async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {
-        let api_key = APP
-            .get()
-            .unwrap()
-            .state::<RwLock<Config>>()
-            .read()
-            .unwrap()
-            .itchio_api_key();
-
-        if api_key.is_none() {
-            return Err("Missing API key".into());
-        }
-
-        let client = ItchioClient::new(api_key.unwrap());
+        let client = match &self.client {
+            Some(c) => c,
+            None => return Err("itch.io client is not initialized".into()),
+        };
 
         let game_id: u32 = game.id.parse()?;
         let game_key: u32 = game.key.unwrap().parse()?;
@@ -126,19 +131,10 @@ impl Storefront for Itchio {
         game: Game,
         version_id: String,
     ) -> Result<GameVersionInfo> {
-        let api_key = APP
-            .get()
-            .unwrap()
-            .state::<RwLock<Config>>()
-            .read()
-            .unwrap()
-            .itchio_api_key();
-
-        if api_key.is_none() {
-            return Err("Missing API key".into());
-        }
-
-        let client = ItchioClient::new(api_key.unwrap());
+        let client = match &self.client {
+            Some(c) => c,
+            None => return Err("itch.io client is not initialized".into()),
+        };
 
         let upload_id: u32 = version_id.parse()?;
         let game_key: u32 = game.key.unwrap().parse()?;
@@ -172,19 +168,10 @@ impl Storefront for Itchio {
         version_id: String,
         download_options: DownloadOptions,
     ) -> Result<Option<Download>> {
-        let api_key = APP
-            .get()
-            .unwrap()
-            .state::<RwLock<Config>>()
-            .read()
-            .unwrap()
-            .itchio_api_key();
-
-        if api_key.is_none() {
-            return Err("Missing API key".into());
-        }
-
-        let client = ItchioClient::new(api_key.unwrap());
+        let client = match &self.client {
+            Some(c) => c,
+            None => return Err("itch.io client is not initialized".into()),
+        };
 
         let upload_id: u32 = version_id.parse()?;
         let game_key: u32 = game.key.clone().unwrap().parse()?;

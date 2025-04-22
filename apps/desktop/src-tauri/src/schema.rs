@@ -4,6 +4,7 @@ diesel::table! {
         itchio_api_key -> Nullable<Text>,
         legacy_games_token -> Nullable<Text>,
         legacy_games_email -> Nullable<Text>,
+        epic_games_refresh_token -> Nullable<Text>,
     }
 }
 

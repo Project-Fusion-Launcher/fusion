@@ -19,11 +19,13 @@ use tokio::{fs, task::JoinSet};
 use wrapper_legacygames::{api::models::Product, LegacyGamesClient};
 
 #[derive(Default)]
-pub struct LegacyGames;
+pub struct LegacyGames {
+    client: Option<Arc<LegacyGamesClient>>,
+}
 
 #[async_trait]
 impl Storefront for LegacyGames {
-    async fn fetch_games(&self) -> Result<Option<Vec<Game>>> {
+    async fn init(&mut self) -> Result<()> {
         let app_handle = APP.get().unwrap();
         let email = app_handle
             .state::<RwLock<Config>>()
@@ -39,45 +41,55 @@ impl Storefront for LegacyGames {
             .clone();
 
         if email.is_none() {
-            return Ok(None);
+            return Ok(());
         }
 
         let client = match token {
-            Some(token) => Arc::new(LegacyGamesClient::from_token(email.unwrap(), token)),
-            None => Arc::new(LegacyGamesClient::from_email(email.unwrap())),
+            Some(token) => LegacyGamesClient::from_token(email.unwrap(), token),
+            None => LegacyGamesClient::from_email(email.unwrap()),
+        };
+
+        self.client = Some(Arc::new(client));
+
+        Ok(())
+    }
+
+    async fn fetch_games(&self) -> Result<Option<Vec<Game>>> {
+        if self.client.is_none() {
+            return Err("Legacy Games client is not initialized".into());
+        }
+        let client = match &self.client {
+            Some(c) => Arc::clone(c),
+            None => return Ok(None),
         };
 
         let mut join_set = JoinSet::new();
 
         if client.is_token_client() {
-            let client_clone = client.clone();
+            let token_client = Arc::clone(&client);
 
             join_set.spawn(async move {
-                match client_clone.fetch_wp_products().await {
-                    Ok(products) => {
-                        let games = create_games(products, false);
-                        Ok(games)
-                    }
-                    Err(err) => Err(err),
-                }
+                token_client
+                    .fetch_wp_products()
+                    .await
+                    .map(|products| create_games(products, false))
             });
         }
 
+        let giveaway_client = Arc::clone(&client);
         join_set.spawn(async move {
-            match client.fetch_giveaway_products().await {
-                Ok(products) => {
-                    let games = create_games(products, true);
-                    Ok(games)
-                }
-                Err(err) => Err(err),
-            }
+            giveaway_client
+                .fetch_giveaway_products()
+                .await
+                .map(|products| create_games(products, true))
         });
 
         let mut result = Vec::new();
 
         while let Some(res) = join_set.join_next().await {
             match res {
-                Ok(games) => result.extend(games?),
+                Ok(Ok(games)) => result.extend(games),
+                Ok(Err(e)) => return Err(e.into()),
                 Err(e) => return Err(e.into()),
             }
         }
@@ -89,36 +101,18 @@ impl Storefront for LegacyGames {
         #[cfg(unix)]
         return Ok(vec![]);
 
-        let app_handle = APP.get().unwrap();
-        let email = app_handle
-            .state::<RwLock<Config>>()
-            .read()
-            .unwrap()
-            .legacy_games_email()
-            .clone();
-        let token = app_handle
-            .state::<RwLock<Config>>()
-            .read()
-            .unwrap()
-            .legacy_games_token()
-            .clone();
-
-        if email.is_none() {
-            return Err("No email set for Legacy Games".into());
+        if self.client.is_none() {
+            return Err("Legacy Games client is not initialized".into());
         }
 
-        let client = match token {
-            Some(token) => LegacyGamesClient::from_token(email.unwrap(), token),
-            None => LegacyGamesClient::from_email(email.unwrap()),
-        };
+        let client = self.client.as_ref().unwrap();
 
-        let size = match game.key {
-            Some(ref key) => {
-                client
-                    .fetch_wp_installer_size(key.parse()?, &game.id)
-                    .await?
-            }
-            None => client.fetch_giveaway_installer_size(&game.id).await?,
+        let size = if let Some(ref key) = game.key {
+            client
+                .fetch_wp_installer_size(key.parse()?, &game.id)
+                .await?
+        } else {
+            client.fetch_giveaway_installer_size(&game.id).await?
         };
 
         Ok(vec![GameVersion {
@@ -147,32 +141,16 @@ impl Storefront for LegacyGames {
         _version_id: String,
         download_options: DownloadOptions,
     ) -> Result<Option<Download>> {
-        let app_handle = APP.get().unwrap();
-        let email = app_handle
-            .state::<RwLock<Config>>()
-            .read()
-            .unwrap()
-            .legacy_games_email()
-            .clone();
-        let token = app_handle
-            .state::<RwLock<Config>>()
-            .read()
-            .unwrap()
-            .legacy_games_token()
-            .clone();
-
-        if email.is_none() {
-            return Err("No email set for Legacy Games".into());
+        if self.client.is_none() {
+            return Err("Legacy Games client is not initialized".into());
         }
 
-        let client = match token {
-            Some(token) => LegacyGamesClient::from_token(email.unwrap(), token),
-            None => LegacyGamesClient::from_email(email.unwrap()),
-        };
+        let client = self.client.as_ref().unwrap();
 
-        let installer_url = match game.key {
-            Some(ref key) => client.fetch_wp_installer(key.parse()?, &game.id).await?,
-            None => client.fetch_giveaway_installer(&game.id).await?,
+        let installer_url = if let Some(ref key) = game.key {
+            client.fetch_wp_installer(key.parse()?, &game.id).await?
+        } else {
+            client.fetch_giveaway_installer(&game.id).await?
         };
 
         let http = reqwest::Client::new();
@@ -184,13 +162,12 @@ impl Storefront for LegacyGames {
             .get(ETAG)
             .map(|header| header.to_str().unwrap().trim_matches('"').to_string());
 
-        let size = match game.key {
-            Some(ref key) => {
-                client
-                    .fetch_wp_installer_size(key.parse()?, &game.id)
-                    .await?
-            }
-            None => client.fetch_giveaway_installer_size(&game.id).await?,
+        let size = if let Some(ref key) = game.key {
+            client
+                .fetch_wp_installer_size(key.parse()?, &game.id)
+                .await?
+        } else {
+            client.fetch_giveaway_installer_size(&game.id).await?
         };
 
         game.version = Some(game.id.clone());

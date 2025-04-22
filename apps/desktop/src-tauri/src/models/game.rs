@@ -4,6 +4,7 @@ use crate::{common::result::Result, schema::games::dsl::*};
 use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use serde::{Deserialize, Serialize};
+use strum_macros::EnumIter;
 
 use super::payloads::GameFiltersPayload;
 
@@ -135,11 +136,12 @@ pub struct GameVersionInfo {
     pub install_size: u32,
 }
 
-#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, EnumIter)]
 #[serde(rename_all = "camelCase")]
 pub enum GameSource {
     Itchio,
     LegacyGames,
+    EpicGames,
 }
 
 #[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq)]

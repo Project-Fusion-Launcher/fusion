@@ -102,6 +102,8 @@ impl DownloadManager {
                         .unwrap();
 
                     let result = get_storefront(&payload.game_source)
+                        .read()
+                        .await
                         .post_download(&payload.game_id, path, &file_name)
                         .await;
 
