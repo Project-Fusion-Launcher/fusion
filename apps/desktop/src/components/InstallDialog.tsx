@@ -187,7 +187,7 @@ const InstallDialog = (props: InstallDialogProps) => {
                   <td class="flex items-center gap-8 pr-16 font-light">
                     <Download class="size-16" /> Download size:
                   </td>
-                  <td>
+                  <td class="text-primary font-medium">
                     <Switch>
                       <Match when={selectedVersion()?.external}>Unknown</Match>
                       <Match when={gameVersionInfo.loading}>
@@ -204,7 +204,7 @@ const InstallDialog = (props: InstallDialogProps) => {
                     <HardDrive class="size-16" />
                     Install size:
                   </td>
-                  <td>
+                  <td class="text-primary font-medium">
                     <Switch>
                       <Match when={selectedVersion()?.external}>Unknown</Match>
                       <Match when={gameVersionInfo.loading}>

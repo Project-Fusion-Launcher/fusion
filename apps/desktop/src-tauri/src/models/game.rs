@@ -130,8 +130,8 @@ pub struct GameVersion {
 #[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct GameVersionInfo {
-    pub install_size: u32,
-    pub download_size: u32,
+    pub install_size: u64,
+    pub download_size: u64,
 }
 
 #[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, EnumIter)]

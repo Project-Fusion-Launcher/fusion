@@ -1,7 +1,8 @@
-use std::collections::HashMap;
-
 use chrono::NaiveDateTime;
 use serde::{de::Error, Deserialize, Deserializer, Serialize};
+use std::collections::HashMap;
+
+pub mod manifest;
 
 #[derive(Serialize)]
 pub struct LoginParams {

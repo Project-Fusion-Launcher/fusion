@@ -151,8 +151,8 @@ impl Storefront for Itchio {
             if let Ok(scanned_archive) = scanned_archive {
                 if scanned_archive.extracted_size.is_some() {
                     return Ok(GameVersionInfo {
-                        download_size: upload.await??.size.unwrap_or_default(),
-                        install_size: scanned_archive.extracted_size.unwrap(),
+                        download_size: upload.await??.size.unwrap_or_default() as u64,
+                        install_size: scanned_archive.extracted_size.unwrap() as u64,
                     });
                 }
             }

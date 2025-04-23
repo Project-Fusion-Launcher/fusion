@@ -107,12 +107,36 @@ impl Storefront for EpicGames {
 
     async fn fetch_game_version_info(
         &self,
-        _game: Game,
-        _version_id: String,
+        game: Game,
+        version_id: String,
     ) -> Result<GameVersionInfo> {
+        let client = match &self.client {
+            Some(c) => c,
+            None => return Err("Epic Games client not initialized".into()),
+        };
+
+        let manifest = client
+            .fetch_version_manifest(&game.id, &version_id)
+            .await
+            .unwrap();
+
+        let download_size = manifest
+            .chunk_data_list
+            .chunks
+            .iter()
+            .map(|chunk| chunk.file_size)
+            .sum::<u64>();
+
+        let install_size = manifest
+            .file_manifest_list
+            .elements
+            .iter()
+            .map(|file| file.file_size)
+            .sum::<u64>();
+
         Ok(GameVersionInfo {
-            install_size: 0,
-            download_size: 0,
+            install_size,
+            download_size,
         })
     }
 

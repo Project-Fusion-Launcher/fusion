@@ -124,7 +124,7 @@ impl Storefront for LegacyGames {
                 .await?
         } else {
             client.fetch_giveaway_installer_size(&game.id).await?
-        };
+        } as u64;
 
         // There is no way to fetch the installed size that I know.
         // The game_installed_size in the API's resonse is actually the download size.

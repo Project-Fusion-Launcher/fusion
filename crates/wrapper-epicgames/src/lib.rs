@@ -1,13 +1,17 @@
 use api::{
     endpoints,
     models::{
-        AccessTokenResponse, Asset, CategoryPath, Game, GameInfoResponse, GameManifestsResponse,
-        GrantType, LoginParams,
+        manifest::Manifest, AccessTokenResponse, Asset, CategoryPath, Game, GameInfoResponse,
+        GameManifestsResponse, GrantType, LoginParams,
     },
 };
 use futures::{stream::FuturesUnordered, StreamExt};
-use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, USER_AGENT};
+use reqwest::{
+    header::{AUTHORIZATION, CONTENT_TYPE, USER_AGENT},
+    StatusCode, Url,
+};
 use serde::de::DeserializeOwned;
+use sha1::{Digest, Sha1};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
 
@@ -133,6 +137,75 @@ impl EpicGamesClient {
             .into_iter()
             .map(|e| e.build_version)
             .collect())
+    }
+
+    pub async fn fetch_version_manifest(
+        &self,
+        catalog_item_id: &str,
+        build_version: &str,
+    ) -> Result<Manifest, &'static str> {
+        let assets: Vec<Asset> =
+            Self::make_get_request(&self.http, api::endpoints::assets(), &self.access_token)
+                .await
+                .map_err(|_| "Failed to fetch assets")?;
+
+        let asset = assets
+            .into_iter()
+            .find(|asset| asset.catalog_item_id == catalog_item_id)
+            .ok_or("Game not found in assets")?;
+
+        let response: GameManifestsResponse = Self::make_get_request(
+            &self.http,
+            &api::endpoints::game_manifests(&asset.namespace, catalog_item_id, &asset.app_name),
+            &self.access_token,
+        )
+        .await
+        .map_err(|_| "Failed to fetch game info")?;
+
+        let element = response
+            .elements
+            .into_iter()
+            .find(|e| e.build_version == build_version)
+            .ok_or("Version not found")?;
+
+        for manifest_url in element.manifests {
+            let mut url = Url::parse(&manifest_url.uri).map_err(|_| "Invalid URL")?;
+
+            for param in &manifest_url.query_params {
+                url.query_pairs_mut().append_pair(&param.name, &param.value);
+            }
+
+            let response = self
+                .http
+                .get(url)
+                .header(AUTHORIZATION, format!("bearer {}", self.access_token))
+                .header(
+                    USER_AGENT,
+                    "UELauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit",
+                )
+                .send()
+                .await
+                .map_err(|_| "Failed to fetch manifest")?;
+
+            if StatusCode::is_success(&response.status()) {
+                let bytes = response
+                    .bytes()
+                    .await
+                    .map_err(|_| "Failed to read manifest response")?;
+
+                let mut hasher = Sha1::new();
+                hasher.update(&bytes);
+                let hash = hasher.finalize();
+
+                if format!("{:x}", hash) != element.hash {
+                    continue;
+                }
+
+                return Manifest::from_bytes(&bytes);
+            }
+        }
+
+        Err("Failed to fetch manifest")
     }
 
     async fn make_get_request<D>(
