@@ -23,7 +23,7 @@
     "@storybook/blocks": "8.5.2",
     "@storybook/docs-tools": "8.5.2",
     "@storybook/test": "8.5.2",
-    "@tailwindcss/vite": "4.0.3",
+    "@tailwindcss/vite": "4.1.4",
     "autoprefixer": "10.4.20",
     "clsx": "2.1.1",
     "eslint": "9.19.0",

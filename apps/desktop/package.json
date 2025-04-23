@@ -29,7 +29,7 @@
     "@repo/config-tailwind": "workspace:*",
     "@repo/config-typescript": "workspace:*",
     "@repo/ui": "workspace:*",
-    "@tailwindcss/vite": "4.0.3",
+    "@tailwindcss/vite": "4.1.4",
     "@tauri-apps/cli": "2.5.0",
     "eslint": "9.19.0",
     "tailwindcss": "4.1.4",
