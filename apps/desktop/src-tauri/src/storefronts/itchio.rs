@@ -104,11 +104,12 @@ impl Storefront for Itchio {
         let game_key: u32 = game.key.unwrap().parse()?;
         let uploads = client.fetch_game_uploads(game_id, game_key).await?;
 
-        #[cfg(unix)]
+        #[cfg(target_os = "linux")]
         let os_trait = UploadTraits::PLinux;
-
-        #[cfg(windows)]
+        #[cfg(target_os = "windows")]
         let os_trait = UploadTraits::PWindows;
+        #[cfg(target_os = "macos")]
+        let os_trait = UploadTraits::POsx;
 
         let game_versions = uploads
             .into_iter()

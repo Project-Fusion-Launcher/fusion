@@ -23,11 +23,12 @@ where
         fs::create_dir_all(output_dir).await?;
     }
 
-    #[cfg(windows)]
+    #[cfg(target_os = "windows")]
     let os_specific_path = "thirdparty/7-Zip/windows/7z.exe";
-
-    #[cfg(unix)]
+    #[cfg(target_os = "linux")]
     let os_specific_path = "thirdparty/7-Zip/linux/7zzs";
+    #[cfg(target_os = "macos")]
+    let os_specific_path = "thirdparty/7-Zip/macos/7zz";
 
     let seven_zip = APP
         .get()
