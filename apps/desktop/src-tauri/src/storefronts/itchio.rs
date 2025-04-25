@@ -215,7 +215,7 @@ impl Storefront for Itchio {
         }))
     }
 
-    fn launch_game(&self, game: Game) -> Result<()> {
+    async fn launch_game(&self, game: Game) -> Result<()> {
         let game_path = game.path.unwrap();
         let launch_target = game.launch_target.unwrap();
 
@@ -256,6 +256,8 @@ async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Result<
     }
 
     let mut launch_target = util::fs::find_launch_target(&path).await?;
+
+    println!("Launch target: {:?}", launch_target);
 
     // Strip base path from launch target
     if let Some(target) = &launch_target {

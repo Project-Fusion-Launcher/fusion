@@ -149,7 +149,7 @@ impl Storefront for EpicGames {
         Ok(None)
     }
 
-    fn launch_game(&self, game: Game) -> Result<()> {
+    async fn launch_game(&self, game: Game) -> Result<()> {
         Ok(())
     }
 

@@ -183,7 +183,7 @@ impl Storefront for LegacyGames {
         }))
     }
 
-    fn launch_game(&self, game: Game) -> Result<()> {
+    async fn launch_game(&self, game: Game) -> Result<()> {
         let game_path = game.path.unwrap();
         let launch_target = game.launch_target.unwrap();
 

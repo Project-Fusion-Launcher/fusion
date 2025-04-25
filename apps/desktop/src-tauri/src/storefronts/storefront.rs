@@ -25,6 +25,6 @@ pub trait Storefront {
         download_options: DownloadOptions,
     ) -> Result<Option<Download>>;
     async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()>;
-    fn launch_game(&self, game: Game) -> Result<()>;
+    async fn launch_game(&self, game: Game) -> Result<()>;
     async fn uninstall_game(&self, game: &Game) -> Result<()>;
 }

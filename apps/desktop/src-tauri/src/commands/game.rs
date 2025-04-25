@@ -131,6 +131,7 @@ pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(),
         .read()
         .await
         .launch_game(game)
+        .await
         .map_err(|e| e.to_string())
 }
 
