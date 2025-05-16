@@ -52,9 +52,6 @@ const GameGrid = (props: GameGridProps) => {
           class="relative mr-[14px] h-full overflow-y-auto overflow-x-hidden pb-16"
           style={{ "scrollbar-gutter": "stable" }}
         >
-          {/* There cannot be a context menu per game as it causes too much scroll lag.
-            There is probably a better way to handle this.
-        */}
           <Virtualizer
             data={groupArrayElements(props.games, columns())}
             overscan={2}
