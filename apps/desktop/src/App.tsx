@@ -8,7 +8,7 @@ const App = (props: RouteSectionProps) => {
     <ContextProvider>
       <WindowEventListener onContextmenu={(e) => e.preventDefault()} />
       <Sidebar />
-      <div class="flex w-full flex-col">{props.children}</div>
+      <div class="relative flex w-full flex-col">{props.children}</div>
     </ContextProvider>
   );
 };

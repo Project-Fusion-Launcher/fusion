@@ -47,7 +47,9 @@ const GameContextMenu = (props: GameContextMenuProps) => {
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger>{props.children}</ContextMenuTrigger>
+      <ContextMenuTrigger class="relative h-full overflow-hidden">
+        {props.children}
+      </ContextMenuTrigger>
       <ContextMenuContent>
         <Switch>
           <Match when={props.game}>

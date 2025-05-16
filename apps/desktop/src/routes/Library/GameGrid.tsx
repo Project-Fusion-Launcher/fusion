@@ -43,21 +43,21 @@ const GameGrid = (props: GameGridProps) => {
   return (
     <>
       <WindowEventListener onResize={calculateColumns} />
-      <div
-        ref={(el) => (gameContainerRef = el)}
-        class="mr-[14px] overflow-y-auto overflow-x-hidden pb-16"
-        style={{ "scrollbar-gutter": "stable" }}
+      <GameContextMenu
+        game={selectedGame()}
+        onMainAction={() => handleMainAction(selectedGame())}
       >
-        {/* There cannot be a context menu per game as it causes too much scroll lag.
+        <div
+          ref={(el) => (gameContainerRef = el)}
+          class="relative mr-[14px] h-full overflow-y-auto overflow-x-hidden pb-16"
+          style={{ "scrollbar-gutter": "stable" }}
+        >
+          {/* There cannot be a context menu per game as it causes too much scroll lag.
             There is probably a better way to handle this.
         */}
-        <GameContextMenu
-          game={selectedGame()}
-          onMainAction={() => handleMainAction(selectedGame())}
-        >
           <Virtualizer
             data={groupArrayElements(props.games, columns())}
-            overscan={1}
+            overscan={2}
           >
             {(gameRow) => (
               <div
@@ -92,8 +92,8 @@ const GameGrid = (props: GameGridProps) => {
               </div>
             )}
           </Virtualizer>
-        </GameContextMenu>
-      </div>
+        </div>
+      </GameContextMenu>
     </>
   );
 };
