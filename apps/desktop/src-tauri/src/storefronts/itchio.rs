@@ -138,13 +138,13 @@ impl Storefront for Itchio {
         let upload_id: u32 = version_id.parse()?;
         let game_key: u32 = game.key.unwrap().parse()?;
 
-        let mut retries = 5;
-
         let client_clone = Arc::clone(client);
         let upload =
             tokio::spawn(async move { client_clone.fetch_game_upload(upload_id, game_key).await });
 
-        while retries > 0 {
+        // Itch.io needs to scan the archive before we can get the info
+        let retries = 8;
+        for attempt in 1..=retries {
             let scanned_archive = client
                 .fetch_upload_scanned_archive(upload_id, game_key)
                 .await;
@@ -158,9 +158,10 @@ impl Storefront for Itchio {
                 }
             }
 
-            retries -= 1;
-
-            tokio::time::sleep(std::time::Duration::from_secs(2_u64.pow(5 - retries))).await;
+            if attempt < retries {
+                let delay_secs = attempt * 2;
+                tokio::time::sleep(std::time::Duration::from_secs(delay_secs)).await;
+            }
         }
 
         Err("Failed to fetch release info".into())
