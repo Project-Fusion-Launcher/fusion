@@ -60,11 +60,23 @@ pub async fn run() {
                 let download_manager_2 = DownloadManager2::init();
 
                 download_manager_2.enqueue_download(Download {
-                    files: vec![DownloadFile {
-                        filename: String::from("test.exe"),
-                        hash: DownloadHash::None,
-                        chunks: vec![],
-                    }],
+                    files: vec![
+                        DownloadFile {
+                            filename: String::from("test.exe"),
+                            hash: DownloadHash::None,
+                            chunks: vec![],
+                        },
+                        DownloadFile {
+                            filename: String::from("readme.txt"),
+                            hash: DownloadHash::None,
+                            chunks: vec![],
+                        },
+                        DownloadFile {
+                            filename: String::from("data.bin"),
+                            hash: DownloadHash::None,
+                            chunks: vec![],
+                        },
+                    ],
                     path: PathBuf::from("C:\\Users\\jorge\\Downloads\\test"),
                     game_id: "test".to_string(),
                     game_source: GameSource::EpicGames,
