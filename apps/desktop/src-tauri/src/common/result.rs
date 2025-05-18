@@ -12,6 +12,7 @@ pub enum Error {
     DieselConnection(diesel::ConnectionError),
     Io(io::Error),
     JoinError(tokio::task::JoinError),
+    AcquireError(tokio::sync::AcquireError),
     ParseInt(std::num::ParseIntError),
     Reqwest(reqwest::Error),
     Tauri(tauri::Error),
@@ -42,6 +43,12 @@ impl From<io::Error> for Error {
 impl From<tokio::task::JoinError> for Error {
     fn from(e: tokio::task::JoinError) -> Self {
         Self::JoinError(e)
+    }
+}
+
+impl From<tokio::sync::AcquireError> for Error {
+    fn from(e: tokio::sync::AcquireError) -> Self {
+        Self::AcquireError(e)
     }
 }
 
@@ -94,6 +101,7 @@ impl Display for Error {
             Self::DieselConnection(e) => write!(f, "Diesel connection error: {}", e),
             Self::Io(e) => write!(f, "IO error: {}", e),
             Self::JoinError(e) => write!(f, "Join error: {}", e),
+            Self::AcquireError(e) => write!(f, "Acquire error: {}", e),
             Self::ParseInt(e) => write!(f, "Parse int error: {}", e),
             Self::Reqwest(e) => write!(f, "Reqwest error: {}", e),
             Self::Tauri(e) => write!(f, "Tauri error: {}", e),

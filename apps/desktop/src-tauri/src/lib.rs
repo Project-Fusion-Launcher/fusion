@@ -1,7 +1,14 @@
 use common::database;
-use managers::download::DownloadManager;
-use models::config::Config;
-use std::sync::{OnceLock, RwLock};
+use managers::{download::DownloadManager, download_new::DownloadManager2};
+use models::{
+    config::Config,
+    download::{Download, DownloadFile, DownloadHash},
+    game::GameSource,
+};
+use std::{
+    path::PathBuf,
+    sync::{OnceLock, RwLock},
+};
 use tauri::{AppHandle, Manager};
 
 pub mod commands;
@@ -49,6 +56,20 @@ pub async fn run() {
                 storefronts::init_storefronts()
                     .await
                     .expect("Error initializing storefronts");
+
+                let download_manager_2 = DownloadManager2::init();
+
+                download_manager_2.enqueue_download(Download {
+                    files: vec![DownloadFile {
+                        filename: String::from("test.exe"),
+                        hash: DownloadHash::None,
+                        chunks: vec![],
+                    }],
+                    path: PathBuf::from("C:\\Users\\jorge\\Downloads\\test"),
+                    game_id: "test".to_string(),
+                    game_source: GameSource::EpicGames,
+                    game_title: "test".to_string(),
+                });
             });
 
             Ok(())
