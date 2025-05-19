@@ -242,12 +242,22 @@ impl ManifestCDL {
         let mut chunks = Vec::new();
 
         for _ in 0..count {
-            let guid = cursor
-                .read_u128::<LittleEndian>()
-                .map_err(|_| "Failed to read GUID")?;
+            let guid1 = cursor
+                .read_u32::<LittleEndian>()
+                .map_err(|_| "Failed to read GUID1")?;
+            let guid2 = cursor
+                .read_u32::<LittleEndian>()
+                .map_err(|_| "Failed to read GUID2")?;
+            let guid3 = cursor
+                .read_u32::<LittleEndian>()
+                .map_err(|_| "Failed to read GUID3")?;
+            let guid4 = cursor
+                .read_u32::<LittleEndian>()
+                .map_err(|_| "Failed to read GUID4")?;
+
             chunks.push(Chunk {
                 manifest_version,
-                guid,
+                guid: (guid1, guid2, guid3, guid4),
                 hash: 0,
                 sha_hash: [0; 20],
                 group_num: 0,
@@ -312,7 +322,7 @@ impl ManifestCDL {
 
 #[derive(Serialize, Debug)]
 pub struct Chunk {
-    pub guid: u128,
+    pub guid: (u32, u32, u32, u32),
     pub hash: u64,
     pub sha_hash: [u8; 20],
     pub group_num: u8,
