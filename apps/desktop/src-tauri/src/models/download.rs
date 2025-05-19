@@ -1,41 +1,50 @@
-use std::path::PathBuf;
-
 use super::game::GameSource;
+use reqwest::RequestBuilder;
+use std::path::PathBuf;
 
 pub struct Download {
     pub files: Vec<DownloadFile>,
+    pub chunks: Vec<DownloadChunk>,
     pub path: PathBuf,
     pub game_id: String,
     pub game_source: GameSource,
     pub game_title: String,
 }
 
-impl Download {
-    pub fn download_size(&self) -> u64 {
-        self.files
-            .iter()
-            .flat_map(|file| &file.chunks)
-            .map(|chunk| chunk.size as u64)
-            .sum()
-    }
-}
-
 pub struct DownloadFile {
     pub filename: String,
-    pub chunks: Vec<DownloadFileChunk>,
+    pub chunk_part: Vec<ChunkPart>,
     pub hash: DownloadHash,
 }
 
-pub struct DownloadFileChunk {
-    pub hash: DownloadHash,
+pub struct ChunkPart {
+    pub chunk_id: u128,
     pub size: u32,
-    pub offset: u64,
+    pub chunk_offset: u64,
+    pub file_offset: u64,
 }
 
+pub struct DownloadChunk {
+    pub id: u128,
+    pub status: DownloadStatus,
+    pub request: RequestBuilder,
+    pub compressed_size: u64,
+    pub size: u64,
+    pub hash: DownloadHash,
+}
+
+#[derive(Clone)]
 pub enum DownloadHash {
     Sha1(String),
     Sha256(String),
     Sha512(String),
     Md5(String),
     None,
+}
+
+#[derive(PartialEq)]
+pub enum DownloadStatus {
+    Queued,
+    Downloading,
+    Completed,
 }

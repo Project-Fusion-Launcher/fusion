@@ -13,6 +13,7 @@ pub enum Error {
     Io(io::Error),
     JoinError(tokio::task::JoinError),
     AcquireError(tokio::sync::AcquireError),
+    RecvError(tokio::sync::oneshot::error::RecvError),
     ParseInt(std::num::ParseIntError),
     Reqwest(reqwest::Error),
     Tauri(tauri::Error),
@@ -49,6 +50,12 @@ impl From<tokio::task::JoinError> for Error {
 impl From<tokio::sync::AcquireError> for Error {
     fn from(e: tokio::sync::AcquireError) -> Self {
         Self::AcquireError(e)
+    }
+}
+
+impl From<tokio::sync::oneshot::error::RecvError> for Error {
+    fn from(e: tokio::sync::oneshot::error::RecvError) -> Self {
+        Self::RecvError(e)
     }
 }
 
@@ -102,6 +109,7 @@ impl Display for Error {
             Self::Io(e) => write!(f, "IO error: {}", e),
             Self::JoinError(e) => write!(f, "Join error: {}", e),
             Self::AcquireError(e) => write!(f, "Acquire error: {}", e),
+            Self::RecvError(e) => write!(f, "Receive error: {}", e),
             Self::ParseInt(e) => write!(f, "Parse int error: {}", e),
             Self::Reqwest(e) => write!(f, "Reqwest error: {}", e),
             Self::Tauri(e) => write!(f, "Tauri error: {}", e),

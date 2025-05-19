@@ -1,14 +1,14 @@
+use byteorder::{LittleEndian, ReadBytesExt};
+use flate2::bufread::ZlibDecoder;
+use serde::Serialize;
+use sha1::{Digest, Sha1};
 use std::{
     cmp::Ordering,
     collections::HashMap,
     io::{Cursor, Read, Seek, SeekFrom},
 };
 
-use byteorder::{LittleEndian, ReadBytesExt};
-use flate2::bufread::ZlibDecoder;
-use sha1::{Digest, Sha1};
-
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct Manifest {
     pub header_size: u32,
     pub size_uncompressed: u32,
@@ -82,7 +82,7 @@ impl Manifest {
         let mut cursor = Cursor::new(&uncompressed_data);
 
         let meta = ManifestMeta::from_cursor(&mut cursor)?;
-        let chunk_data_list = ManifestCDL::from_cursor(&mut cursor)?;
+        let chunk_data_list = ManifestCDL::from_cursor(&mut cursor, version)?;
         let file_manifest_list = ManifestFML::from_cursor(&mut cursor)?;
         let custom_fields = ManifestCustomFields::from_cursor(&mut cursor)?;
 
@@ -112,7 +112,7 @@ impl Manifest {
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct ManifestMeta {
     pub meta_size: u32,
     pub data_version: u8,
@@ -216,7 +216,7 @@ impl ManifestMeta {
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct ManifestCDL {
     pub cdl_size: u32,
     pub cdl_version: u8,
@@ -225,7 +225,10 @@ pub struct ManifestCDL {
 }
 
 impl ManifestCDL {
-    fn from_cursor(cursor: &mut Cursor<&Vec<u8>>) -> Result<Self, &'static str> {
+    fn from_cursor(
+        cursor: &mut Cursor<&Vec<u8>>,
+        manifest_version: u32,
+    ) -> Result<Self, &'static str> {
         let initial_position = cursor.position();
 
         let cdl_size = cursor
@@ -243,6 +246,7 @@ impl ManifestCDL {
                 .read_u128::<LittleEndian>()
                 .map_err(|_| "Failed to read GUID")?;
             chunks.push(Chunk {
+                manifest_version,
                 guid,
                 hash: 0,
                 sha_hash: [0; 20],
@@ -306,7 +310,7 @@ impl ManifestCDL {
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct Chunk {
     pub guid: u128,
     pub hash: u64,
@@ -314,9 +318,26 @@ pub struct Chunk {
     pub group_num: u8,
     pub window_size: u32,
     pub file_size: u64,
+    pub manifest_version: u32,
 }
 
-#[derive(Debug)]
+impl Chunk {
+    pub fn path(&self) -> String {
+        let dir = if self.manifest_version >= 15 {
+            "ChunksV4"
+        } else if self.manifest_version >= 6 {
+            "ChunksV3"
+        } else if self.manifest_version >= 3 {
+            "ChunksV2"
+        } else {
+            "Chunks"
+        };
+
+        format!("{dir}/{}/{}_{}", self.group_num, self.hash, self.guid)
+    }
+}
+
+#[derive(Serialize, Debug)]
 pub struct ManifestFML {
     pub fml_size: u32,
     pub fml_version: u8,
@@ -479,7 +500,7 @@ impl ManifestFML {
     }
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct FileManifest {
     pub filename: String,
     pub symlink_target: String,
@@ -493,7 +514,7 @@ pub struct FileManifest {
     pub file_size: u64,
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct ChunkPart {
     pub guid: u128,
     pub offset: u32,
@@ -501,7 +522,7 @@ pub struct ChunkPart {
     pub file_offset: u64,
 }
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct ManifestCustomFields {
     pub custom_fields_size: u32,
     pub custom_fields_version: u8,

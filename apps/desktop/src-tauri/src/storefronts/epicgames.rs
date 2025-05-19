@@ -134,6 +134,11 @@ impl Storefront for EpicGames {
             .map(|file| file.file_size)
             .sum::<u64>();
 
+        let manifest_json = serde_json::to_string_pretty(&manifest).unwrap();
+        let file_path = std::path::Path::new("C:\\Users\\jorge\\Downloads")
+            .join(format!("{}_manifest.json", game.id));
+        std::fs::write(file_path, manifest_json)?;
+
         Ok(GameVersionInfo {
             install_size,
             download_size,

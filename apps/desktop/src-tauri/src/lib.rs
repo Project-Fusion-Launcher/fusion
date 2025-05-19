@@ -2,9 +2,10 @@ use common::database;
 use managers::{download::DownloadManager, download_new::DownloadManager2};
 use models::{
     config::Config,
-    download::{Download, DownloadFile, DownloadHash},
+    download::{Download, DownloadChunk, DownloadFile, DownloadHash, DownloadStatus},
     game::GameSource,
 };
+use reqwest::RequestBuilder;
 use std::{
     path::PathBuf,
     sync::{OnceLock, RwLock},
@@ -60,28 +61,27 @@ pub async fn run() {
                 let download_manager_2 = DownloadManager2::init();
 
                 download_manager_2.enqueue_download(Download {
-                    files: vec![
-                        DownloadFile {
-                            filename: String::from("test.exe"),
-                            hash: DownloadHash::None,
-                            chunks: vec![],
-                        },
-                        DownloadFile {
-                            filename: String::from("readme.txt"),
-                            hash: DownloadHash::None,
-                            chunks: vec![],
-                        },
-                        DownloadFile {
-                            filename: String::from("data.bin"),
-                            hash: DownloadHash::None,
-                            chunks: vec![],
-                        },
-                    ],
+                    files: vec![],
+                    chunks: vec![DownloadChunk {
+                        id: 263186378597728493026504637363234853699,
+                        status: DownloadStatus::Queued,
+                        hash: DownloadHash::Sha1(String::from(
+                            "5a6abd08f571fb662aff3e8cccf5848cd1858f40",
+                        )),
+                        compressed_size: 759559,
+                        size: 1048576,
+                        request: reqwest::Client::new()
+                            .get("https://example.com")
+                            .header("User-Agent", "EpicGamesLauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"),
+                    }],
                     path: PathBuf::from("C:\\Users\\jorge\\Downloads\\test"),
                     game_id: "test".to_string(),
                     game_source: GameSource::EpicGames,
                     game_title: "test".to_string(),
                 });
+
+                tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+                download_manager_2.pause_download();
             });
 
             Ok(())
