@@ -323,7 +323,11 @@ pub struct Chunk {
 
 impl Chunk {
     pub fn path(&self) -> String {
-        let dir = if self.manifest_version >= 15 {
+        format!("{}/", self.dir())
+    }
+
+    fn dir(&self) -> &'static str {
+        if self.manifest_version >= 15 {
             "ChunksV4"
         } else if self.manifest_version >= 6 {
             "ChunksV3"
@@ -331,9 +335,7 @@ impl Chunk {
             "ChunksV2"
         } else {
             "Chunks"
-        };
-
-        format!("{dir}/{}/{}_{}", self.group_num, self.hash, self.guid)
+        }
     }
 }
 
