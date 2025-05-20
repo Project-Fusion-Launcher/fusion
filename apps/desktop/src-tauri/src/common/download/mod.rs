@@ -14,10 +14,10 @@ pub async fn process_download(
     download: Download,
     cancellation_token: CancellationToken,
 ) -> Result<()> {
-    let pool = WorkerPool::new(2);
+    //let pool = WorkerPool::new(2);
     fs::create_dir_all(&download.path).await?;
 
-    for mut file in download.files {
+    /*for mut file in download.files {
         if cancellation_token.is_cancelled() {
             println!("Download cancelled");
             break;
@@ -32,7 +32,7 @@ pub async fn process_download(
         pool.execute(move || process_file(file, token)).await?;
     }
 
-    pool.shutdown().await;
+    pool.shutdown().await;*/
 
     Ok(())
 }
@@ -41,24 +41,24 @@ pub async fn process_file(
     download_file: DownloadFile,
     cancellation_token: CancellationToken,
 ) -> Result<()> {
-    for chunk in download_file.chunks {
+    /*for chunk in download_file.chunks {
         if cancellation_token.is_cancelled() {
             println!("Download cancelled");
             break;
         }
         println!("Downloading file: {}", download_file.filename);
         download_chunk(&download_file.filename, chunk, cancellation_token.clone()).await?;
-    }
+    }*/
 
     Ok(())
 }
 
 pub async fn download_chunk<P: AsRef<Path>>(
     file_path: P,
-    chunk: DownloadFileChunk,
+    //chunk: DownloadFileChunk,
     cancellation_token: CancellationToken,
 ) -> Result<()> {
-    if cancellation_token.is_cancelled() {
+    /*if cancellation_token.is_cancelled() {
         println!("Download cancelled");
         return Ok(());
     }
@@ -111,7 +111,7 @@ pub async fn download_chunk<P: AsRef<Path>>(
     });
 
     downloader.await??;
-    write.await??;
+    write.await??; */
 
     Ok(())
 }

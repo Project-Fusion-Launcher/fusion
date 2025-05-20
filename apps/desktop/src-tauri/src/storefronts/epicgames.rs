@@ -124,7 +124,7 @@ impl Storefront for EpicGames {
             .chunk_data_list
             .chunks
             .iter()
-            .map(|chunk| chunk.file_size)
+            .map(|chunk| chunk.file_size as u64)
             .sum::<u64>();
 
         let install_size = manifest
@@ -134,8 +134,20 @@ impl Storefront for EpicGames {
             .map(|file| file.file_size)
             .sum::<u64>();
 
+        let urls = client.fetch_cdn_urls(&game.id, &version_id).await.unwrap();
+
+        let url = urls[0].to_string();
+
+        for chunk in manifest.chunk_data_list.chunks.iter() {
+            println!("{url}/{}", chunk.path());
+        }
+
         let manifest_json = serde_json::to_string_pretty(&manifest).unwrap();
+        #[cfg(windows)]
         let file_path = std::path::Path::new("C:\\Users\\jorge\\Downloads")
+            .join(format!("{}_manifest.json", game.id));
+        #[cfg(unix)]
+        let file_path = std::path::Path::new("/Users/jorge/Downloads")
             .join(format!("{}_manifest.json", game.id));
         std::fs::write(file_path, manifest_json)?;
 

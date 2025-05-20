@@ -1,4 +1,5 @@
-use byteorder::{LittleEndian, ReadBytesExt};
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use crc_fast::{self, CrcAlgorithm::Crc32IsoHdlc};
 use flate2::bufread::ZlibDecoder;
 use serde::Serialize;
 use sha1::{Digest, Sha1};
@@ -297,7 +298,7 @@ impl ManifestCDL {
 
         for chunk in &mut chunks {
             let file_size = cursor
-                .read_u64::<LittleEndian>()
+                .read_i64::<LittleEndian>()
                 .map_err(|_| "Failed to read file size")?;
             chunk.file_size = file_size;
         }
@@ -327,13 +328,19 @@ pub struct Chunk {
     pub sha_hash: [u8; 20],
     pub group_num: u8,
     pub window_size: u32,
-    pub file_size: u64,
+    pub file_size: i64,
     pub manifest_version: u32,
 }
 
 impl Chunk {
     pub fn path(&self) -> String {
-        format!("{}/", self.dir())
+        format!(
+            "{}/{:02}/{:016X}_{}.chunk",
+            self.dir(),
+            self.group_num,
+            self.hash,
+            self.guid_str()
+        )
     }
 
     fn dir(&self) -> &'static str {
@@ -346,6 +353,37 @@ impl Chunk {
         } else {
             "Chunks"
         }
+    }
+
+    fn guid_str(&self) -> String {
+        format!(
+            "{:08X}{:08X}{:08X}{:08X}",
+            self.guid.0, self.guid.1, self.guid.2, self.guid.3
+        )
+    }
+
+    fn guid_num(&self) -> u128 {
+        (self.guid.0 as u128)
+            << 96 + (self.guid.1 as u128)
+            << 64 + (self.guid.2 as u128)
+            << 32 + (self.guid.3 as u128)
+    }
+
+    fn group_num(&self) -> u8 {
+        let mut buffer = Cursor::new(Vec::with_capacity(16));
+
+        buffer.write_u32::<LittleEndian>(self.guid.0).unwrap();
+        buffer.write_u32::<LittleEndian>(self.guid.1).unwrap();
+        buffer.write_u32::<LittleEndian>(self.guid.2).unwrap();
+        buffer.write_u32::<LittleEndian>(self.guid.3).unwrap();
+
+        let bytes = buffer.get_ref();
+
+        let mut digest = crc_fast::Digest::new(Crc32IsoHdlc);
+        digest.update(&bytes);
+        let crc = digest.finalize();
+
+        (crc % 100) as u8
     }
 }
 
@@ -427,9 +465,20 @@ impl ManifestFML {
                     .read_u32::<LittleEndian>()
                     .map_err(|_| "Failed to read chunk part size")?
                     as u64;
-                let guid = cursor
-                    .read_u128::<LittleEndian>()
-                    .map_err(|_| "Failed to read GUID")?;
+
+                let guid1 = cursor
+                    .read_u32::<LittleEndian>()
+                    .map_err(|_| "Failed to read GUID1")?;
+                let guid2 = cursor
+                    .read_u32::<LittleEndian>()
+                    .map_err(|_| "Failed to read GUID2")?;
+                let guid3 = cursor
+                    .read_u32::<LittleEndian>()
+                    .map_err(|_| "Failed to read GUID3")?;
+                let guid4 = cursor
+                    .read_u32::<LittleEndian>()
+                    .map_err(|_| "Failed to read GUID4")?;
+
                 let offset = cursor
                     .read_u32::<LittleEndian>()
                     .map_err(|_| "Failed to read offset")?;
@@ -438,7 +487,7 @@ impl ManifestFML {
                     .map_err(|_| "Failed to read size")?;
 
                 element.chunk_parts.push(ChunkPart {
-                    guid,
+                    guid: (guid1, guid2, guid3, guid4),
                     offset,
                     size,
                     file_offset,
@@ -528,7 +577,7 @@ pub struct FileManifest {
 
 #[derive(Serialize, Debug)]
 pub struct ChunkPart {
-    pub guid: u128,
+    pub guid: (u32, u32, u32, u32),
     pub offset: u32,
     pub size: u32,
     pub file_offset: u64,

@@ -62,7 +62,6 @@ impl EpicGamesClient {
         let assets: Vec<Asset> =
             Self::make_get_request(&self.http, api::endpoints::assets(), &self.access_token)
                 .await?;
-
         let semaphore = Arc::new(Semaphore::new(16));
         let mut tasks = FuturesUnordered::new();
 
@@ -206,6 +205,51 @@ impl EpicGamesClient {
         }
 
         Err("Failed to fetch manifest")
+    }
+
+    pub async fn fetch_cdn_urls(
+        &self,
+        catalog_item_id: &str,
+        build_version: &str,
+    ) -> Result<Vec<Url>, &'static str> {
+        let assets: Vec<Asset> =
+            Self::make_get_request(&self.http, api::endpoints::assets(), &self.access_token)
+                .await
+                .map_err(|_| "Failed to fetch assets")?;
+
+        let asset = assets
+            .into_iter()
+            .find(|asset| asset.catalog_item_id == catalog_item_id)
+            .ok_or("Game not found in assets")?;
+
+        let response: GameManifestsResponse = Self::make_get_request(
+            &self.http,
+            &api::endpoints::game_manifests(&asset.namespace, catalog_item_id, &asset.app_name),
+            &self.access_token,
+        )
+        .await
+        .map_err(|_| "Failed to fetch game info")?;
+
+        let element = response
+            .elements
+            .into_iter()
+            .find(|e| e.build_version == build_version)
+            .ok_or("Version not found")?;
+
+        let mut result = Vec::new();
+
+        for manifest_url in element.manifests {
+            let mut url = Url::parse(&manifest_url.uri).map_err(|_| "Invalid URL")?;
+
+            {
+                let mut segments = url.path_segments_mut().map_err(|_| "Cannot be base URL")?;
+                segments.pop();
+            }
+
+            result.push(url);
+        }
+
+        Ok(result)
     }
 
     async fn make_get_request<D>(
