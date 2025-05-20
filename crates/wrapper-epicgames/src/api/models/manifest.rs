@@ -362,11 +362,11 @@ impl Chunk {
         )
     }
 
-    fn guid_num(&self) -> u128 {
-        (self.guid.0 as u128)
-            << 96 + (self.guid.1 as u128)
-            << 64 + (self.guid.2 as u128)
-            << 32 + (self.guid.3 as u128)
+    pub fn guid_num(&self) -> u128 {
+        ((self.guid.0 as u128) << 96)
+            | ((self.guid.1 as u128) << 64)
+            | ((self.guid.2 as u128) << 32)
+            | (self.guid.3 as u128)
     }
 
     fn group_num(&self) -> u8 {
@@ -380,7 +380,7 @@ impl Chunk {
         let bytes = buffer.get_ref();
 
         let mut digest = crc_fast::Digest::new(Crc32IsoHdlc);
-        digest.update(&bytes);
+        digest.update(bytes);
         let crc = digest.finalize();
 
         (crc % 100) as u8

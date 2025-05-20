@@ -1,11 +1,11 @@
 use super::storefront::Storefront;
 use crate::{
     common::{database, result::Result},
-    managers::download::{Download, DownloadOptions},
     models::{
         config::Config,
+        download::Download,
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
-        payloads::DownloadPayload,
+        payloads::{DownloadOptions, DownloadPayload},
     },
     util, APP,
 };
@@ -204,7 +204,9 @@ impl Storefront for Itchio {
             .map(|build| build.version.to_string())
             .or(upload.md5_hash.clone());
 
-        Ok(Some(Download {
+        Ok(None)
+
+        /*Ok(Some(Download {
             request: download_request,
             file_name: upload.filename,
             download_options,
@@ -213,7 +215,7 @@ impl Storefront for Itchio {
             game_title: game.title.clone(),
             md5: upload.md5_hash,
             download_size: upload.size.unwrap_or(0) as u64,
-        }))
+        })) */
     }
 
     async fn launch_game(&self, game: Game) -> Result<()> {
@@ -239,6 +241,10 @@ impl Storefront for Itchio {
 
     async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
         post_download(game_id, path, file_name).await
+    }
+
+    async fn process_chunk(&self, _path: PathBuf) -> Result<()> {
+        Ok(())
     }
 }
 

@@ -27,8 +27,10 @@ impl DownloadManager2 {
     }
 
     pub fn enqueue_download(&self, download: Download) {
+        println!("Enqueuing download: {:?}", download.game_id);
         let mut queue = self.queue.lock().unwrap();
         queue.push_back(download);
+        self.queue_notifier.notify_one();
     }
 
     pub fn pause_download(&self) {

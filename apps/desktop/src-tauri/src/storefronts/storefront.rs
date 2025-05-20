@@ -1,12 +1,13 @@
-use std::path::PathBuf;
-
-use async_trait::async_trait;
-
 use crate::{
     common::result::Result,
-    managers::download::{Download, DownloadOptions},
-    models::game::{Game, GameVersion, GameVersionInfo},
+    models::{
+        download::Download,
+        game::{Game, GameVersion, GameVersionInfo},
+        payloads::DownloadOptions,
+    },
 };
+use async_trait::async_trait;
+use std::path::{Path, PathBuf};
 
 #[async_trait]
 pub trait Storefront {
@@ -27,4 +28,5 @@ pub trait Storefront {
     async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()>;
     async fn launch_game(&self, game: Game) -> Result<()>;
     async fn uninstall_game(&self, game: &Game) -> Result<()>;
+    async fn process_chunk(&self, path: PathBuf) -> Result<()>;
 }

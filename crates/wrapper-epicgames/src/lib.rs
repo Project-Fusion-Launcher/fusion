@@ -1,8 +1,8 @@
 use api::{
     endpoints,
     models::{
-        manifest::Manifest, AccessTokenResponse, Asset, CategoryPath, Game, GameInfoResponse,
-        GameManifestsResponse, GrantType, LoginParams,
+        chunk::Chunk, manifest::Manifest, AccessTokenResponse, Asset, CategoryPath, Game,
+        GameInfoResponse, GameManifestsResponse, GrantType, LoginParams,
     },
 };
 use futures::{stream::FuturesUnordered, StreamExt};
@@ -308,5 +308,9 @@ impl EpicGamesClient {
             refresh_token: response.refresh_token,
             http,
         })
+    }
+
+    pub fn decode_chunk(data: &[u8]) -> Result<Chunk, &'static str> {
+        Chunk::from_bytes(data)
     }
 }

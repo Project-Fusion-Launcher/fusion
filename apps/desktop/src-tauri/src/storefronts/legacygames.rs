@@ -1,17 +1,18 @@
 use super::storefront::Storefront;
 use crate::{
     common::{database, result::Result},
-    managers::download::{Download, DownloadOptions},
     models::{
         config::Config,
+        download::Download,
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
+        payloads::DownloadOptions,
     },
     util, APP,
 };
 use async_trait::async_trait;
 use reqwest::header::ETAG;
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{Arc, RwLock},
 };
 use tauri::Manager;
@@ -171,7 +172,9 @@ impl Storefront for LegacyGames {
 
         game.version = Some(game.id.clone());
 
-        Ok(Some(Download {
+        Ok(None)
+
+        /*Ok(Some(Download {
             request: http.get(installer_url),
             file_name: String::from("setup.exe"),
             download_options,
@@ -180,7 +183,7 @@ impl Storefront for LegacyGames {
             game_title: game.title.clone(),
             md5,
             download_size: size as u64,
-        }))
+        })) */
     }
 
     async fn launch_game(&self, game: Game) -> Result<()> {
@@ -228,6 +231,10 @@ impl Storefront for LegacyGames {
         game.status = GameStatus::Installed;
         game.update(&mut connection).unwrap();
 
+        Ok(())
+    }
+
+    async fn process_chunk(&self, _path: PathBuf) -> Result<()> {
         Ok(())
     }
 }

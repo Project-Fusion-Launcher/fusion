@@ -3,10 +3,9 @@ use std::path::Path;
 #[cfg(unix)]
 use std::{fs::Permissions, os::unix::fs::PermissionsExt};
 use tauri::{path::BaseDirectory, Manager};
-use tokio::{
-    fs::{self, File},
-    io::AsyncReadExt,
-};
+#[cfg(unix)]
+use tokio::io::AsyncReadExt;
+use tokio::{fs, process::Command};
 
 const SKIP_EXTENSIONS: &[&str] = &["dylib", "bundle", "so", "dll"];
 
@@ -51,7 +50,7 @@ where
         .path()
         .resolve(os_specific_path, BaseDirectory::Resource)?;
 
-    let mut command = tokio::process::Command::new(seven_zip);
+    let mut command = Command::new(seven_zip);
     command
         .arg("x")
         .arg(file_path)
@@ -85,7 +84,7 @@ where
         return Err(format!("File does not exist: {:?}", file_path).into());
     }
 
-    let mut command = tokio::process::Command::new(file_path);
+    let mut command = Command::new(file_path);
 
     let parent_dir = file_path.parent().unwrap();
     command.current_dir(parent_dir);
@@ -111,7 +110,7 @@ pub async fn is_executable(file_path: &Path) -> bool {
 
     #[cfg(target_os = "linux")]
     {
-        if let Ok(mut file) = File::open(file_path).await {
+        if let Ok(mut file) = fs::File::open(file_path).await {
             let mut magic = [0u8; 4];
             if file.read_exact(&mut magic).await.is_ok() {
                 return LINUX_MAGICS.contains(&magic);
@@ -128,7 +127,7 @@ pub async fn is_executable(file_path: &Path) -> bool {
 
     #[cfg(target_os = "macos")]
     {
-        if let Ok(mut file) = File::open(file_path).await {
+        if let Ok(mut file) = fs::File::open(file_path).await {
             let mut magic = [0u8; 4];
             if file.read_exact(&mut magic).await.is_ok() {
                 return MACOS_MAGICS.contains(&magic);
@@ -144,4 +143,22 @@ pub async fn set_permissions<P: AsRef<Path>>(file_path: P, mode: u32) -> Result<
     fs::set_permissions(file_path, Permissions::from_mode(mode)).await?;
 
     Ok(())
+}
+
+pub async fn open_or_create_file<P: AsRef<Path>>(file_path: P) -> Result<fs::File> {
+    let file_path = file_path.as_ref();
+
+    if !file_path.exists() {
+        fs::create_dir_all(file_path.parent().unwrap()).await?;
+    }
+
+    let file = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .write(true)
+        .read(true)
+        .open(file_path)
+        .await?;
+
+    Ok(file)
 }

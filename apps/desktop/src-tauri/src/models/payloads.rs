@@ -1,5 +1,13 @@
+use std::path::PathBuf;
+
 use super::game::GameSource;
 use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DownloadOptions {
+    pub install_location: PathBuf,
+}
 
 #[derive(Serialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]

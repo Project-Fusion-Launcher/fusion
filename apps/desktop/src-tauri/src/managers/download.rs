@@ -1,5 +1,8 @@
 use crate::{
-    models::{game::GameSource, payloads::DownloadPayload},
+    models::{
+        game::GameSource,
+        payloads::{DownloadOptions, DownloadPayload},
+    },
     storefronts::get_storefront,
     APP,
 };
@@ -31,12 +34,6 @@ pub struct Download {
     pub md5: Option<String>,
     pub download_size: u64,
     pub download_options: DownloadOptions,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DownloadOptions {
-    pub install_location: PathBuf,
 }
 
 pub struct DownloadManager {

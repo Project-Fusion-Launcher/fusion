@@ -1,9 +1,21 @@
 use super::{result::Result, worker::WorkerPool};
-use crate::models::download::{Download, DownloadFile};
-use std::{io::SeekFrom, path::Path};
+use crate::{
+    models::{
+        download::{Download, DownloadChunk},
+        game::GameSource,
+    },
+    storefronts::get_storefront,
+};
+use std::{
+    path::Path,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc,
+    },
+};
 use tokio::{
     fs::{self, OpenOptions},
-    io::{AsyncSeekExt, AsyncWriteExt},
+    io::AsyncWriteExt,
     select,
     sync::mpsc,
     task::{self, JoinHandle},
@@ -14,57 +26,53 @@ pub async fn process_download(
     download: Download,
     cancellation_token: CancellationToken,
 ) -> Result<()> {
-    //let pool = WorkerPool::new(2);
-    fs::create_dir_all(&download.path).await?;
+    let pool = WorkerPool::new(16);
+    fs::create_dir_all(&download.path.join(".downloading")).await?;
 
-    /*for mut file in download.files {
+    for chunk in download.chunks {
         if cancellation_token.is_cancelled() {
-            println!("Download cancelled");
             break;
         }
-        println!("Processing file: {}", file.filename);
-        file.filename = download
-            .path
-            .join(&file.filename)
-            .to_string_lossy()
-            .to_string();
+
         let token = cancellation_token.clone();
-        pool.execute(move || process_file(file, token)).await?;
+        let path = download.path.clone();
+        let source = download.game_source.clone();
+        pool.execute(move || download_chunk(path, chunk, source, token))
+            .await?;
     }
 
-    pool.shutdown().await;*/
-
-    Ok(())
-}
-
-pub async fn process_file(
-    download_file: DownloadFile,
-    cancellation_token: CancellationToken,
-) -> Result<()> {
-    /*for chunk in download_file.chunks {
-        if cancellation_token.is_cancelled() {
-            println!("Download cancelled");
-            break;
-        }
-        println!("Downloading file: {}", download_file.filename);
-        download_chunk(&download_file.filename, chunk, cancellation_token.clone()).await?;
-    }*/
+    pool.shutdown().await;
 
     Ok(())
 }
 
 pub async fn download_chunk<P: AsRef<Path>>(
-    file_path: P,
-    //chunk: DownloadFileChunk,
+    download_path: P,
+    chunk: DownloadChunk,
+    game_source: GameSource,
     cancellation_token: CancellationToken,
 ) -> Result<()> {
-    /*if cancellation_token.is_cancelled() {
-        println!("Download cancelled");
+    if cancellation_token.is_cancelled() {
         return Ok(());
     }
 
     let (writer_tx, mut writer_rx) = mpsc::channel(16);
 
+    let file_path = download_path
+        .as_ref()
+        .join(".downloading")
+        .join(chunk.id.to_string());
+
+    let mut file = OpenOptions::new()
+        .create(true)
+        .truncate(true)
+        .write(true)
+        .open(&file_path)
+        .await?;
+
+    let total_written = Arc::new(AtomicU64::new(0));
+
+    let cancellation_token_clone = cancellation_token.clone();
     let downloader: JoinHandle<Result<()>> = task::spawn(async move {
         let mut response = chunk.request.send().await?;
 
@@ -72,7 +80,7 @@ pub async fn download_chunk<P: AsRef<Path>>(
             select! {
                 biased;
 
-                _ = cancellation_token.cancelled() => {
+                _ = cancellation_token_clone.cancelled() => {
                     println!("Downloader cancelled");
                     break;
                 }
@@ -94,24 +102,37 @@ pub async fn download_chunk<P: AsRef<Path>>(
         Ok(())
     });
 
-    let mut file = OpenOptions::new()
-        .truncate(false)
-        .write(true)
-        .open(&file_path)
-        .await?;
-
-    file.seek(SeekFrom::Start(chunk.offset)).await?;
-
-    let write: JoinHandle<Result<()>> = task::spawn(async move {
+    let total_written_clone = total_written.clone();
+    let writer: JoinHandle<Result<()>> = task::spawn(async move {
         while let Some(data) = writer_rx.recv().await {
             file.write_all(&data).await?;
+            total_written_clone.fetch_add(data.len() as u64, Ordering::Relaxed);
         }
 
         Ok(())
     });
 
     downloader.await??;
-    write.await??; */
+    writer.await??;
+
+    let total_written = total_written.load(Ordering::Relaxed);
+    if total_written == chunk.compressed_size {
+        get_storefront(&game_source)
+            .read()
+            .await
+            .process_chunk(file_path)
+            .await?;
+
+        println!("Downloaded chunk {}", chunk.id);
+    } else if cancellation_token.is_cancelled() {
+        println!("Chunk download cancelled");
+    } else {
+        println!(
+            "Chunk size mismatch: expected {}, got {}",
+            chunk.compressed_size, total_written
+        );
+        Err("Chunk size mismatch")?;
+    }
 
     Ok(())
 }

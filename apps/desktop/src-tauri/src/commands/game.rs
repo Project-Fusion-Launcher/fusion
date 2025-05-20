@@ -1,9 +1,9 @@
 use crate::{
     common::database,
-    managers::download::{DownloadManager, DownloadOptions},
+    managers::download_new::DownloadManager2,
     models::{
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo, ReducedGame},
-        payloads::GameFiltersPayload,
+        payloads::{DownloadOptions, GameFiltersPayload},
     },
     storefronts::get_storefront,
 };
@@ -83,7 +83,7 @@ pub async fn fetch_game_version_info(
 
 #[tauri::command]
 pub async fn download_game(
-    download_manager: State<'_, DownloadManager>,
+    download_manager: State<'_, DownloadManager2>,
     game_id: String,
     game_source: GameSource,
     version_id: String,

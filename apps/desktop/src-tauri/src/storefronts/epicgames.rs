@@ -1,16 +1,22 @@
 use super::storefront::Storefront;
 use crate::{
     common::{database, result::Result},
-    managers::download::{Download, DownloadOptions},
     models::{
         config::Config,
+        download::{Download, DownloadChunk, DownloadHash, DownloadStatus},
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
+        payloads::DownloadOptions,
     },
+    util::string,
     APP,
 };
 use async_trait::async_trait;
 use std::{path::PathBuf, sync::RwLock};
 use tauri::Manager;
+use tokio::{
+    fs::{self, OpenOptions},
+    io::AsyncWriteExt,
+};
 use wrapper_epicgames::{api::models::KeyImageType, EpicGamesClient};
 
 #[derive(Default)]
@@ -134,23 +140,6 @@ impl Storefront for EpicGames {
             .map(|file| file.file_size)
             .sum::<u64>();
 
-        let urls = client.fetch_cdn_urls(&game.id, &version_id).await.unwrap();
-
-        let url = urls[0].to_string();
-
-        for chunk in manifest.chunk_data_list.chunks.iter() {
-            println!("{url}/{}", chunk.path());
-        }
-
-        let manifest_json = serde_json::to_string_pretty(&manifest).unwrap();
-        #[cfg(windows)]
-        let file_path = std::path::Path::new("C:\\Users\\jorge\\Downloads")
-            .join(format!("{}_manifest.json", game.id));
-        #[cfg(unix)]
-        let file_path = std::path::Path::new("/Users/jorge/Downloads")
-            .join(format!("{}_manifest.json", game.id));
-        std::fs::write(file_path, manifest_json)?;
-
         Ok(GameVersionInfo {
             install_size,
             download_size,
@@ -160,21 +149,70 @@ impl Storefront for EpicGames {
     async fn pre_download(
         &self,
         game: &mut Game,
-        _version_id: String,
+        version_id: String,
         download_options: DownloadOptions,
     ) -> Result<Option<Download>> {
-        Ok(None)
+        let client = match &self.client {
+            Some(c) => c,
+            None => return Err("Epic Games client not initialized".into()),
+        };
+
+        let manifest = client
+            .fetch_version_manifest(&game.id, &version_id)
+            .await
+            .unwrap();
+
+        let urls = client.fetch_cdn_urls(&game.id, &version_id).await.unwrap();
+
+        let mut download = Download {
+            chunks: vec![],
+            path: download_options.install_location,
+            game_id: game.id.clone(),
+            game_source: GameSource::EpicGames,
+            game_title: game.title.clone(),
+        };
+
+        for chunk in manifest.chunk_data_list.chunks.iter() {
+            let url = format!("{}/{}", urls[0], chunk.path());
+
+            download.chunks.push(DownloadChunk {
+                id: chunk.guid_num(),
+                status: DownloadStatus::Queued,
+                request: reqwest::Client::new().get(url).header("User-Agent", "EpicGamesLauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"),
+                compressed_size: chunk.file_size as u64,
+                size: chunk.window_size as u64,
+                hash: DownloadHash::Sha1(string::array_to_hex(chunk.sha_hash))
+            })
+        }
+
+        Ok(Some(download))
     }
 
-    async fn launch_game(&self, game: Game) -> Result<()> {
+    async fn launch_game(&self, _game: Game) -> Result<()> {
         Ok(())
     }
 
-    async fn uninstall_game(&self, game: &Game) -> Result<()> {
+    async fn uninstall_game(&self, _game: &Game) -> Result<()> {
         Ok(())
     }
 
-    async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
+    async fn post_download(&self, _game_id: &str, _path: PathBuf, _file_name: &str) -> Result<()> {
+        Ok(())
+    }
+
+    async fn process_chunk(&self, path: PathBuf) -> Result<()> {
+        let data = fs::read(&path).await?;
+        let decoded_chunk = EpicGamesClient::decode_chunk(&data)?;
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .truncate(true)
+            .open(path)
+            .await?;
+
+        file.write_all(&decoded_chunk.data).await?;
+
         Ok(())
     }
 }
