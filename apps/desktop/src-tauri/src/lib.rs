@@ -85,6 +85,18 @@ pub async fn run() {
                             request: reqwest::Client::new()
                                 .get("https://cloudflare.epicgamescdn.com/Builds/Org/o-x6pmn2h8elkycylakfrdw79xp2hrpv/5900d5b75cb24e4ca6ac93c30155fb72/default/ChunksV4/42/F3C21297B89C6047_50ACEDD44C309695925555900375F4EF.chunk")
                                 .header("User-Agent", "EpicGamesLauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"),
+                        },
+                        DownloadChunk {
+                            id: 852822330127879693733318934123471924209,
+                            status: DownloadStatus::Queued,
+                            hash: DownloadHash::Sha1(String::from(
+                                "03f4d2d087aeda1ab570203af6d3c4cdc52807dd",
+                            )),
+                            compressed_size: 143085,
+                            size: 1048576,
+                            request: reqwest::Client::new()
+                                .get("https://cloudflare.epicgamescdn.com/Builds/Org/o-x6pmn2h8elkycylakfrdw79xp2hrpv/5900d5b75cb24e4ca6ac93c30155fb72/default/ChunksV4/42/65415279DC5B2957_32D5093A4C38E489C698A8A4CEF15BF1.chunk")
+                                .header("User-Agent", "EpicGamesLauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"),
                         }
                     ],
                     #[cfg(windows)]
