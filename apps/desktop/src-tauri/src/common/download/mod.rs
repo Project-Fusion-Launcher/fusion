@@ -1,7 +1,7 @@
 use super::{result::Result, worker::WorkerPool};
 use crate::{
     models::{
-        download::{Download, DownloadChunk},
+        download::{Download, DownloadChunk, DownloadProgress},
         game::GameSource,
     },
     storefronts::get_storefront,
@@ -25,6 +25,7 @@ use tokio_util::sync::CancellationToken;
 pub async fn process_download(
     download: Download,
     cancellation_token: CancellationToken,
+    progress_tx: mpsc::Sender<DownloadProgress>,
 ) -> Result<()> {
     let pool = WorkerPool::new(16);
     fs::create_dir_all(&download.path.join(".downloading")).await?;
@@ -36,8 +37,8 @@ pub async fn process_download(
 
         let token = cancellation_token.clone();
         let path = download.path.clone();
-        let source = download.game_source.clone();
-        pool.execute(move || download_chunk(path, chunk, source, token))
+        let progress_tx = progress_tx.clone();
+        pool.execute(move || download_chunk(path, chunk, download.game_source, token, progress_tx))
             .await?;
     }
 
@@ -51,6 +52,7 @@ pub async fn download_chunk<P: AsRef<Path>>(
     chunk: DownloadChunk,
     game_source: GameSource,
     cancellation_token: CancellationToken,
+    progress_tx: mpsc::Sender<DownloadProgress>,
 ) -> Result<()> {
     if cancellation_token.is_cancelled() {
         return Ok(());
@@ -74,7 +76,13 @@ pub async fn download_chunk<P: AsRef<Path>>(
 
     let cancellation_token_clone = cancellation_token.clone();
     let downloader: JoinHandle<Result<()>> = task::spawn(async move {
-        let mut response = chunk.request.send().await?;
+        let mut response = get_storefront(&game_source)
+            .read()
+            .await
+            .chunk_request(&chunk.url)
+            .await?
+            .send()
+            .await?;
 
         loop {
             select! {
@@ -122,6 +130,14 @@ pub async fn download_chunk<P: AsRef<Path>>(
             .await
             .process_chunk(file_path)
             .await?;
+
+        progress_tx
+            .send(DownloadProgress {
+                chunk_id: chunk.id,
+                completed: true,
+            })
+            .await
+            .unwrap();
 
         println!("Downloaded chunk {}", chunk.id);
     } else if cancellation_token.is_cancelled() {

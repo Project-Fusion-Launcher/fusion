@@ -10,7 +10,7 @@ use crate::{
     util, APP,
 };
 use async_trait::async_trait;
-use reqwest::header::ETAG;
+use reqwest::{header::ETAG, RequestBuilder};
 use std::{
     path::{Path, PathBuf},
     sync::{Arc, RwLock},
@@ -236,6 +236,10 @@ impl Storefront for LegacyGames {
 
     async fn process_chunk(&self, _path: PathBuf) -> Result<()> {
         Ok(())
+    }
+
+    async fn chunk_request(&self, url: &str) -> Result<RequestBuilder> {
+        Err("Not implemented".into())
     }
 }
 

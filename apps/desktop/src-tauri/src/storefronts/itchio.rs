@@ -10,6 +10,7 @@ use crate::{
     util, APP,
 };
 use async_trait::async_trait;
+use reqwest::RequestBuilder;
 use std::{
     path::{Path, PathBuf},
     sync::{Arc, RwLock},
@@ -245,6 +246,10 @@ impl Storefront for Itchio {
 
     async fn process_chunk(&self, _path: PathBuf) -> Result<()> {
         Ok(())
+    }
+
+    async fn chunk_request(&self, url: &str) -> Result<RequestBuilder> {
+        Err("Not implemented".into())
     }
 }
 

@@ -96,7 +96,7 @@ pub async fn download_game(
         .install_location
         .join(game.title.replace(" :", " -").replace(":", " -"));
 
-    game.status = GameStatus::Downloading;
+    //game.status = GameStatus::Downloading;
     game.path = Some(complete_install_location.to_string_lossy().to_string());
     download_options.install_location = complete_install_location;
 
@@ -110,7 +110,7 @@ pub async fn download_game(
     match download {
         Ok(Some(download)) => {
             game.update(&mut connection).unwrap();
-            download_manager.enqueue_download(download);
+            download_manager.enqueue_download(download).await?;
         }
         Ok(None) => {
             game.status = GameStatus::NotInstalled;

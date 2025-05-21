@@ -134,7 +134,7 @@ pub struct GameVersionInfo {
     pub download_size: u64,
 }
 
-#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, EnumIter)]
+#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, EnumIter, Copy)]
 #[serde(rename_all = "camelCase")]
 pub enum GameSource {
     Itchio,

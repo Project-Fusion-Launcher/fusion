@@ -16,6 +16,7 @@ pub enum Error {
     RecvError(tokio::sync::oneshot::error::RecvError),
     ParseInt(std::num::ParseIntError),
     Reqwest(reqwest::Error),
+    SerdeJson(serde_json::Error),
     Tauri(tauri::Error),
     Other(String),
     WrapperLegacygames(wrapper_legacygames::result::Error),
@@ -71,6 +72,12 @@ impl From<reqwest::Error> for Error {
     }
 }
 
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Self {
+        Self::SerdeJson(e)
+    }
+}
+
 impl From<tauri::Error> for Error {
     fn from(e: tauri::Error) -> Self {
         Self::Tauri(e)
@@ -112,6 +119,7 @@ impl Display for Error {
             Self::RecvError(e) => write!(f, "Receive error: {}", e),
             Self::ParseInt(e) => write!(f, "Parse int error: {}", e),
             Self::Reqwest(e) => write!(f, "Reqwest error: {}", e),
+            Self::SerdeJson(e) => write!(f, "Serde JSON error: {}", e),
             Self::Tauri(e) => write!(f, "Tauri error: {}", e),
             Self::Other(e) => write!(f, "Other error: {}", e),
             Self::WrapperLegacygames(e) => write!(f, "Wrapper-Legacygames error: {}", e),

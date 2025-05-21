@@ -3,7 +3,7 @@ use crate::{
     common::{database, result::Result},
     models::{
         config::Config,
-        download::{Download, DownloadChunk, DownloadHash, DownloadStatus},
+        download::{Download, DownloadChunk, DownloadChunkPart, DownloadFile, DownloadHash},
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
         payloads::DownloadOptions,
     },
@@ -11,6 +11,7 @@ use crate::{
     APP,
 };
 use async_trait::async_trait;
+use reqwest::RequestBuilder;
 use std::{path::PathBuf, sync::RwLock};
 use tauri::Manager;
 use tokio::{
@@ -166,6 +167,7 @@ impl Storefront for EpicGames {
 
         let mut download = Download {
             chunks: vec![],
+            files: vec![],
             path: download_options.install_location,
             game_id: game.id.clone(),
             game_source: GameSource::EpicGames,
@@ -177,12 +179,32 @@ impl Storefront for EpicGames {
 
             download.chunks.push(DownloadChunk {
                 id: chunk.guid_num(),
-                status: DownloadStatus::Queued,
-                request: reqwest::Client::new().get(url).header("User-Agent", "EpicGamesLauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"),
+                completed: false,
+                url,
                 compressed_size: chunk.file_size as u64,
                 size: chunk.window_size as u64,
-                hash: DownloadHash::Sha1(string::array_to_hex(chunk.sha_hash))
+                hash: DownloadHash::Sha1(string::array_to_hex(chunk.sha_hash)),
             })
+        }
+
+        for file in manifest.file_manifest_list.elements {
+            let mut download_file = DownloadFile {
+                filename: file.filename,
+                hash: DownloadHash::Sha1(string::array_to_hex(file.hash)),
+                chunk_parts: vec![],
+            };
+
+            for chunk_part in file.chunk_parts.iter() {
+                download_file.chunk_parts.push(DownloadChunkPart {
+                    id: chunk_part.guid_num(),
+                    chunk_offset: chunk_part.offset as u64,
+                    file_offset: chunk_part.file_offset,
+                    size: chunk_part.size as u64,
+                    completed: false,
+                })
+            }
+
+            download.files.push(download_file);
         }
 
         Ok(Some(download))
@@ -214,5 +236,9 @@ impl Storefront for EpicGames {
         file.write_all(&decoded_chunk.data).await?;
 
         Ok(())
+    }
+
+    async fn chunk_request(&self, url: &str) -> Result<RequestBuilder> {
+        Ok(reqwest::Client::new().get(url).header("User-Agent", "EpicGamesLauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"))
     }
 }

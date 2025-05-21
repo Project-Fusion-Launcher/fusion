@@ -2,7 +2,6 @@ use std::io::{Cursor, Read};
 
 use byteorder::{LittleEndian, ReadBytesExt};
 use flate2::bufread::ZlibDecoder;
-use sha1::{Digest, Sha1};
 
 static CHUNK_MAGIC: [u8; 4] = [0xA2, 0x3A, 0xFE, 0xB1];
 
@@ -126,11 +125,6 @@ impl Chunk {
                 .read_to_end(&mut data)
                 .map_err(|_| "Failed to decompress chunk data")?;
         }
-
-        let mut hasher = Sha1::new();
-        hasher.update(&data);
-        let result = hasher.finalize();
-        println!("SHA1 hash: {:x}", result);
 
         Ok(Chunk {
             header_version,

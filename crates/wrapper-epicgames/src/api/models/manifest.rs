@@ -583,6 +583,15 @@ pub struct ChunkPart {
     pub file_offset: u64,
 }
 
+impl ChunkPart {
+    pub fn guid_num(&self) -> u128 {
+        ((self.guid.0 as u128) << 96)
+            | ((self.guid.1 as u128) << 64)
+            | ((self.guid.2 as u128) << 32)
+            | (self.guid.3 as u128)
+    }
+}
+
 #[derive(Serialize, Debug)]
 pub struct ManifestCustomFields {
     pub custom_fields_size: u32,

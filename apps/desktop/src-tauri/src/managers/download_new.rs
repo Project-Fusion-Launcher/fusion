@@ -1,12 +1,20 @@
 use std::{
     collections::VecDeque,
+    path::Path,
     sync::{Arc, Mutex},
 };
 
-use tokio::sync::Notify;
+use tokio::{
+    fs,
+    io::AsyncWriteExt,
+    sync::{mpsc, Notify},
+};
 use tokio_util::sync::CancellationToken;
 
-use crate::{common::download::process_download, models::download::Download};
+use crate::{
+    common::{download::process_download, result::Result},
+    models::download::{Download, DownloadProgress},
+};
 
 pub struct DownloadManager2 {
     queue: Arc<Mutex<VecDeque<Download>>>,
@@ -26,11 +34,29 @@ impl DownloadManager2 {
         manager
     }
 
-    pub fn enqueue_download(&self, download: Download) {
+    pub async fn enqueue_download(&self, download: Download) -> Result<()> {
+        let manifest_path = download.path.join(".downloading").join("manifest.json");
+
+        let download = if Path::new(&manifest_path).exists() {
+            let manifest = fs::read_to_string(&manifest_path).await?;
+            serde_json::from_str(&manifest)?
+        } else {
+            if let Some(parent) = manifest_path.parent() {
+                fs::create_dir_all(parent).await?;
+            }
+
+            let json = serde_json::to_string_pretty(&download)?;
+            let mut file = fs::File::create(&manifest_path).await?;
+            file.write_all(json.as_bytes()).await?;
+
+            download
+        };
+
         println!("Enqueuing download: {:?}", download.game_id);
         let mut queue = self.queue.lock().unwrap();
         queue.push_back(download);
         self.queue_notifier.notify_one();
+        Ok(())
     }
 
     pub fn pause_download(&self) {
@@ -59,7 +85,16 @@ impl DownloadManager2 {
                         *token_lock = Some(token.clone());
                     }
 
-                    let result = process_download(download, token.clone()).await;
+                    let (progress_tx, mut progress_rx) = mpsc::channel::<DownloadProgress>(50);
+
+                    let progress_agregator = tokio::spawn(async move {
+                        while let Some(update) = progress_rx.recv().await {
+                            println!("Downloaded chunk: {}", update.chunk_id);
+                        }
+                    });
+
+                    let result = process_download(download, token.clone(), progress_tx).await;
+                    progress_agregator.await.unwrap();
                     println!("Download result: {:?}", result);
 
                     {

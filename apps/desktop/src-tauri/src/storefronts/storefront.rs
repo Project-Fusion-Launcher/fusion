@@ -7,7 +7,8 @@ use crate::{
     },
 };
 use async_trait::async_trait;
-use std::path::{Path, PathBuf};
+use reqwest::RequestBuilder;
+use std::path::PathBuf;
 
 #[async_trait]
 pub trait Storefront {
@@ -28,5 +29,6 @@ pub trait Storefront {
     async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()>;
     async fn launch_game(&self, game: Game) -> Result<()>;
     async fn uninstall_game(&self, game: &Game) -> Result<()>;
+    async fn chunk_request(&self, url: &str) -> Result<RequestBuilder>;
     async fn process_chunk(&self, path: PathBuf) -> Result<()>;
 }
