@@ -178,7 +178,7 @@ pub async fn write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
     loop {
         match try_write_at(file_path, data, offset).await {
             Ok(res) => return Ok(res),
-            Err(e) if attempts < 5 => {
+            Err(_) if attempts < 5 => {
                 attempts += 1;
                 thread::sleep(Duration::from_millis(100));
                 continue;
@@ -194,10 +194,7 @@ async fn try_write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
         fs::create_dir_all(parent).await?;
     }
 
-    let wide: Vec<u16> = OsStr::new(file_path)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect();
+    let wide: Vec<u16> = OsStr::new(file_path).encode_wide().chain(Some(0)).collect();
 
     let handle = unsafe {
         windows::Win32::Storage::FileSystem::CreateFileW(
@@ -211,15 +208,10 @@ async fn try_write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
         )
     };
 
-    if let Ok(handle) = handle {
-        if handle == INVALID_HANDLE_VALUE {
-            return Err(Error::from_win32().to_string().into());
-        }
-    } else {
-        return Err(Error::from_win32().to_string().into());
-    }
-
-    let handle = handle.unwrap();
+    let handle = match handle {
+        Ok(h) if h != INVALID_HANDLE_VALUE => h,
+        _ => return Err(Error::from_win32().to_string().into()),
+    };
 
     let mut overlapped = OVERLAPPED::default();
     overlapped.Anonymous.Anonymous.Offset = offset as u32;
@@ -236,12 +228,11 @@ async fn try_write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
     };
 
     unsafe {
-        CloseHandle(handle).unwrap();
-    };
+        let _ = CloseHandle(handle);
+    }
 
-    if res.is_ok() && written as usize == data.len() {
-        Ok(())
-    } else {
-        Err(Error::from_win32().to_string().into())
+    match res {
+        Ok(_) if written as usize == data.len() => Ok(()),
+        _ => Err(Error::from_win32().to_string().into()),
     }
 }
