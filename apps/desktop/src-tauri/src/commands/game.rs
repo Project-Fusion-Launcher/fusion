@@ -1,7 +1,8 @@
 use crate::{
     common::database,
-    managers::download_new::DownloadManager2,
+    managers::download::DownloadManager,
     models::{
+        download::Download,
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo, ReducedGame},
         payloads::{DownloadOptions, GameFiltersPayload},
     },
@@ -83,13 +84,13 @@ pub async fn fetch_game_version_info(
 
 #[tauri::command]
 pub async fn download_game(
-    download_manager: State<'_, DownloadManager2>,
+    download_manager: State<'_, DownloadManager>,
     game_id: String,
     game_source: GameSource,
     version_id: String,
     mut download_options: DownloadOptions,
 ) -> Result<(), String> {
-    let mut connection = database::create_connection()?;
+    /*let mut connection = database::create_connection()?;
     let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
 
     let complete_install_location = download_options
@@ -117,7 +118,27 @@ pub async fn download_game(
             game.update(&mut connection).unwrap();
         }
         Err(e) => return Err(e),
-    }
+    } */
+
+    let mut connection = database::create_connection()?;
+    let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
+
+    let complete_install_location = download_options
+        .install_location
+        .join(game.title.replace(" :", " -").replace(":", " -"));
+
+    game.path = Some(complete_install_location.to_string_lossy().to_string());
+    game.update(&mut connection).unwrap();
+
+    download_manager
+        .enqueue_download(Download {
+            game_id,
+            game_source,
+            game_version_id: version_id,
+            path: complete_install_location,
+            completed: false,
+        })
+        .await?;
 
     Ok(())
 }

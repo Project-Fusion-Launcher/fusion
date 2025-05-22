@@ -1,7 +1,7 @@
 use crate::{
     common::result::Result,
     models::{
-        download::Download,
+        download::{Download, DownloadManifest},
         game::{Game, GameVersion, GameVersionInfo},
         payloads::DownloadOptions,
     },
@@ -29,6 +29,8 @@ pub trait Storefront {
     async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()>;
     async fn launch_game(&self, game: Game) -> Result<()>;
     async fn uninstall_game(&self, game: &Game) -> Result<()>;
-    async fn chunk_request(&self, url: &str) -> Result<RequestBuilder>;
+
+    async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest>;
+    async fn chunk_request(&self, http: &reqwest::Client, url: &str) -> Result<RequestBuilder>;
     async fn process_chunk(&self, path: PathBuf) -> Result<()>;
 }

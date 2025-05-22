@@ -1,5 +1,5 @@
 use common::database;
-use managers::download_new::DownloadManager2;
+use managers::download::DownloadManager;
 use models::config::Config;
 use std::sync::{OnceLock, RwLock};
 use tauri::{AppHandle, Manager};
@@ -43,7 +43,7 @@ pub async fn run() {
             app.manage(RwLock::new(
                 Config::select(&mut connection).expect("Error selecting config"),
             ));
-            app.manage(DownloadManager2::init());
+            app.manage(DownloadManager::init());
 
             tauri::async_runtime::spawn(async {
                 storefronts::init_storefronts()

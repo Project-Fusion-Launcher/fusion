@@ -1,11 +1,18 @@
 use crate::{common::result::Result, APP};
 use std::path::Path;
+#[cfg(windows)]
+use std::{ffi::OsStr, os::windows::ffi::OsStrExt};
 #[cfg(unix)]
 use std::{fs::Permissions, os::unix::fs::PermissionsExt};
 use tauri::{path::BaseDirectory, Manager};
 #[cfg(unix)]
 use tokio::io::AsyncReadExt;
 use tokio::{fs, process::Command};
+#[cfg(windows)]
+use windows::{
+    core::*,
+    Win32::{Foundation::*, Storage::FileSystem::*, System::IO::OVERLAPPED},
+};
 
 const SKIP_EXTENSIONS: &[&str] = &["dylib", "bundle", "so", "dll"];
 
@@ -154,11 +161,87 @@ pub async fn open_or_create_file<P: AsRef<Path>>(file_path: P) -> Result<fs::Fil
 
     let file = fs::OpenOptions::new()
         .create(true)
-        .append(true)
-        .write(true)
+        .truncate(false)
         .read(true)
+        .write(true)
         .open(file_path)
         .await?;
 
     Ok(file)
+}
+
+#[cfg(windows)]
+pub async fn write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
+    use std::{thread, time::Duration};
+
+    let mut attempts = 0;
+    loop {
+        match try_write_at(file_path, data, offset).await {
+            Ok(res) => return Ok(res),
+            Err(e) if attempts < 5 => {
+                attempts += 1;
+                thread::sleep(Duration::from_millis(100));
+                continue;
+            }
+            Err(e) => return Err(e),
+        }
+    }
+}
+
+#[cfg(windows)]
+async fn try_write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
+    if let Some(parent) = Path::new(file_path).parent() {
+        fs::create_dir_all(parent).await?;
+    }
+
+    let wide: Vec<u16> = OsStr::new(file_path)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+
+    let handle = unsafe {
+        windows::Win32::Storage::FileSystem::CreateFileW(
+            PCWSTR(wide.as_ptr()),
+            FILE_GENERIC_WRITE.0,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            None,
+            OPEN_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            Some(HANDLE(std::ptr::null_mut())),
+        )
+    };
+
+    if let Ok(handle) = handle {
+        if handle == INVALID_HANDLE_VALUE {
+            return Err(Error::from_win32().to_string().into());
+        }
+    } else {
+        return Err(Error::from_win32().to_string().into());
+    }
+
+    let handle = handle.unwrap();
+
+    let mut overlapped = OVERLAPPED::default();
+    overlapped.Anonymous.Anonymous.Offset = offset as u32;
+    overlapped.Anonymous.Anonymous.OffsetHigh = (offset >> 32) as u32;
+
+    let mut written = 0u32;
+    let res = unsafe {
+        WriteFile(
+            handle,
+            Some(data),
+            Some(&mut written),
+            Some(&mut overlapped),
+        )
+    };
+
+    unsafe {
+        CloseHandle(handle).unwrap();
+    };
+
+    if res.is_ok() && written as usize == data.len() {
+        Ok(())
+    } else {
+        Err(Error::from_win32().to_string().into())
+    }
 }

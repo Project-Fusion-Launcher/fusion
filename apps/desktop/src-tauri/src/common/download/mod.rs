@@ -27,7 +27,7 @@ pub async fn process_download(
     cancellation_token: CancellationToken,
     progress_tx: mpsc::Sender<DownloadProgress>,
 ) -> Result<()> {
-    let pool = WorkerPool::new(16);
+    /*let pool = WorkerPool::new(16);
     fs::create_dir_all(&download.path.join(".downloading")).await?;
 
     for chunk in download.chunks {
@@ -42,7 +42,7 @@ pub async fn process_download(
             .await?;
     }
 
-    pool.shutdown().await;
+    pool.shutdown().await;*/
 
     Ok(())
 }
@@ -58,7 +58,7 @@ pub async fn download_chunk<P: AsRef<Path>>(
         return Ok(());
     }
 
-    let (writer_tx, mut writer_rx) = mpsc::channel(16);
+    /*let (writer_tx, mut writer_rx) = mpsc::channel(10);
 
     let file_path = download_path
         .as_ref()
@@ -148,7 +148,7 @@ pub async fn download_chunk<P: AsRef<Path>>(
             chunk.compressed_size, total_written
         );
         Err("Chunk size mismatch")?;
-    }
+    }*/
 
     Ok(())
 }

@@ -3,7 +3,10 @@ use crate::{
     common::{database, result::Result},
     models::{
         config::Config,
-        download::{Download, DownloadChunk, DownloadChunkPart, DownloadFile, DownloadHash},
+        download::{
+            Download, DownloadChunk, DownloadChunkPart, DownloadFile, DownloadHash,
+            DownloadManifest,
+        },
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
         payloads::DownloadOptions,
     },
@@ -153,7 +156,8 @@ impl Storefront for EpicGames {
         version_id: String,
         download_options: DownloadOptions,
     ) -> Result<Option<Download>> {
-        let client = match &self.client {
+        Ok(None)
+        /*let client = match &self.client {
             Some(c) => c,
             None => return Err("Epic Games client not initialized".into()),
         };
@@ -207,7 +211,7 @@ impl Storefront for EpicGames {
             download.files.push(download_file);
         }
 
-        Ok(Some(download))
+        Ok(Some(download))*/
     }
 
     async fn launch_game(&self, _game: Game) -> Result<()> {
@@ -238,7 +242,61 @@ impl Storefront for EpicGames {
         Ok(())
     }
 
-    async fn chunk_request(&self, url: &str) -> Result<RequestBuilder> {
-        Ok(reqwest::Client::new().get(url).header("User-Agent", "EpicGamesLauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"))
+    async fn chunk_request(&self, http: &reqwest::Client, url: &str) -> Result<RequestBuilder> {
+        Ok(http.get(url).header("User-Agent", "EpicGamesLauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"))
+    }
+
+    async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest> {
+        let client = match &self.client {
+            Some(c) => c,
+            None => return Err("Epic Games client not initialized".into()),
+        };
+
+        let manifest = client
+            .fetch_version_manifest(&game_id, &version_id)
+            .await
+            .unwrap();
+
+        let urls = client.fetch_cdn_urls(&game_id, &version_id).await.unwrap();
+
+        let mut result = DownloadManifest {
+            chunks: vec![],
+            files: vec![],
+        };
+
+        for chunk in manifest.chunk_data_list.chunks.iter() {
+            let url = format!("{}/{}", urls[0], chunk.path());
+
+            result.chunks.push(DownloadChunk {
+                id: chunk.guid_num(),
+                completed: false,
+                url,
+                compressed_size: chunk.file_size as u64,
+                size: chunk.window_size as u64,
+                hash: DownloadHash::Sha1(string::array_to_hex(chunk.sha_hash)),
+            })
+        }
+
+        for file in manifest.file_manifest_list.elements {
+            let mut download_file = DownloadFile {
+                filename: file.filename,
+                hash: DownloadHash::Sha1(string::array_to_hex(file.hash)),
+                chunk_parts: vec![],
+            };
+
+            for chunk_part in file.chunk_parts.iter() {
+                download_file.chunk_parts.push(DownloadChunkPart {
+                    id: chunk_part.guid_num(),
+                    chunk_offset: chunk_part.offset as u64,
+                    file_offset: chunk_part.file_offset,
+                    size: chunk_part.size as u64,
+                    completed: false,
+                })
+            }
+
+            result.files.push(download_file);
+        }
+
+        Ok(result)
     }
 }

@@ -3,7 +3,7 @@ use crate::{
     common::{database, result::Result},
     models::{
         config::Config,
-        download::Download,
+        download::{Download, DownloadManifest},
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
         payloads::{DownloadOptions, DownloadPayload},
     },
@@ -248,7 +248,11 @@ impl Storefront for Itchio {
         Ok(())
     }
 
-    async fn chunk_request(&self, url: &str) -> Result<RequestBuilder> {
+    async fn chunk_request(&self, http: &reqwest::Client, url: &str) -> Result<RequestBuilder> {
+        Err("Not implemented".into())
+    }
+
+    async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest> {
         Err("Not implemented".into())
     }
 }
