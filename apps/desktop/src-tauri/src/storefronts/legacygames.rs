@@ -1,6 +1,7 @@
 use super::storefront::Storefront;
 use crate::{
     common::{database, result::Result},
+    downloads::DownloadStrategy,
     models::{
         config::Config,
         download::{Download, DownloadManifest},
@@ -209,7 +210,12 @@ impl Storefront for LegacyGames {
         Ok(())
     }
 
-    async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
+    async fn post_download(&self, game_id: &str, path: PathBuf) -> Result<()> {
+        let mut entries = fs::read_dir(&path).await?;
+        let entry = entries.next_entry().await?;
+        let entry = entry.ok_or("No files found in the directory")?;
+        let file_name = entry.file_name();
+
         let file_path = path.join(file_name);
 
         let mut connection = database::create_connection()?;
@@ -234,16 +240,12 @@ impl Storefront for LegacyGames {
         Ok(())
     }
 
-    async fn process_chunk(&self, _path: PathBuf) -> Result<()> {
-        Ok(())
-    }
-
-    async fn chunk_request(&self, http: &reqwest::Client, url: &str) -> Result<RequestBuilder> {
-        Err("Not implemented".into())
-    }
-
     async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest> {
         Err("Not implemented".into())
+    }
+
+    fn download_strategy(&self) -> Arc<dyn DownloadStrategy> {
+        unimplemented!()
     }
 }
 

@@ -1,5 +1,6 @@
 use crate::{
     common::result::Result,
+    downloads::DownloadStrategy,
     models::{
         download::{Download, DownloadManifest},
         game::{Game, GameVersion, GameVersionInfo},
@@ -7,8 +8,7 @@ use crate::{
     },
 };
 use async_trait::async_trait;
-use reqwest::RequestBuilder;
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 #[async_trait]
 pub trait Storefront {
@@ -26,11 +26,10 @@ pub trait Storefront {
         version_id: String,
         download_options: DownloadOptions,
     ) -> Result<Option<Download>>;
-    async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()>;
+    async fn post_download(&self, game_id: &str, path: PathBuf) -> Result<()>;
     async fn launch_game(&self, game: Game) -> Result<()>;
     async fn uninstall_game(&self, game: &Game) -> Result<()>;
 
     async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest>;
-    async fn chunk_request(&self, http: &reqwest::Client, url: &str) -> Result<RequestBuilder>;
-    async fn process_chunk(&self, path: PathBuf) -> Result<()>;
+    fn download_strategy(&self) -> Arc<dyn DownloadStrategy>;
 }

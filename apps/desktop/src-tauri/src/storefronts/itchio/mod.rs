@@ -1,6 +1,9 @@
+use self::services::Services;
+
 use super::storefront::Storefront;
 use crate::{
     common::{database, result::Result},
+    downloads::DownloadStrategy,
     models::{
         config::Config,
         download::{Download, DownloadManifest},
@@ -9,22 +12,62 @@ use crate::{
     },
     util, APP,
 };
+use api::{models::UploadTraits, services};
 use async_trait::async_trait;
-use reqwest::RequestBuilder;
 use std::{
     path::{Path, PathBuf},
     sync::{Arc, RwLock},
+    time::Duration,
 };
+use strategy::ItchioDownload;
 use tauri::{webview::DownloadEvent, Emitter, Manager, Url, WebviewUrl, WebviewWindow};
-use tokio::fs;
-use wrapper_itchio::{
-    api::models::{UploadStorage, UploadTraits},
-    ItchioClient,
-};
+use tokio::{fs, time};
+use wrapper_itchio::{api::models::UploadStorage, ItchioClient};
 
-#[derive(Default)]
+mod api;
+mod conversions;
+mod strategy;
+mod utils;
+
 pub struct Itchio {
     client: Option<Arc<ItchioClient>>,
+    strategy: Arc<dyn DownloadStrategy>,
+    services: Option<Arc<Services>>,
+}
+
+impl Default for Itchio {
+    fn default() -> Self {
+        Self {
+            client: None,
+            strategy: Arc::new(strategy::ItchioStrategy {}),
+            services: None,
+        }
+    }
+}
+
+impl Itchio {
+    pub(self) async fn temp(&self, download: &Download) -> Result<ItchioDownload> {
+        let client = match &self.client {
+            Some(c) => c,
+            None => return Err("itch.io client is not initialized".into()),
+        };
+
+        let mut connection = database::create_connection()?;
+        let game = Game::select_one(&mut connection, &download.game_source, &download.game_id)?;
+
+        let upload_id: u32 = download.game_version_id.parse()?;
+        let game_key: u32 = game.key.clone().unwrap().parse()?;
+
+        let upload = client.fetch_game_upload(upload_id, game_key).await?;
+
+        let download_request = client.fetch_upload_download_url(upload_id, game_key);
+
+        Ok(ItchioDownload {
+            request: download_request,
+            filename: upload.filename,
+            md5: upload.md5_hash,
+        })
+    }
 }
 
 #[async_trait]
@@ -38,11 +81,13 @@ impl Storefront for Itchio {
             .unwrap()
             .itchio_api_key();
 
-        if api_key.is_none() {
-            return Ok(());
+        let api_key = match api_key {
+            Some(key) => key,
+            None => return Ok(()),
         };
 
-        let client = ItchioClient::new(api_key.unwrap());
+        self.services = Some(Arc::new(Services::new(api_key.clone())));
+        let client = ItchioClient::new(api_key);
 
         self.client = Some(Arc::new(client));
 
@@ -50,8 +95,8 @@ impl Storefront for Itchio {
     }
 
     async fn fetch_games(&self) -> Result<Option<Vec<Game>>> {
-        let client = match &self.client {
-            Some(c) => c,
+        let services = match &self.services {
+            Some(s) => s,
             None => return Ok(None),
         };
 
@@ -59,31 +104,10 @@ impl Storefront for Itchio {
         let mut page = 1;
 
         loop {
-            let owned_keys = client.fetch_owned_keys(page).await?;
+            let owned_keys = services.fetch_owned_keys(page).await?;
             let current_page_count = owned_keys.owned_keys.len() as u8;
 
-            games.extend(owned_keys.owned_keys.into_iter().map(|key| {
-                let developer = key
-                    .game
-                    .user
-                    .and_then(|user| user.display_name.or(Some(user.username)));
-
-                Game {
-                    id: key.game.id.to_string(),
-                    title: key.game.title.clone(),
-                    source: GameSource::Itchio,
-                    key: Some(key.id.to_string()),
-                    developer,
-                    launch_target: None,
-                    path: None,
-                    version: None,
-                    status: GameStatus::NotInstalled,
-                    favorite: false,
-                    hidden: false,
-                    cover_url: key.game.still_cover_url.or(key.game.cover_url),
-                    sort_title: key.game.title.to_lowercase(),
-                }
-            }));
+            games.extend(owned_keys.owned_keys.into_iter().map(Game::from));
 
             if current_page_count < owned_keys.per_page {
                 break;
@@ -96,14 +120,14 @@ impl Storefront for Itchio {
     }
 
     async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {
-        let client = match &self.client {
-            Some(c) => c,
-            None => return Err("itch.io client is not initialized".into()),
+        let services = match &self.services {
+            Some(s) => s,
+            None => return Err("itch.io api key not set".into()),
         };
 
         let game_id: u32 = game.id.parse()?;
         let game_key: u32 = game.key.unwrap().parse()?;
-        let uploads = client.fetch_game_uploads(game_id, game_key).await?;
+        let uploads = services.fetch_game_uploads(game_id, game_key).await?;
 
         #[cfg(target_os = "linux")]
         let os_trait = UploadTraits::PLinux;
@@ -115,12 +139,7 @@ impl Storefront for Itchio {
         let game_versions = uploads
             .into_iter()
             .filter(|upload| upload.traits.contains(&os_trait))
-            .map(|upload| GameVersion {
-                id: upload.id.to_string(),
-                name: upload.display_name.unwrap_or(upload.filename),
-                //download_size: upload.size.unwrap_or(0),
-                external: upload.storage == UploadStorage::External,
-            })
+            .map(GameVersion::from)
             .collect();
 
         Ok(game_versions)
@@ -131,37 +150,39 @@ impl Storefront for Itchio {
         game: Game,
         version_id: String,
     ) -> Result<GameVersionInfo> {
-        let client = match &self.client {
-            Some(c) => c,
-            None => return Err("itch.io client is not initialized".into()),
+        let services = match &self.services {
+            Some(s) => s,
+            None => return Err("itch.io api key not set".into()),
         };
 
         let upload_id: u32 = version_id.parse()?;
         let game_key: u32 = game.key.unwrap().parse()?;
 
-        let client_clone = Arc::clone(client);
+        let services_clone = Arc::clone(services);
+
         let upload =
-            tokio::spawn(async move { client_clone.fetch_game_upload(upload_id, game_key).await });
+            tokio::spawn(
+                async move { services_clone.fetch_game_upload(upload_id, game_key).await },
+            );
 
         // Itch.io needs to scan the archive before we can get the info
         let retries = 8;
         for attempt in 1..=retries {
-            let scanned_archive = client
+            let scanned_archive = services
                 .fetch_upload_scanned_archive(upload_id, game_key)
                 .await;
 
             if let Ok(scanned_archive) = scanned_archive {
-                if scanned_archive.extracted_size.is_some() {
+                if let Some(install_size) = scanned_archive.extracted_size {
                     return Ok(GameVersionInfo {
                         download_size: upload.await??.size.unwrap_or_default() as u64,
-                        install_size: scanned_archive.extracted_size.unwrap() as u64,
+                        install_size: install_size as u64,
                     });
                 }
             }
 
             if attempt < retries {
-                let delay_secs = attempt * 2;
-                tokio::time::sleep(std::time::Duration::from_secs(delay_secs)).await;
+                time::sleep(Duration::from_secs(attempt * 2)).await;
             }
         }
 
@@ -240,24 +261,25 @@ impl Storefront for Itchio {
         Ok(())
     }
 
-    async fn post_download(&self, game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
-        post_download(game_id, path, file_name).await
-    }
-
-    async fn process_chunk(&self, _path: PathBuf) -> Result<()> {
-        Ok(())
-    }
-
-    async fn chunk_request(&self, http: &reqwest::Client, url: &str) -> Result<RequestBuilder> {
-        Err("Not implemented".into())
+    async fn post_download(&self, game_id: &str, path: PathBuf) -> Result<()> {
+        post_download(game_id, path).await
     }
 
     async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest> {
         Err("Not implemented".into())
     }
+
+    fn download_strategy(&self) -> Arc<dyn DownloadStrategy> {
+        Arc::clone(&self.strategy)
+    }
 }
 
-async fn post_download(game_id: &str, path: PathBuf, file_name: &str) -> Result<()> {
+async fn post_download(game_id: &str, path: PathBuf) -> Result<()> {
+    let mut entries = fs::read_dir(&path).await?;
+    let entry = entries.next_entry().await?;
+    let entry = entry.ok_or("No files found in the directory")?;
+    let file_name = entry.file_name();
+
     let file_path = path.join(file_name);
 
     let mut connection = database::create_connection()?;
@@ -319,7 +341,7 @@ async fn post_download_external(
         .emit("download-finished", &payload)
         .unwrap();
 
-    post_download(game_id, path, file_name).await?;
+    post_download(game_id, path).await?;
 
     APP.get()
         .unwrap()

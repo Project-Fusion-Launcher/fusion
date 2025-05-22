@@ -88,7 +88,7 @@ pub async fn download_game(
     game_id: String,
     game_source: GameSource,
     version_id: String,
-    mut download_options: DownloadOptions,
+    download_options: DownloadOptions,
 ) -> Result<(), String> {
     /*let mut connection = database::create_connection()?;
     let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;

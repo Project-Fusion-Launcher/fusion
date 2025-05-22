@@ -1,31 +1,33 @@
 use super::storefront::Storefront;
 use crate::{
     common::{database, result::Result},
-    models::{
-        config::Config,
-        download::{
-            Download, DownloadChunk, DownloadChunkPart, DownloadFile, DownloadHash,
-            DownloadManifest,
-        },
-        game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
-        payloads::DownloadOptions,
-    },
+    downloads::DownloadStrategy,
+    models::{config::Config, download::*, game::*, payloads::DownloadOptions},
     util::string,
     APP,
 };
 use async_trait::async_trait;
-use reqwest::RequestBuilder;
-use std::{path::PathBuf, sync::RwLock};
-use tauri::Manager;
-use tokio::{
-    fs::{self, OpenOptions},
-    io::AsyncWriteExt,
+use std::{
+    path::PathBuf,
+    sync::{Arc, RwLock},
 };
+use tauri::Manager;
 use wrapper_epicgames::{api::models::KeyImageType, EpicGamesClient};
 
-#[derive(Default)]
+mod strategy;
+
 pub struct EpicGames {
     client: Option<EpicGamesClient>,
+    strategy: Arc<dyn DownloadStrategy>,
+}
+
+impl Default for EpicGames {
+    fn default() -> Self {
+        Self {
+            client: None,
+            strategy: Arc::new(strategy::EpicGamesStrategy {}),
+        }
+    }
 }
 
 #[async_trait]
@@ -222,28 +224,8 @@ impl Storefront for EpicGames {
         Ok(())
     }
 
-    async fn post_download(&self, _game_id: &str, _path: PathBuf, _file_name: &str) -> Result<()> {
+    async fn post_download(&self, _game_id: &str, _path: PathBuf) -> Result<()> {
         Ok(())
-    }
-
-    async fn process_chunk(&self, path: PathBuf) -> Result<()> {
-        let data = fs::read(&path).await?;
-        let decoded_chunk = EpicGamesClient::decode_chunk(&data)?;
-
-        let mut file = OpenOptions::new()
-            .create(true)
-            .write(true)
-            .truncate(true)
-            .open(path)
-            .await?;
-
-        file.write_all(&decoded_chunk.data).await?;
-
-        Ok(())
-    }
-
-    async fn chunk_request(&self, http: &reqwest::Client, url: &str) -> Result<RequestBuilder> {
-        Ok(http.get(url).header("User-Agent", "EpicGamesLauncher/11.0.1-14907503+++Portal+Release-Live Windows/10.0.19041.1.256.64bit"))
     }
 
     async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest> {
@@ -298,5 +280,9 @@ impl Storefront for EpicGames {
         }
 
         Ok(result)
+    }
+
+    fn download_strategy(&self) -> Arc<dyn DownloadStrategy> {
+        Arc::clone(&self.strategy)
     }
 }

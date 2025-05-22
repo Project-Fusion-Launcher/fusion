@@ -1,18 +1,9 @@
 use crate::{common::result::Result, APP};
 use std::path::Path;
-#[cfg(windows)]
-use std::{ffi::OsStr, os::windows::ffi::OsStrExt};
-#[cfg(unix)]
-use std::{fs::Permissions, os::unix::fs::PermissionsExt};
 use tauri::{path::BaseDirectory, Manager};
 #[cfg(unix)]
 use tokio::io::AsyncReadExt;
 use tokio::{fs, process::Command};
-#[cfg(windows)]
-use windows::{
-    core::*,
-    Win32::{Foundation::*, Storage::FileSystem::*, System::IO::OVERLAPPED},
-};
 
 const SKIP_EXTENSIONS: &[&str] = &["dylib", "bundle", "so", "dll"];
 
@@ -147,6 +138,8 @@ pub async fn is_executable(file_path: &Path) -> bool {
 
 #[cfg(unix)]
 pub async fn set_permissions<P: AsRef<Path>>(file_path: P, mode: u32) -> Result<()> {
+    use std::{fs::Permissions, os::unix::fs::PermissionsExt};
+
     fs::set_permissions(file_path, Permissions::from_mode(mode)).await?;
 
     Ok(())
@@ -172,7 +165,11 @@ pub async fn open_or_create_file<P: AsRef<Path>>(file_path: P) -> Result<fs::Fil
 
 #[cfg(windows)]
 pub async fn write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
-    use std::{thread, time::Duration};
+    if let Some(parent) = Path::new(file_path).parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent).await?;
+        }
+    }
 
     let mut attempts = 0;
     loop {
@@ -180,7 +177,7 @@ pub async fn write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
             Ok(res) => return Ok(res),
             Err(_) if attempts < 5 => {
                 attempts += 1;
-                thread::sleep(Duration::from_millis(100));
+                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
                 continue;
             }
             Err(e) => return Err(e),
@@ -190,9 +187,11 @@ pub async fn write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
 
 #[cfg(windows)]
 async fn try_write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
-    if let Some(parent) = Path::new(file_path).parent() {
-        fs::create_dir_all(parent).await?;
-    }
+    use std::{ffi::OsStr, os::windows::ffi::OsStrExt};
+    use windows::{
+        core::*,
+        Win32::{Foundation::*, Storage::FileSystem::*, System::IO::OVERLAPPED},
+    };
 
     let wide: Vec<u16> = OsStr::new(file_path).encode_wide().chain(Some(0)).collect();
 
