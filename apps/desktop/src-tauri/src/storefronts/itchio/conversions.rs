@@ -10,7 +10,8 @@ impl From<OwnedKey> for Game {
 
         Game {
             id: key.game.id.to_string(),
-            title: key.game.title.clone(),
+            sort_title: key.game.title.to_lowercase(),
+            title: key.game.title,
             source: GameSource::Itchio,
             key: Some(key.id.to_string()),
             developer,
@@ -21,7 +22,6 @@ impl From<OwnedKey> for Game {
             favorite: false,
             hidden: false,
             cover_url: key.game.still_cover_url.or(key.game.cover_url),
-            sort_title: key.game.title.to_lowercase(),
         }
     }
 }
