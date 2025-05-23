@@ -20,7 +20,7 @@ impl DownloadStrategy for EpicGamesStrategy {
         &self,
         download: &mut Download,
         cancellation_token: CancellationToken,
-        progress_tx: mpsc::Sender<DownloadProgress>,
+        _progress_tx: mpsc::Sender<DownloadProgress>,
     ) -> Result<()> {
         let manifest = Arc::new(
             get_storefront(&download.game_source)
@@ -30,7 +30,7 @@ impl DownloadStrategy for EpicGamesStrategy {
                 .await?,
         );
 
-        let writer_queue: Arc<Queue<(u128, Vec<u8>)>> = Arc::new(Queue::new(16));
+        let writer_queue: Arc<Queue<(u128, Vec<u8>)>> = Arc::new(Queue::new(24));
 
         let writers = 8;
         let writer_pool = WorkerPool::new(writers);

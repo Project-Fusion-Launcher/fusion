@@ -56,13 +56,10 @@ impl Storefront for LegacyGames {
         Ok(())
     }
 
-    async fn fetch_games(&self) -> Result<Option<Vec<Game>>> {
-        if self.client.is_none() {
-            return Err("Legacy Games client is not initialized".into());
-        }
+    async fn fetch_games(&self) -> Result<Vec<Game>> {
         let client = match &self.client {
             Some(c) => Arc::clone(c),
-            None => return Ok(None),
+            None => return Ok(vec![]),
         };
 
         let mut join_set = JoinSet::new();
@@ -95,7 +92,7 @@ impl Storefront for LegacyGames {
             }
         }
 
-        Ok(Some(result))
+        Ok(result)
     }
 
     async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {

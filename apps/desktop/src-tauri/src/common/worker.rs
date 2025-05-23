@@ -16,7 +16,7 @@ pub struct WorkerPool<T: Send + 'static> {
 
 impl<T: Send + 'static> WorkerPool<T> {
     pub fn new(max_concurrency: usize) -> Self {
-        let queue: Arc<Queue<Job<T>>> = Arc::new(Queue::new(16));
+        let queue: Arc<Queue<Job<T>>> = Arc::new(Queue::new(max_concurrency * 2));
 
         let mut workers = Vec::with_capacity(max_concurrency);
 

@@ -1,6 +1,6 @@
 use crate::storefronts::itchio::api::BASE_URL;
 
-/// The list of keys (games) that the user owns
+/// The list of keys (games) that the user owns.
 pub fn owned_keys(page: u32) -> String {
     format!("{}/profile/owned-keys?page={}", BASE_URL, page)
 }

@@ -27,15 +27,15 @@ mod conversions;
 mod strategy;
 
 pub struct Itchio {
-    strategy: Arc<dyn DownloadStrategy>,
     services: Option<Arc<Services>>,
+    strategy: Arc<dyn DownloadStrategy>,
 }
 
 impl Default for Itchio {
     fn default() -> Self {
         Self {
-            strategy: Arc::new(strategy::ItchioStrategy {}),
             services: None,
+            strategy: Arc::new(strategy::ItchioStrategy {}),
         }
     }
 }
@@ -56,15 +56,15 @@ impl Storefront for Itchio {
             None => return Ok(()),
         };
 
-        self.services = Some(Arc::new(Services::new(api_key)));
+        self.services = Some(Arc::new(Services::from_api_key(api_key)));
 
         Ok(())
     }
 
-    async fn fetch_games(&self) -> Result<Option<Vec<Game>>> {
+    async fn fetch_games(&self) -> Result<Vec<Game>> {
         let services = match &self.services {
             Some(s) => s,
-            None => return Ok(None),
+            None => return Ok(vec![]),
         };
 
         let mut games = Vec::new();
@@ -83,7 +83,7 @@ impl Storefront for Itchio {
             page += 1;
         }
 
-        Ok(Some(games))
+        Ok(games)
     }
 
     async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {

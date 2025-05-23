@@ -1,23 +1,29 @@
 use super::storefront::Storefront;
 use crate::{
-    common::{database, result::Result},
+    common::{database, result::Result, worker::WorkerPool},
     downloads::DownloadStrategy,
-    models::{config::Config, download::*, game::*, payloads::DownloadOptions},
+    models::{config::Config, download::*, game::*},
     utils::string,
     APP,
 };
+use api::{models::CategoryPath, services::Services};
 use async_trait::async_trait;
 use std::{
     path::PathBuf,
     sync::{Arc, RwLock},
 };
+use strategy::EpicGamesStrategy;
 use tauri::Manager;
-use wrapper_epicgames::{api::models::KeyImageType, EpicGamesClient};
+use tokio::{sync::mpsc, task};
+use wrapper_epicgames::EpicGamesClient;
 
+mod api;
+mod conversions;
 mod strategy;
 
 pub struct EpicGames {
     client: Option<EpicGamesClient>,
+    services: Option<Arc<Services>>,
     strategy: Arc<dyn DownloadStrategy>,
 }
 
@@ -25,7 +31,8 @@ impl Default for EpicGames {
     fn default() -> Self {
         Self {
             client: None,
-            strategy: Arc::new(strategy::EpicGamesStrategy {}),
+            services: None,
+            strategy: Arc::new(EpicGamesStrategy {}),
         }
     }
 }
@@ -33,88 +40,96 @@ impl Default for EpicGames {
 #[async_trait]
 impl Storefront for EpicGames {
     async fn init(&mut self) -> Result<()> {
-        let refresh_token = APP
-            .get()
-            .unwrap()
-            .state::<RwLock<Config>>()
-            .read()
-            .unwrap()
-            .epic_games_refresh_token();
+        let config_lock = APP.get().unwrap().state::<RwLock<Config>>();
 
+        let refresh_token = config_lock.read().unwrap().epic_games_refresh_token();
         if refresh_token.is_none() {
             return Ok(());
         }
 
-        let client = EpicGamesClient::from_refresh_token(refresh_token.unwrap()).await?;
-        let new_refresh_token = client.refresh_token();
+        let services = Services::from_refresh_token(refresh_token.unwrap()).await?;
+        let new_refresh_token = services.refresh_token();
 
         let mut connection = database::create_connection()?;
-
-        APP.get()
-            .unwrap()
-            .state::<RwLock<Config>>()
+        config_lock
             .write()
             .unwrap()
             .set_epic_games_refresh_token(Some(new_refresh_token), &mut connection)?;
 
-        self.client = Some(client);
+        self.client = None;
+        self.services = Some(Arc::new(services));
 
         Ok(())
     }
 
-    async fn fetch_games(&self) -> Result<Option<Vec<Game>>> {
-        let client = match &self.client {
+    async fn fetch_games(&self) -> Result<Vec<Game>> {
+        let services = match &self.services {
             Some(c) => c,
-            None => return Ok(None),
+            None => return Ok(vec![]),
         };
 
-        let games = client.fetch_games().await?;
+        let assets = services.fetch_game_assets("Windows").await?;
+        let pool = WorkerPool::new(16);
+        let (tx, mut rx) = mpsc::channel::<api::models::Game>(24);
 
-        Ok(Some(
-            games
-                .into_iter()
-                .map(|game| Game {
-                    id: game.id,
-                    title: game.title.clone(),
-                    source: GameSource::EpicGames,
-                    key: None,
-                    developer: Some(game.developer),
-                    launch_target: None,
-                    path: None,
-                    version: None,
-                    status: GameStatus::NotInstalled,
-                    favorite: false,
-                    hidden: false,
-                    cover_url: game
-                        .key_images
+        let result = task::spawn(async move {
+            let mut games: Vec<Game> = vec![];
+
+            while let Some(game) = rx.recv().await {
+                if game.main_game_item.is_none()
+                    && game
+                        .categories
                         .iter()
-                        .find(|image| image.image_type == KeyImageType::DieselGameBoxTall)
-                        .map(|image| image.url.clone()),
-                    sort_title: game.title.to_lowercase(),
-                })
-                .collect(),
-        ))
+                        .any(|c| c.path == CategoryPath::Games)
+                {
+                    games.push(Game::from(game));
+                }
+            }
+
+            games
+        });
+
+        for asset in assets {
+            if asset.namespace == "ue" {
+                continue;
+            }
+
+            let services = Arc::clone(services);
+            let tx = tx.clone();
+
+            pool.execute(move || async move {
+                let game = services
+                    .fetch_game_info(&asset.namespace, &asset.catalog_item_id)
+                    .await;
+
+                if let Ok(game) = game {
+                    if tx.send(game).await.is_err() {
+                        eprintln!("The receiver dropped");
+                    }
+                }
+            })
+            .await?;
+        }
+
+        drop(tx);
+
+        pool.shutdown().await;
+        Ok(result.await?)
     }
 
     async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {
-        let client = match &self.client {
+        let services = match &self.services {
             Some(c) => c,
             None => return Err("Epic Games client not initialized".into()),
         };
 
-        let versions = client
-            .fetch_game_versions(&game.id)
-            .await
-            .map_err(|_| "Failed to fetch game versions")?;
-
-        Ok(versions
+        let assets = services.fetch_game_assets("Windows").await?;
+        let asset = assets
             .into_iter()
-            .map(|v| GameVersion {
-                id: v.clone(),
-                name: v,
-                external: false,
-            })
-            .collect())
+            .find(|asset| asset.catalog_item_id == game.id)
+            .ok_or("Game not found")?;
+
+        Ok(vec![GameVersion::from(asset)])
     }
 
     async fn fetch_game_version_info(
@@ -122,17 +137,28 @@ impl Storefront for EpicGames {
         game: Game,
         version_id: String,
     ) -> Result<GameVersionInfo> {
-        let client = match &self.client {
+        let services = match &self.services {
             Some(c) => c,
             None => return Err("Epic Games client not initialized".into()),
         };
 
-        let manifest = client
-            .fetch_version_manifest(&game.id, &version_id)
-            .await
-            .unwrap();
+        let assets = services.fetch_game_assets("Windows").await?;
+        let asset = assets
+            .into_iter()
+            .find(|asset| asset.catalog_item_id == game.id)
+            .ok_or("Game not found")?;
 
-        let download_size = manifest
+        let manifest = services
+            .fetch_game_manifest(
+                "Windows",
+                &asset.namespace,
+                &asset.catalog_item_id,
+                &asset.app_name,
+                &version_id,
+            )
+            .await?;
+
+        /*let download_size = manifest
             .chunk_data_list
             .chunks
             .iter()
@@ -144,11 +170,11 @@ impl Storefront for EpicGames {
             .elements
             .iter()
             .map(|file| file.file_size)
-            .sum::<u64>();
+            .sum::<u64>(); */
 
         Ok(GameVersionInfo {
-            install_size,
-            download_size,
+            install_size: 0,
+            download_size: 0,
         })
     }
 

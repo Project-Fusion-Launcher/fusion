@@ -12,7 +12,7 @@ use std::{path::PathBuf, sync::Arc};
 #[async_trait]
 pub trait Storefront {
     async fn init(&mut self) -> Result<()>;
-    async fn fetch_games(&self) -> Result<Option<Vec<Game>>>;
+    async fn fetch_games(&self) -> Result<Vec<Game>>;
     async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>>;
     async fn fetch_game_version_info(
         &self,

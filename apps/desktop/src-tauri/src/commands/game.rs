@@ -31,8 +31,7 @@ pub async fn get_games(
         while let Some(res) = tasks.join_next().await {
             match res {
                 Ok(fetched_games) => match fetched_games {
-                    Ok(Some(fetched_games)) => games_to_return.extend(fetched_games),
-                    Ok(None) => (),
+                    Ok(fetched_games) => games_to_return.extend(fetched_games),
                     Err(e) => println!("{:?}", e),
                 },
                 Err(e) => println!("{:?}", e),

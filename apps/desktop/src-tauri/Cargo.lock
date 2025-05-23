@@ -1196,6 +1196,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "strum",
  "strum_macros",
  "tauri",
