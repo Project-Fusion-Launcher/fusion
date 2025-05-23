@@ -2,9 +2,8 @@ use crate::{
     common::result::Result,
     downloads::DownloadStrategy,
     models::{
-        download::{Download, DownloadManifest},
+        download::DownloadManifest,
         game::{Game, GameVersion, GameVersionInfo},
-        payloads::DownloadOptions,
     },
 };
 use async_trait::async_trait;
@@ -20,16 +19,10 @@ pub trait Storefront {
         game: Game,
         version_id: String,
     ) -> Result<GameVersionInfo>;
-    async fn pre_download(
-        &self,
-        game: &mut Game,
-        version_id: String,
-        download_options: DownloadOptions,
-    ) -> Result<Option<Download>>;
+    fn download_strategy(&self) -> Arc<dyn DownloadStrategy>;
     async fn post_download(&self, game_id: &str, path: PathBuf) -> Result<()>;
     async fn launch_game(&self, game: Game) -> Result<()>;
     async fn uninstall_game(&self, game: &Game) -> Result<()>;
 
     async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest>;
-    fn download_strategy(&self) -> Arc<dyn DownloadStrategy>;
 }

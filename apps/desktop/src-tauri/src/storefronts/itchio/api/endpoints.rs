@@ -14,7 +14,7 @@ pub fn game_uploads(game_id: u32, download_key_id: u32) -> String {
 }
 
 /// A specific upload.
-pub fn game_upload(upload_id: u32, download_key_id: u32) -> String {
+pub fn upload(upload_id: u32, download_key_id: u32) -> String {
     format!(
         "{}/uploads/{}?download_key_id={}",
         BASE_URL, upload_id, download_key_id
@@ -25,6 +25,14 @@ pub fn game_upload(upload_id: u32, download_key_id: u32) -> String {
 pub fn upload_scanned_archive(upload_id: u32, download_key_id: u32) -> String {
     format!(
         "{}/uploads/{}/scanned-archive?download_key_id={}",
+        BASE_URL, upload_id, download_key_id
+    )
+}
+
+/// The download URL for an upload.
+pub fn upload_download(upload_id: u32, download_key_id: u32) -> String {
+    format!(
+        "{}/uploads/{}/download?download_key_id={}",
         BASE_URL, upload_id, download_key_id
     )
 }

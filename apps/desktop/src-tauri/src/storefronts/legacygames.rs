@@ -8,7 +8,7 @@ use crate::{
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
         payloads::DownloadOptions,
     },
-    util, APP,
+    utils, APP,
 };
 use async_trait::async_trait;
 use reqwest::{header::ETAG, RequestBuilder};
@@ -136,7 +136,7 @@ impl Storefront for LegacyGames {
         })
     }
 
-    async fn pre_download(
+    /*async fn pre_download(
         &self,
         game: &mut Game,
         _version_id: String,
@@ -185,7 +185,7 @@ impl Storefront for LegacyGames {
             md5,
             download_size: size as u64,
         })) */
-    }
+    } */
 
     async fn launch_game(&self, game: Game) -> Result<()> {
         let game_path = game.path.unwrap();
@@ -193,7 +193,7 @@ impl Storefront for LegacyGames {
 
         let target_path = PathBuf::from(&game_path).join(&launch_target);
 
-        util::file::execute_file(&target_path)?;
+        utils::file::execute_file(&target_path)?;
 
         Ok(())
     }
@@ -222,14 +222,14 @@ impl Storefront for LegacyGames {
         let mut game = Game::select_one(&mut connection, &GameSource::LegacyGames, game_id)?;
 
         println!("Extracting game: {:?}", file_path);
-        util::file::extract_file(&file_path, &path).await?;
+        utils::file::extract_file(&file_path, &path).await?;
 
-        let mut launch_target = util::fs::find_launch_target(&path).await?;
+        let mut launch_target = utils::fs::find_launch_target(&path).await?;
 
         // Strip base path from launch target
         if let Some(target) = &launch_target {
             #[cfg(unix)]
-            util::file::set_permissions(&target, 0o755).await?;
+            utils::file::set_permissions(&target, 0o755).await?;
             launch_target = Some(target.strip_prefix(&path).unwrap().to_path_buf());
         }
 

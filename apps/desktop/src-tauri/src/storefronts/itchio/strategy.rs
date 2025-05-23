@@ -1,17 +1,15 @@
-use std::sync::{
-    atomic::{AtomicU64, Ordering},
-    Arc,
-};
-
-use super::Itchio;
 use crate::{
     common::result::Result,
     downloads::DownloadStrategy,
     models::download::{Download, DownloadProgress},
-    storefronts::storefront::Storefront,
+    storefronts::get_itchio,
 };
 use async_trait::async_trait;
 use reqwest::RequestBuilder;
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Arc,
+};
 use tokio::{
     fs::{self, OpenOptions},
     io::AsyncWriteExt,
@@ -27,10 +25,14 @@ impl DownloadStrategy for ItchioStrategy {
     async fn download(
         &self,
         download: &mut Download,
-        cancellation_token: CancellationToken,
-        progress_tx: mpsc::Sender<DownloadProgress>,
+        _cancellation_token: CancellationToken,
+        _progress_tx: mpsc::Sender<DownloadProgress>,
     ) -> Result<()> {
-        let download_info = download_info(download).await?;
+        let download_info = get_itchio()
+            .read()
+            .await
+            .fetch_download_info(download)
+            .await?;
 
         let (writer_tx, mut writer_rx) = mpsc::channel(16);
         let (verifier_tx, mut verifier_rx) = mpsc::channel(16);
@@ -94,14 +96,6 @@ impl DownloadStrategy for ItchioStrategy {
 
         Ok(())
     }
-}
-
-// TODO: remove
-async fn download_info(download: &Download) -> Result<ItchioDownload> {
-    let mut client = Itchio::default();
-    client.init().await.unwrap();
-
-    client.temp(download).await
 }
 
 pub(super) struct ItchioDownload {

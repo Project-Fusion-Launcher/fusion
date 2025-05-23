@@ -173,7 +173,7 @@ pub async fn write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
 
     let mut attempts = 0;
     loop {
-        match try_write_at(file_path, data, offset).await {
+        match try_write_at(file_path, data, offset) {
             Ok(res) => return Ok(res),
             Err(_) if attempts < 5 => {
                 attempts += 1;
@@ -186,7 +186,7 @@ pub async fn write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
 }
 
 #[cfg(windows)]
-async fn try_write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
+fn try_write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
     use std::{ffi::OsStr, os::windows::ffi::OsStrExt};
     use windows::{
         core::*,
@@ -203,7 +203,7 @@ async fn try_write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
             None,
             OPEN_ALWAYS,
             FILE_ATTRIBUTE_NORMAL,
-            Some(HANDLE(std::ptr::null_mut())),
+            None,
         )
     };
 

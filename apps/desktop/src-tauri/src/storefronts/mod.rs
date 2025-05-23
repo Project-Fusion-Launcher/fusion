@@ -7,28 +7,34 @@ use storefront::Storefront;
 use strum::IntoEnumIterator;
 use tokio::{sync::RwLock, task::JoinSet};
 
-pub mod epicgames;
-pub mod itchio;
-pub mod legacygames;
+mod epicgames;
+mod itchio;
+mod legacygames;
 #[macro_use]
-pub mod storefront;
+mod storefront;
 
-static ITCHIO: OnceLock<Arc<RwLock<dyn Storefront + Send + Sync>>> = OnceLock::new();
-static LEGACY_GAMES: OnceLock<Arc<RwLock<dyn Storefront + Send + Sync>>> = OnceLock::new();
-static EPIC_GAMES: OnceLock<Arc<RwLock<dyn Storefront + Send + Sync>>> = OnceLock::new();
+static ITCHIO: OnceLock<Arc<RwLock<Itchio>>> = OnceLock::new();
+static LEGACY_GAMES: OnceLock<Arc<RwLock<LegacyGames>>> = OnceLock::new();
+static EPIC_GAMES: OnceLock<Arc<RwLock<EpicGames>>> = OnceLock::new();
 
 pub fn get_storefront(source: &GameSource) -> Arc<RwLock<dyn Storefront + Send + Sync>> {
     match source {
-        GameSource::Itchio => ITCHIO
-            .get_or_init(|| Arc::new(RwLock::new(Itchio::default())))
-            .clone(),
-        GameSource::LegacyGames => LEGACY_GAMES
-            .get_or_init(|| Arc::new(RwLock::new(LegacyGames::default())))
-            .clone(),
-        GameSource::EpicGames => EPIC_GAMES
-            .get_or_init(|| Arc::new(RwLock::new(EpicGames::default())))
-            .clone(),
+        GameSource::Itchio => get_itchio(),
+        GameSource::LegacyGames => get_legacy_games(),
+        GameSource::EpicGames => get_epic_games(),
     }
+}
+
+fn get_itchio() -> Arc<RwLock<Itchio>> {
+    get_or_init_store(&ITCHIO)
+}
+
+fn get_legacy_games() -> Arc<RwLock<LegacyGames>> {
+    get_or_init_store(&LEGACY_GAMES)
+}
+
+fn get_epic_games() -> Arc<RwLock<EpicGames>> {
+    get_or_init_store(&EPIC_GAMES)
 }
 
 pub async fn init_storefronts() -> Result<(), String> {
@@ -38,7 +44,7 @@ pub async fn init_storefronts() -> Result<(), String> {
         let store = get_storefront(&source);
 
         tasks.spawn(async move {
-            let mut store = store.write().await; // Handle the poison case appropriately
+            let mut store = store.write().await;
             store.init().await
         });
     }
@@ -52,4 +58,11 @@ pub async fn init_storefronts() -> Result<(), String> {
     }
 
     Ok(())
+}
+
+fn get_or_init_store<T: Default + 'static>(
+    cell: &'static OnceLock<Arc<RwLock<T>>>,
+) -> Arc<RwLock<T>> {
+    cell.get_or_init(|| Arc::new(RwLock::new(T::default())))
+        .clone()
 }

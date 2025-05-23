@@ -3,7 +3,7 @@ use crate::{
     downloads::DownloadStrategy,
     models::download::*,
     storefronts::get_storefront,
-    util::file,
+    utils::file,
 };
 use async_trait::async_trait;
 use std::sync::Arc;

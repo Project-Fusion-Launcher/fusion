@@ -8,7 +8,6 @@ use serde_json::Value;
 #[derive(Debug, Deserialize)]
 pub struct OwnedKeys {
     pub per_page: u8,
-    // pub page: u32,
     #[serde(deserialize_with = "deserialize_empty_object")]
     pub owned_keys: Vec<OwnedKey>,
 }
@@ -144,38 +143,7 @@ pub struct ScannedArchiveResponse {
 
 #[derive(Deserialize, Debug)]
 pub struct ScannedArchive {
-    pub object_id: u32,
     pub extracted_size: Option<u32>,
-    #[serde(deserialize_with = "deserialize_date")]
-    pub created_at: NaiveDateTime,
-    #[serde(deserialize_with = "deserialize_date")]
-    pub updated_at: NaiveDateTime,
-    #[serde(deserialize_with = "deserialize_empty_object")]
-    pub launch_targets: Vec<LaunchTarget>,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct LaunchTarget {
-    pub arch: String,
-    pub flavor: String,
-    pub path: String,
-    pub sha256: String,
-    pub size: u32,
-    pub pe_info: PeInfo,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct PeInfo {
-    pub imports: Vec<String>,
-    pub arch: String,
-    pub assembly_info: Option<AssemblyInfo>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct AssemblyInfo {
-    pub description: String,
 }
 
 #[derive(Deserialize, Debug)]

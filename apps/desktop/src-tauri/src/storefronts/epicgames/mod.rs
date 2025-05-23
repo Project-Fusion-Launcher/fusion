@@ -3,7 +3,7 @@ use crate::{
     common::{database, result::Result},
     downloads::DownloadStrategy,
     models::{config::Config, download::*, game::*, payloads::DownloadOptions},
-    util::string,
+    utils::string,
     APP,
 };
 use async_trait::async_trait;
@@ -152,7 +152,7 @@ impl Storefront for EpicGames {
         })
     }
 
-    async fn pre_download(
+    /*async fn pre_download(
         &self,
         game: &mut Game,
         version_id: String,
@@ -214,7 +214,7 @@ impl Storefront for EpicGames {
         }
 
         Ok(Some(download))*/
-    }
+    }*/
 
     async fn launch_game(&self, _game: Game) -> Result<()> {
         Ok(())

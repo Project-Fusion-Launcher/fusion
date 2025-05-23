@@ -11,7 +11,7 @@ pub mod managers;
 pub mod models;
 pub mod schema;
 pub mod storefronts;
-pub mod util;
+pub mod utils;
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 

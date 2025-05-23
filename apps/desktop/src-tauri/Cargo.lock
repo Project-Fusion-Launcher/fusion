@@ -1210,7 +1210,6 @@ dependencies = [
  "tokio-util",
  "windows 0.61.1",
  "wrapper-epicgames",
- "wrapper-itchio",
  "wrapper-legacygames",
 ]
 
@@ -5768,18 +5767,6 @@ dependencies = [
  "serde_json",
  "serde_urlencoded",
  "sha1",
- "tokio",
-]
-
-[[package]]
-name = "wrapper-itchio"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "reqwest",
- "serde",
- "serde_json",
- "serde_urlencoded",
  "tokio",
 ]
 
