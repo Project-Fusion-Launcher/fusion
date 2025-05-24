@@ -5,7 +5,7 @@ use crate::{
     downloads::DownloadStrategy,
     models::{
         config::Config,
-        download::{Download, DownloadManifest},
+        download::Download,
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
         payloads::DownloadPayload,
     },
@@ -228,10 +228,6 @@ impl Storefront for Itchio {
 
     async fn post_download(&self, game_id: &str, path: PathBuf) -> Result<()> {
         post_download(game_id, path).await
-    }
-
-    async fn game_manifest(&self, _game_id: &str, _version_id: &str) -> Result<DownloadManifest> {
-        Err("Not implemented".into())
     }
 
     fn download_strategy(&self) -> Arc<dyn DownloadStrategy> {

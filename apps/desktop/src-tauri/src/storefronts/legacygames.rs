@@ -4,16 +4,13 @@ use crate::{
     downloads::DownloadStrategy,
     models::{
         config::Config,
-        download::{Download, DownloadManifest},
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
-        payloads::DownloadOptions,
     },
     utils, APP,
 };
 use async_trait::async_trait;
-use reqwest::{header::ETAG, RequestBuilder};
 use std::{
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::{Arc, RwLock},
 };
 use tauri::Manager;
@@ -235,10 +232,6 @@ impl Storefront for LegacyGames {
         game.update(&mut connection).unwrap();
 
         Ok(())
-    }
-
-    async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest> {
-        Err("Not implemented".into())
     }
 
     fn download_strategy(&self) -> Arc<dyn DownloadStrategy> {

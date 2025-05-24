@@ -8,6 +8,7 @@ const LAUNCHER_HOST: &str = "https://launcher-public-service-prod06.ol.epicgames
 const CATALOG_HOST: &str = "https://catalog-public-service-prod06.ol.epicgames.com";
 
 const MANIFEST_MAGIC: [u8; 4] = [0x0C, 0xC0, 0xBE, 0x44];
+const CHUNK_MAGIC: [u8; 4] = [0xA2, 0x3A, 0xFE, 0xB1];
 
 mod endpoints;
 pub(super) mod models;

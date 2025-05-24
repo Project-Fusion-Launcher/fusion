@@ -2,12 +2,15 @@ use super::storefront::Storefront;
 use crate::{
     common::{database, result::Result, worker::WorkerPool},
     downloads::DownloadStrategy,
-    models::{config::Config, download::*, game::*},
-    utils::string,
+    models::{config::Config, game::*},
     APP,
 };
-use api::{models::CategoryPath, services::Services};
+use api::{
+    models::{manifest::Manifest, CategoryPath},
+    services::Services,
+};
 use async_trait::async_trait;
+use reqwest::Url;
 use std::{
     path::PathBuf,
     sync::{Arc, RwLock},
@@ -15,14 +18,12 @@ use std::{
 use strategy::EpicGamesStrategy;
 use tauri::Manager;
 use tokio::{sync::mpsc, task};
-use wrapper_epicgames::EpicGamesClient;
 
 mod api;
 mod conversions;
 mod strategy;
 
 pub struct EpicGames {
-    client: Option<EpicGamesClient>,
     services: Option<Arc<Services>>,
     strategy: Arc<dyn DownloadStrategy>,
 }
@@ -30,7 +31,6 @@ pub struct EpicGames {
 impl Default for EpicGames {
     fn default() -> Self {
         Self {
-            client: None,
             services: None,
             strategy: Arc::new(EpicGamesStrategy {}),
         }
@@ -56,7 +56,6 @@ impl Storefront for EpicGames {
             .unwrap()
             .set_epic_games_refresh_token(Some(new_refresh_token), &mut connection)?;
 
-        self.client = None;
         self.services = Some(Arc::new(services));
 
         Ok(())
@@ -137,46 +136,25 @@ impl Storefront for EpicGames {
         game: Game,
         version_id: String,
     ) -> Result<GameVersionInfo> {
-        let services = match &self.services {
-            Some(c) => c,
-            None => return Err("Epic Games client not initialized".into()),
-        };
+        let manifest = self.get_game_manifest(&game.id, &version_id).await?;
 
-        let assets = services.fetch_game_assets("Windows").await?;
-        let asset = assets
-            .into_iter()
-            .find(|asset| asset.catalog_item_id == game.id)
-            .ok_or("Game not found")?;
-
-        let manifest = services
-            .fetch_game_manifest(
-                "Windows",
-                &asset.namespace,
-                &asset.catalog_item_id,
-                &asset.app_name,
-                &version_id,
-            )
-            .await;
-
-        println!("Manifest: {:?}", manifest);
-
-        /*let download_size = manifest
-            .chunk_data_list
-            .chunks
+        let download_size = manifest
+            .cdl
+            .elements
             .iter()
             .map(|chunk| chunk.file_size as u64)
             .sum::<u64>();
 
         let install_size = manifest
-            .file_manifest_list
+            .fml
             .elements
             .iter()
-            .map(|file| file.file_size)
-            .sum::<u64>(); */
+            .map(|file| file.size)
+            .sum::<u64>();
 
         Ok(GameVersionInfo {
-            install_size: 0,
-            download_size: 0,
+            install_size,
+            download_size,
         })
     }
 
@@ -256,61 +234,56 @@ impl Storefront for EpicGames {
         Ok(())
     }
 
-    async fn game_manifest(&self, game_id: &str, version_id: &str) -> Result<DownloadManifest> {
-        let client = match &self.client {
+    fn download_strategy(&self) -> Arc<dyn DownloadStrategy> {
+        Arc::clone(&self.strategy)
+    }
+}
+
+impl EpicGames {
+    pub async fn get_cdn_url(&self, game_id: &str) -> Result<Url> {
+        let services = match &self.services {
             Some(c) => c,
             None => return Err("Epic Games client not initialized".into()),
         };
 
-        let manifest = client
-            .fetch_version_manifest(&game_id, &version_id)
-            .await
-            .unwrap();
+        let assets = services.fetch_game_assets("Windows").await?;
+        let asset = assets
+            .into_iter()
+            .find(|asset| asset.catalog_item_id == game_id)
+            .ok_or("Game not found")?;
 
-        let urls = client.fetch_cdn_urls(&game_id, &version_id).await.unwrap();
+        let urls = services
+            .fetch_cdn_urls(
+                "Windows",
+                &asset.namespace,
+                &asset.catalog_item_id,
+                &asset.app_name,
+            )
+            .await?;
 
-        let mut result = DownloadManifest {
-            chunks: vec![],
-            files: vec![],
-        };
-
-        for chunk in manifest.chunk_data_list.chunks.iter() {
-            let url = format!("{}/{}", urls[0], chunk.path());
-
-            result.chunks.push(DownloadChunk {
-                id: chunk.guid_num(),
-                completed: false,
-                url,
-                compressed_size: chunk.file_size as u64,
-                size: chunk.window_size as u64,
-                hash: DownloadHash::Sha1(string::array_to_hex(chunk.sha_hash)),
-            })
-        }
-
-        for file in manifest.file_manifest_list.elements {
-            let mut download_file = DownloadFile {
-                filename: file.filename,
-                hash: DownloadHash::Sha1(string::array_to_hex(file.hash)),
-                chunk_parts: vec![],
-            };
-
-            for chunk_part in file.chunk_parts.iter() {
-                download_file.chunk_parts.push(DownloadChunkPart {
-                    id: chunk_part.guid_num(),
-                    chunk_offset: chunk_part.offset as u64,
-                    file_offset: chunk_part.file_offset,
-                    size: chunk_part.size as u64,
-                    completed: false,
-                })
-            }
-
-            result.files.push(download_file);
-        }
-
-        Ok(result)
+        let url = urls.first().ok_or("No CDN URL found").cloned()?;
+        Ok(url)
     }
 
-    fn download_strategy(&self) -> Arc<dyn DownloadStrategy> {
-        Arc::clone(&self.strategy)
+    pub async fn get_game_manifest(&self, game_id: &str, _version_id: &str) -> Result<Manifest> {
+        let services = match &self.services {
+            Some(c) => c,
+            None => return Err("Epic Games client not initialized".into()),
+        };
+
+        let assets = services.fetch_game_assets("Windows").await?;
+        let asset = assets
+            .into_iter()
+            .find(|asset| asset.catalog_item_id == game_id)
+            .ok_or("Game not found")?;
+
+        services
+            .fetch_game_manifest(
+                "Windows",
+                &asset.namespace,
+                &asset.catalog_item_id,
+                &asset.app_name,
+            )
+            .await
     }
 }

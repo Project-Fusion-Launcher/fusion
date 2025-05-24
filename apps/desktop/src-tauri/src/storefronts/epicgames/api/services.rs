@@ -1,13 +1,14 @@
 use super::{
     endpoints,
-    models::{manifest::Manifest, *},
+    models::{json_manifest::JsonManifest, manifest::Manifest, *},
 };
 use crate::common::result::Result;
 use reqwest::{
     header::{AUTHORIZATION, CONTENT_TYPE, USER_AGENT},
-    IntoUrl, StatusCode, Url,
+    IntoUrl, Url,
 };
 use serde::de::DeserializeOwned;
+use serde_json::Value;
 use sha1::{Digest, Sha1};
 
 pub struct Services {
@@ -45,47 +46,70 @@ impl Services {
         Ok(response.game)
     }
 
+    pub async fn fetch_cdn_urls(
+        &self,
+        platform: &str,
+        namespace: &str,
+        catalog_item_id: &str,
+        app_name: &str,
+    ) -> Result<Vec<Url>> {
+        let url = endpoints::game_manifest(platform, namespace, catalog_item_id, app_name, "Live");
+        let response: GameManifestResponse = self.get_json(url).await?;
+
+        let element = response.elements.first().ok_or("No elements found")?;
+
+        let urls = element
+            .manifests
+            .iter()
+            .filter_map(|manifest| Url::parse(&manifest.uri).ok())
+            .collect();
+
+        Ok(urls)
+    }
+
     pub async fn fetch_game_manifest(
         &self,
         platform: &str,
         namespace: &str,
         catalog_item_id: &str,
         app_name: &str,
-        build_version: &str,
     ) -> Result<Manifest> {
         let url = endpoints::game_manifest(platform, namespace, catalog_item_id, app_name, "Live");
         let response: GameManifestResponse = self.get_json(url).await?;
 
-        let element = response
-            .elements
-            .into_iter()
-            .find(|e| e.build_version == build_version)
-            .ok_or("Version not found")?;
+        let element = response.elements.first().ok_or("No elements found")?;
 
-        for manifest_url in element.manifests {
-            let mut url = Url::parse(&manifest_url.uri).map_err(|_| "Invalid URL")?;
+        for manifest_url in element.manifests.iter() {
+            let mut url = match Url::parse(&manifest_url.uri) {
+                Ok(u) => u,
+                Err(_) => continue,
+            };
 
             for param in &manifest_url.query_params {
                 url.query_pairs_mut().append_pair(&param.name, &param.value);
             }
 
-            let response = self.get(url).await?;
+            let response = match self.get(url).await {
+                Ok(resp) if resp.status().is_success() => resp,
+                _ => continue,
+            };
 
-            if StatusCode::is_success(&response.status()) {
-                let bytes = response
-                    .bytes()
-                    .await
-                    .map_err(|_| "Failed to read manifest response")?;
+            let bytes = match response.bytes().await {
+                Ok(b) => b,
+                Err(_) => continue,
+            };
 
-                let mut hasher = Sha1::new();
-                hasher.update(&bytes);
-                let hash = hasher.finalize();
+            let computed_sha1 = format!("{:x}", Sha1::digest(&bytes));
+            if computed_sha1 != element.hash {
+                continue;
+            }
 
-                if format!("{:x}", hash) != element.hash {
-                    continue;
+            if bytes[0] == b'{' {
+                if let Ok(json_manifest) = serde_json::from_slice::<JsonManifest>(&bytes) {
+                    return Ok(Manifest::from(json_manifest));
                 }
-
-                return Manifest::from_slice(&bytes);
+            } else if let Ok(manifest) = Manifest::new(bytes.into()) {
+                return Ok(manifest);
             }
         }
 

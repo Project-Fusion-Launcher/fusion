@@ -2,6 +2,8 @@ use chrono::NaiveDateTime;
 use serde::{de::Error, Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
+pub mod chunk;
+pub mod json_manifest;
 pub mod manifest;
 mod utils;
 
