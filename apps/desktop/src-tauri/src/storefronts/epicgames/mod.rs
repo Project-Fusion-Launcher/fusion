@@ -156,7 +156,9 @@ impl Storefront for EpicGames {
                 &asset.app_name,
                 &version_id,
             )
-            .await?;
+            .await;
+
+        println!("Manifest: {:?}", manifest);
 
         /*let download_size = manifest
             .chunk_data_list

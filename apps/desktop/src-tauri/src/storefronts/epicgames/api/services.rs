@@ -1,10 +1,14 @@
-use super::{endpoints, models::*};
+use super::{
+    endpoints,
+    models::{manifest::Manifest, *},
+};
 use crate::common::result::Result;
 use reqwest::{
     header::{AUTHORIZATION, CONTENT_TYPE, USER_AGENT},
-    IntoUrl, Url,
+    IntoUrl, StatusCode, Url,
 };
 use serde::de::DeserializeOwned;
+use sha1::{Digest, Sha1};
 
 pub struct Services {
     http: reqwest::Client,
@@ -32,12 +36,12 @@ impl Services {
 
     pub async fn fetch_game_assets(&self, platform: &str) -> Result<Vec<Asset>> {
         let url = endpoints::assets(platform, "Live");
-        self.get(url).await
+        self.get_json(url).await
     }
 
     pub async fn fetch_game_info(&self, namespace: &str, catalog_item_id: &str) -> Result<Game> {
         let url = endpoints::game_info(namespace, catalog_item_id);
-        let response: GameInfoResponse = self.get(url).await?;
+        let response: GameInfoResponse = self.get_json(url).await?;
         Ok(response.game)
     }
 
@@ -48,9 +52,9 @@ impl Services {
         catalog_item_id: &str,
         app_name: &str,
         build_version: &str,
-    ) -> Result<()> {
+    ) -> Result<Manifest> {
         let url = endpoints::game_manifest(platform, namespace, catalog_item_id, app_name, "Live");
-        let response: GameManifestResponse = self.get(url).await?;
+        let response: GameManifestResponse = self.get_json(url).await?;
 
         let element = response
             .elements
@@ -64,9 +68,28 @@ impl Services {
             for param in &manifest_url.query_params {
                 url.query_pairs_mut().append_pair(&param.name, &param.value);
             }
+
+            let response = self.get(url).await?;
+
+            if StatusCode::is_success(&response.status()) {
+                let bytes = response
+                    .bytes()
+                    .await
+                    .map_err(|_| "Failed to read manifest response")?;
+
+                let mut hasher = Sha1::new();
+                hasher.update(&bytes);
+                let hash = hasher.finalize();
+
+                if format!("{:x}", hash) != element.hash {
+                    continue;
+                }
+
+                return Manifest::from_slice(&bytes);
+            }
         }
 
-        Ok(())
+        Err("Failed to fetch manifest".into())
     }
 
     async fn authenticate(
@@ -94,9 +117,8 @@ impl Services {
             .await?)
     }
 
-    async fn get<D, U>(&self, url: U) -> Result<D>
+    async fn get<U>(&self, url: U) -> Result<reqwest::Response>
     where
-        D: DeserializeOwned,
         U: IntoUrl,
     {
         Ok(self
@@ -105,8 +127,14 @@ impl Services {
             .header(AUTHORIZATION, format!("bearer {}", self.access_token))
             .header(USER_AGENT, super::USER_AGENT)
             .send()
-            .await?
-            .json()
             .await?)
+    }
+
+    async fn get_json<D, U>(&self, url: U) -> Result<D>
+    where
+        D: DeserializeOwned,
+        U: IntoUrl,
+    {
+        Ok(self.get(url).await?.json().await?)
     }
 }

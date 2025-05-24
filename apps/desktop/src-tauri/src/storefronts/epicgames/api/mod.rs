@@ -7,6 +7,8 @@ const ACCOUNT_HOST: &str = "https://account-public-service-prod03.ol.epicgames.c
 const LAUNCHER_HOST: &str = "https://launcher-public-service-prod06.ol.epicgames.com";
 const CATALOG_HOST: &str = "https://catalog-public-service-prod06.ol.epicgames.com";
 
+const MANIFEST_MAGIC: [u8; 4] = [0x0C, 0xC0, 0xBE, 0x44];
+
 mod endpoints;
 pub(super) mod models;
 pub(super) mod services;

@@ -5,8 +5,6 @@ description = "One for all game launcher."
 authors = ["Jorge Pardo"]
 edition = "2024"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [lib]
 name = "fusion_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
@@ -42,7 +40,9 @@ tokio-util = "0.7.15"
 tokio-mpmc = "0.1"
 chrono = "0.4"
 serde_urlencoded = "0.7"
-
+byteorder = "1.5.0"
+flate2 = "1.0"
+sha1 = "0.10.6"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.61", features = [
@@ -54,7 +54,6 @@ windows = { version = "0.61", features = [
 
 [target.'cfg(target_os = "macos")'.dependencies]
 plist = "1.7.1"
-
 
 [profile.release]
 panic = "abort"
