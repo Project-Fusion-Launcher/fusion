@@ -8,7 +8,6 @@ use reqwest::{
     IntoUrl, Url,
 };
 use serde::de::DeserializeOwned;
-use serde_json::Value;
 use sha1::{Digest, Sha1};
 
 pub struct Services {

@@ -1,9 +1,7 @@
+use super::manifest::*;
+use crate::common::result::Result;
 use serde::Deserialize;
 use std::collections::HashMap;
-
-use crate::common::result::Result;
-
-use super::manifest::*;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]
