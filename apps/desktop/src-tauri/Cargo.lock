@@ -1196,7 +1196,6 @@ dependencies = [
  "tokio-mpmc",
  "tokio-util",
  "windows 0.61.1",
- "wrapper-legacygames",
 ]
 
 [[package]]
@@ -5758,18 +5757,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1"
 dependencies = [
  "bitflags 2.9.0",
-]
-
-[[package]]
-name = "wrapper-legacygames"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "chrono",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
 ]
 
 [[package]]

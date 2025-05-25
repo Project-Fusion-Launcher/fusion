@@ -19,7 +19,6 @@ pub enum Error {
     SerdeJson(serde_json::Error),
     Tauri(tauri::Error),
     Other(String),
-    WrapperLegacygames(wrapper_legacygames::result::Error),
 }
 
 impl StdError for Error {}
@@ -102,12 +101,6 @@ impl From<&str> for Error {
     }
 }
 
-impl From<wrapper_legacygames::result::Error> for Error {
-    fn from(e: wrapper_legacygames::result::Error) -> Self {
-        Self::WrapperLegacygames(e)
-    }
-}
-
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
@@ -122,7 +115,6 @@ impl Display for Error {
             Self::SerdeJson(e) => write!(f, "Serde JSON error: {}", e),
             Self::Tauri(e) => write!(f, "Tauri error: {}", e),
             Self::Other(e) => write!(f, "Other error: {}", e),
-            Self::WrapperLegacygames(e) => write!(f, "Wrapper-Legacygames error: {}", e),
         }
     }
 }
