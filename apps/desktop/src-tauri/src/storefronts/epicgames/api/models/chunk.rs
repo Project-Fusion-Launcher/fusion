@@ -16,31 +16,35 @@ impl Chunk {
 
         let header = ChunkHeader::new(&mut cursor)?;
 
-        let data = if header.compressed() {
-            let mut decoder = ZlibDecoder::new(cursor);
-            let mut decompressed = Vec::new();
-            decoder.read_to_end(&mut decompressed)?;
+        let uncompressed_data = if header.compressed() {
+            let mut uncompressed =
+                Vec::with_capacity(header.data_uncompressed_size.unwrap_or(1024 * 1024) as usize);
+
+            ZlibDecoder::new(cursor).read_to_end(&mut uncompressed)?;
 
             if let Some(uncompressed_size) = header.data_uncompressed_size {
-                if decompressed.len() != uncompressed_size as usize {
+                if uncompressed.len() != uncompressed_size as usize {
                     return Err("Uncompressed data size does not match header size")?;
                 }
             }
 
             if let Some(sha1) = header.data_sha1 {
-                let computed_sha1 = Sha1::digest(&decompressed);
+                let computed_sha1 = Sha1::digest(&uncompressed);
 
                 if computed_sha1.as_slice() != sha1 {
                     return Err("SHA1 checksum does not match")?;
                 }
             }
 
-            decompressed
+            uncompressed
         } else {
             cursor.into_inner()
         };
 
-        Ok(Self { header, data })
+        Ok(Self {
+            header,
+            data: uncompressed_data,
+        })
     }
 }
 

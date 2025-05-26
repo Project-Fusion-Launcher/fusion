@@ -18,8 +18,6 @@ use tokio_util::sync::CancellationToken;
 
 pub(super) struct EpicGamesStrategy {}
 
-type Guid = (u32, u32, u32, u32);
-
 #[async_trait]
 impl DownloadStrategy for EpicGamesStrategy {
     async fn download(
@@ -44,17 +42,13 @@ impl DownloadStrategy for EpicGamesStrategy {
                 .await?,
         );
 
-        let writer_queue: Arc<Queue<(Guid, Chunk)>> = Arc::new(Queue::new(24));
-        let decoder_queue: Arc<Queue<(Guid, Vec<u8>)>> = Arc::new(Queue::new(24));
+        let writer_queue: Arc<Queue<Chunk>> = Arc::new(Queue::new(24));
 
         let downloaders = 16;
         let dl_pool = WorkerPool::new(downloaders);
 
         let writers = 16;
         let writer_pool = WorkerPool::new(writers);
-
-        let decoders = 16;
-        let decoder_pool = WorkerPool::new(decoders);
 
         let http = reqwest::Client::new();
 
@@ -71,8 +65,8 @@ impl DownloadStrategy for EpicGamesStrategy {
                 .execute(move || async move {
                     loop {
                         match writer_queue.receive().await {
-                            Ok(Some(data)) => {
-                                let chunk_files = manifest.chunk_files(data.0);
+                            Ok(Some(chunk)) => {
+                                /*let chunk_files = manifest.chunk_files(chunk.header.guid);
 
                                 //let mut written = 0;
 
@@ -80,10 +74,10 @@ impl DownloadStrategy for EpicGamesStrategy {
                                     let file_path = download_path.join(&chunk_file.filename);
 
                                     for chunk_part in chunk_file.chunk_parts.iter() {
-                                        if chunk_part.guid == data.0 {
+                                        if chunk_part.guid == chunk.header.guid {
                                             file::write_at(
                                                 file_path.to_str().unwrap(),
-                                                &data.1.data[chunk_part.offset as usize
+                                                &chunk.data[chunk_part.offset as usize
                                                     ..(chunk_part.offset + chunk_part.size)
                                                         as usize],
                                                 chunk_part.file_offset,
@@ -94,37 +88,9 @@ impl DownloadStrategy for EpicGamesStrategy {
                                             //written += chunk_part.size as u64;
                                         }
                                     }
-                                }
+                                }*/
 
                                 //total_written_clone.fetch_add(written, Ordering::Relaxed);
-                            }
-                            Ok(None) => break,
-                            Err(e) => eprintln!("Receive failed: {}", e),
-                        }
-                    }
-                })
-                .await?;
-        }
-
-        for _ in 0..decoders {
-            let decoder_queue = Arc::clone(&decoder_queue);
-            let writer_queue = Arc::clone(&writer_queue);
-            let total_downloaded_clone = Arc::clone(&total_downloaded);
-
-            decoder_pool
-                .execute(move || async move {
-                    loop {
-                        match decoder_queue.receive().await {
-                            Ok(Some(data)) => {
-                                /*total_downloaded_clone
-                                .fetch_add(data.1.len() as u64, Ordering::Relaxed);*/
-
-                                let decoded_chunk = Chunk::new(data.1).unwrap();
-
-                                if writer_queue.is_full() {
-                                    println!("Writer queue is full.");
-                                }
-                                writer_queue.send((data.0, decoded_chunk)).await.unwrap();
                             }
                             Ok(None) => break,
                             Err(e) => eprintln!("Receive failed: {}", e),
@@ -160,20 +126,17 @@ impl DownloadStrategy for EpicGamesStrategy {
             }
 
             let token = cancellation_token.clone();
-            let decoder_queue = Arc::clone(&decoder_queue);
+            let writer_queue = Arc::clone(&writer_queue);
             let chunk = chunk.clone();
             let http = http.clone();
             let base_url = Arc::clone(&base_url);
 
             dl_pool
-                .execute(move || download_chunk(http, base_url, chunk, token, decoder_queue))
+                .execute(move || download_chunk(http, base_url, chunk, token, writer_queue))
                 .await?;
         }
 
         dl_pool.shutdown().await;
-
-        decoder_queue.close().await;
-        decoder_pool.shutdown().await;
 
         writer_queue.close().await;
         writer_pool.shutdown().await;
@@ -193,7 +156,7 @@ async fn download_chunk(
     base_url: Arc<Url>,
     chunk: ChunkInfo,
     cancellation_token: CancellationToken,
-    decoder_queue: Arc<Queue<(Guid, Vec<u8>)>>,
+    writer_queue: Arc<Queue<Chunk>>,
 ) -> Result<()> {
     let request = http.get(base_url.join(&chunk.path()).unwrap()).header(
         "User-Agent",
@@ -210,10 +173,12 @@ async fn download_chunk(
             match response {
                 Ok(response) => {
                     let bytes = response.bytes().await?.to_vec();
-                    if decoder_queue.is_full() {
-                        println!("Decoder queue is full.");
+                    let decoded_chunk = Chunk::new(bytes).unwrap();
+
+                    if writer_queue.is_full() {
+                        println!("Writer queue is full.");
                     }
-                    decoder_queue.send((chunk.guid, bytes)).await.unwrap();
+                    writer_queue.send(decoded_chunk).await.unwrap();
 
                 }
                 Err(e) => {
