@@ -14,6 +14,7 @@ use std::sync::{
 use tokio::{
     fs::{self, OpenOptions},
     io::{AsyncReadExt, AsyncWriteExt},
+    pin,
     sync::mpsc,
     task,
 };
@@ -32,7 +33,7 @@ impl DownloadStrategy for ItchioStrategy {
     async fn download(
         &self,
         download: &mut Download,
-        _cancellation_token: CancellationToken,
+        cancellation_token: CancellationToken,
         progress_tx: mpsc::Sender<DownloadProgress>,
     ) -> Result<()> {
         let download_info = get_itchio()
@@ -135,10 +136,23 @@ impl DownloadStrategy for ItchioStrategy {
             }
         });
 
-        downloader.await.unwrap();
+        pin!(downloader);
+        tokio::select! {
+            _ = cancellation_token.cancelled() => {
+                downloader.abort();
+            }
+            _ = &mut downloader => {},
+
+        }
+
         writer.await.unwrap();
         let verifier_result = verifier.await.unwrap();
         reporter.abort();
+
+        if cancellation_token.is_cancelled() {
+            println!("Download cancelled.");
+            return Ok(());
+        }
 
         if let Some(md5) = download_info.md5 {
             println!("MD5: {:x}", verifier_result);

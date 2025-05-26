@@ -31,7 +31,8 @@ pub async fn run() {
             commands::game::download_game,
             commands::game::launch_game,
             commands::game::uninstall_game,
-            commands::game::hide_game
+            commands::game::hide_game,
+            managers::download::pause,
         ])
         .setup(|app| {
             APP.set(app.handle().clone())

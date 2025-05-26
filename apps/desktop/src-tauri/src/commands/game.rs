@@ -107,7 +107,7 @@ pub async fn download_game(
         .map_err(|e| e.to_string())?;
 
     download_manager
-        .enqueue_download(Download {
+        .enqueue(Download {
             game_id,
             game_source,
             game_version_id: version_id,
