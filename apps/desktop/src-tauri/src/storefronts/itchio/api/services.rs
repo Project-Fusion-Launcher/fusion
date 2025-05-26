@@ -33,7 +33,8 @@ impl Services {
 
     pub async fn fetch_upload(&self, upload_id: u32, download_key_id: u32) -> Result<Upload> {
         let url = endpoints::upload(upload_id, download_key_id);
-        self.get(url).await
+        let response: UploadResponse = self.get(&url).await?;
+        Ok(response.upload)
     }
 
     pub async fn fetch_upload_scanned_archive(

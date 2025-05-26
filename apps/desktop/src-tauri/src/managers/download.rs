@@ -64,7 +64,10 @@ impl DownloadManager {
 
                     let progress_agregator = tokio::spawn(async move {
                         while let Some(update) = progress_rx.recv().await {
-                            println!("[Progress Reporter] Downloaded chunk: {}", update.chunk_id);
+                            println!(
+                                "[Progress Reporter] Downloaded: {}, Written: {}",
+                                update.downloaded, update.written
+                            );
                         }
                     });
 

@@ -5,6 +5,7 @@ use crate::{
     storefronts::get_legacy_games,
 };
 use async_trait::async_trait;
+use md5::{Digest, Md5};
 use reqwest::RequestBuilder;
 use std::sync::{
     atomic::{AtomicU64, Ordering},
@@ -74,11 +75,11 @@ impl DownloadStrategy for LegacyGamesStrategy {
         });
 
         let verifier = task::spawn(async move {
-            let mut hasher = md5::Context::new();
+            let mut hasher = Md5::new();
             while let Some(chunk) = verifier_rx.recv().await {
-                hasher.consume(&chunk);
+                hasher.update(&chunk);
             }
-            hasher.compute()
+            hasher.finalize()
         });
 
         downloader.await.unwrap();

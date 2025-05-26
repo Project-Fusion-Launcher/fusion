@@ -86,6 +86,11 @@ pub struct Uploads {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct UploadResponse {
+    pub upload: Upload,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Upload {
     pub id: u32,
     pub game_id: u32,

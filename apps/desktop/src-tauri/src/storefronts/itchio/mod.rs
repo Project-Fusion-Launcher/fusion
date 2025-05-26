@@ -13,6 +13,7 @@ use crate::{
 };
 use api::{models::UploadTraits, services};
 use async_trait::async_trait;
+use reqwest::header::RANGE;
 use std::{
     path::{Path, PathBuf},
     sync::{Arc, RwLock},
@@ -153,57 +154,6 @@ impl Storefront for Itchio {
 
         Err("Failed to fetch release info".into())
     }
-
-    /*async fn pre_download(
-        &self,
-        game: &mut Game,
-        version_id: String,
-        download_options: DownloadOptions,
-    ) -> Result<Option<Download>> {
-        let client = match &self.client {
-            Some(c) => c,
-            None => return Err("itch.io client is not initialized".into()),
-        };
-
-        let upload_id: u32 = version_id.parse()?;
-        let game_key: u32 = game.key.clone().unwrap().parse()?;
-
-        let upload = client.fetch_game_upload(upload_id, game_key).await?;
-
-        let download_request = client.fetch_upload_download_url(upload_id, game_key);
-
-        if upload.storage == UploadStorage::External {
-            let response = download_request.send().await?;
-            let url = response.url().to_owned();
-            handle_external_download(
-                url,
-                &download_options.install_location,
-                &game.id,
-                &game.title,
-            )
-            .await?;
-            return Ok(None);
-        }
-
-        game.version = upload
-            .build
-            .as_ref()
-            .map(|build| build.version.to_string())
-            .or(upload.md5_hash.clone());
-
-        Ok(None)
-
-        /*Ok(Some(Download {
-            request: download_request,
-            file_name: upload.filename,
-            download_options,
-            game_source: GameSource::Itchio,
-            game_id: game.id.clone(),
-            game_title: game.title.clone(),
-            md5: upload.md5_hash,
-            download_size: upload.size.unwrap_or(0) as u64,
-        })) */
-    }*/
 
     async fn launch_game(&self, game: Game) -> Result<()> {
         let game_path = game.path.unwrap();

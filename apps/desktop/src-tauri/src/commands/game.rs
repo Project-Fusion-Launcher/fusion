@@ -89,36 +89,6 @@ pub async fn download_game(
     version_id: String,
     download_options: DownloadOptions,
 ) -> Result<(), String> {
-    /*let mut connection = database::create_connection()?;
-    let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
-
-    let complete_install_location = download_options
-        .install_location
-        .join(game.title.replace(" :", " -").replace(":", " -"));
-
-    //game.status = GameStatus::Downloading;
-    game.path = Some(complete_install_location.to_string_lossy().to_string());
-    download_options.install_location = complete_install_location;
-
-    let download = get_storefront(&game_source)
-        .read()
-        .await
-        .pre_download(&mut game, version_id, download_options)
-        .await
-        .map_err(|e| e.to_string());
-
-    match download {
-        Ok(Some(download)) => {
-            game.update(&mut connection).unwrap();
-            download_manager.enqueue_download(download).await?;
-        }
-        Ok(None) => {
-            game.status = GameStatus::NotInstalled;
-            game.update(&mut connection).unwrap();
-        }
-        Err(e) => return Err(e),
-    } */
-
     let mut connection = database::create_connection()?;
     let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
 
@@ -129,6 +99,13 @@ pub async fn download_game(
     game.path = Some(complete_install_location.to_string_lossy().to_string());
     game.update(&mut connection).unwrap();
 
+    let version_info = get_storefront(&game_source)
+        .read()
+        .await
+        .fetch_game_version_info(game, version_id.clone())
+        .await
+        .map_err(|e| e.to_string())?;
+
     download_manager
         .enqueue_download(Download {
             game_id,
@@ -136,6 +113,8 @@ pub async fn download_game(
             game_version_id: version_id,
             path: complete_install_location,
             completed: false,
+            download_size: version_info.download_size,
+            install_size: version_info.install_size,
         })
         .await?;
 
