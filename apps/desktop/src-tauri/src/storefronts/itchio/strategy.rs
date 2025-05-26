@@ -97,8 +97,8 @@ impl DownloadStrategy for ItchioStrategy {
         let total_written = Arc::new(AtomicU64::new(file_size));
         let total_downloaded = Arc::new(AtomicU64::new(file_size));
 
-        let total_written_clone = total_written.clone();
-        let total_downloaded_clone = total_downloaded.clone();
+        let total_written_clone = Arc::clone(&total_written);
+        let total_downloaded_clone = Arc::clone(&total_downloaded);
 
         let writer = task::spawn(async move {
             while let Some(chunk) = writer_rx.recv().await {
@@ -145,8 +145,8 @@ impl DownloadStrategy for ItchioStrategy {
 
         }
 
-        writer.await.unwrap();
-        let verifier_result = verifier.await.unwrap();
+        writer.await?;
+        let verifier_result = verifier.await?;
         reporter.abort();
 
         if cancellation_token.is_cancelled() {

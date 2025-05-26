@@ -95,11 +95,16 @@ impl DownloadManager {
 
                     let (progress_tx, mut progress_rx) = mpsc::channel::<DownloadProgress>(50);
 
+                    let download_size = download.download_size;
+                    let install_size = download.install_size;
                     let progress_agregator = tokio::spawn(async move {
                         while let Some(update) = progress_rx.recv().await {
                             println!(
-                                "[Progress Reporter] Downloaded: {}, Written: {}",
-                                update.downloaded, update.written
+                                "[Progress Reporter] Downloaded: {} ({:.2}%), Written: {} ({:.2}%)",
+                                update.downloaded,
+                                update.downloaded * 100 / download_size,
+                                update.written,
+                                update.written * 100 / install_size
                             );
                         }
                     });
