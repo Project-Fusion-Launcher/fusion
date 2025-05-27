@@ -18,6 +18,7 @@ pub enum Error {
     Reqwest(reqwest::Error),
     SerdeJson(serde_json::Error),
     Tauri(tauri::Error),
+    SerdeUrlEncodedSer(serde_urlencoded::ser::Error),
     Other(String),
 }
 
@@ -83,6 +84,12 @@ impl From<tauri::Error> for Error {
     }
 }
 
+impl From<serde_urlencoded::ser::Error> for Error {
+    fn from(e: serde_urlencoded::ser::Error) -> Self {
+        Self::SerdeUrlEncodedSer(e)
+    }
+}
+
 impl From<Box<dyn StdError + Send + Sync>> for Error {
     fn from(e: Box<dyn StdError + Send + Sync>) -> Self {
         Self::Other(e.to_string())
@@ -114,6 +121,9 @@ impl Display for Error {
             Self::Reqwest(e) => write!(f, "Reqwest error: {}", e),
             Self::SerdeJson(e) => write!(f, "Serde JSON error: {}", e),
             Self::Tauri(e) => write!(f, "Tauri error: {}", e),
+            Self::SerdeUrlEncodedSer(e) => {
+                write!(f, "Serde URL encoded serialization error: {}", e)
+            }
             Self::Other(e) => write!(f, "Other error: {}", e),
         }
     }

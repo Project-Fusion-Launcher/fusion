@@ -6,7 +6,7 @@ use crate::{
     APP,
 };
 use api::{
-    models::{manifest::Manifest, CategoryPath},
+    models::{download_plan::DownloadPlan, manifest::Manifest, CategoryPath},
     services::Services,
 };
 use async_trait::async_trait;
@@ -134,9 +134,9 @@ impl Storefront for EpicGames {
     async fn fetch_game_version_info(
         &self,
         game: Game,
-        version_id: String,
+        _version_id: String,
     ) -> Result<GameVersionInfo> {
-        let manifest = self.get_game_manifest(&game.id, &version_id).await?;
+        let manifest = self.get_game_manifest(&game.id).await?;
 
         let download_size = manifest
             .cdl
@@ -201,7 +201,7 @@ impl EpicGames {
         Ok(url)
     }
 
-    pub async fn get_game_manifest(&self, game_id: &str, _version_id: &str) -> Result<Manifest> {
+    pub async fn get_game_manifest(&self, game_id: &str) -> Result<Manifest> {
         let services = match &self.services {
             Some(c) => c,
             None => return Err("Epic Games client not initialized".into()),
@@ -221,5 +221,12 @@ impl EpicGames {
                 &asset.app_name,
             )
             .await
+    }
+
+    pub async fn compute_download_plan(&self, game_id: &str) -> Result<DownloadPlan> {
+        let manifest = self.get_game_manifest(game_id).await?;
+        let mut plan = DownloadPlan::new(manifest);
+        plan.compute();
+        Ok(plan)
     }
 }

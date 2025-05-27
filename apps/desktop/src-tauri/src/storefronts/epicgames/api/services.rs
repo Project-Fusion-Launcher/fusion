@@ -52,10 +52,9 @@ impl Services {
         catalog_item_id: &str,
         app_name: &str,
     ) -> Result<Vec<Url>> {
-        let url = endpoints::game_manifest(platform, namespace, catalog_item_id, app_name, "Live");
-        let response: GameManifestResponse = self.get_json(url).await?;
-
-        let element = response.elements.first().ok_or("No elements found")?;
+        let element = self
+            .fetch_game_manifest_element(platform, namespace, catalog_item_id, app_name)
+            .await?;
 
         let urls = element
             .manifests
@@ -73,10 +72,9 @@ impl Services {
         catalog_item_id: &str,
         app_name: &str,
     ) -> Result<Manifest> {
-        let url = endpoints::game_manifest(platform, namespace, catalog_item_id, app_name, "Live");
-        let response: GameManifestResponse = self.get_json(url).await?;
-
-        let element = response.elements.first().ok_or("No elements found")?;
+        let element = self
+            .fetch_game_manifest_element(platform, namespace, catalog_item_id, app_name)
+            .await?;
 
         for manifest_url in element.manifests.iter() {
             let mut url = match Url::parse(&manifest_url.uri) {
@@ -115,6 +113,21 @@ impl Services {
         Err("Failed to fetch manifest".into())
     }
 
+    async fn fetch_game_manifest_element(
+        &self,
+        platform: &str,
+        namespace: &str,
+        catalog_item_id: &str,
+        app_name: &str,
+    ) -> Result<GameManifestElement> {
+        let url = endpoints::game_manifest(platform, namespace, catalog_item_id, app_name, "Live");
+        let mut response: GameManifestResponse = self.get_json(url).await?;
+        Ok(response
+            .elements
+            .pop()
+            .ok_or("No game manifest element found")?)
+    }
+
     async fn authenticate(
         http: &reqwest::Client,
         grant_type: GrantType,
@@ -123,7 +136,7 @@ impl Services {
     ) -> Result<AccessTokenResponse> {
         let params = LoginParams {
             grant_type,
-            token_type: String::from("eg1"),
+            token_type: "eg1",
             code,
             refresh_token,
         };
@@ -133,7 +146,7 @@ impl Services {
             .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
             .header(USER_AGENT, super::USER_AGENT)
             .basic_auth(super::USER_BASIC, Some(super::PASSWORD_BASIC))
-            .body(serde_urlencoded::to_string(&params).unwrap())
+            .body(serde_urlencoded::to_string(&params)?)
             .send()
             .await?
             .json()

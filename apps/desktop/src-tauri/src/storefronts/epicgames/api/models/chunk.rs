@@ -28,13 +28,15 @@ impl Chunk {
                 }
             }
 
+            // This makes chunk decoding much heavier.
+            /*
             if let Some(sha1) = header.data_sha1 {
                 let computed_sha1 = Sha1::digest(&uncompressed);
 
                 if computed_sha1.as_slice() != sha1 {
                     return Err("SHA1 checksum does not match")?;
                 }
-            }
+            }*/
 
             uncompressed
         } else {

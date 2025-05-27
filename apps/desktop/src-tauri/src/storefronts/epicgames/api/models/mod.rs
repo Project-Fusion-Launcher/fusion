@@ -3,6 +3,7 @@ use serde::{de::Error, Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
 pub mod chunk;
+pub mod download_plan;
 pub mod json_manifest;
 pub mod manifest;
 mod utils;
@@ -10,7 +11,7 @@ mod utils;
 #[derive(Serialize)]
 pub struct LoginParams {
     pub grant_type: GrantType,
-    pub token_type: String,
+    pub token_type: &'static str,
     pub code: Option<String>,
     pub refresh_token: Option<String>,
 }
