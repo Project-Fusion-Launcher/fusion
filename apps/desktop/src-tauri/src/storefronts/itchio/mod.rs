@@ -13,7 +13,6 @@ use crate::{
 };
 use api::{models::UploadTraits, services};
 use async_trait::async_trait;
-use reqwest::header::RANGE;
 use std::{
     path::{Path, PathBuf},
     sync::{Arc, RwLock},
