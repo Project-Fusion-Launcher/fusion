@@ -47,7 +47,6 @@ impl DownloadStrategy for EpicGamesStrategy {
                 .await?,
         );
 
-        //let writer_queue: Arc<Queue<Chunk>> = Arc::new(Queue::new(24));
         let (tx, mut rx) = mpsc::channel::<Vec<u8>>(32);
 
         let downloaders = 16;
