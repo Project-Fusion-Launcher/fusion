@@ -5,12 +5,8 @@ use serde::{
 };
 use serde_json::Value;
 
-#[derive(Debug, Deserialize)]
-pub struct OwnedKeys {
-    pub per_page: u8,
-    #[serde(deserialize_with = "deserialize_empty_object")]
-    pub owned_keys: Vec<OwnedKey>,
-}
+mod responses;
+pub use responses::*;
 
 #[derive(Debug, Deserialize)]
 pub struct OwnedKey {
@@ -41,9 +37,7 @@ pub struct Game {
     pub published_at: NaiveDateTime,
     #[serde(deserialize_with = "deserialize_date")]
     pub created_at: NaiveDateTime,
-    pub min_price: u32,
     pub user: Option<User>,
-    pub sale: Option<Sale>,
     #[serde(deserialize_with = "deserialize_empty_object")]
     pub traits: Vec<GameTraits>,
 }
@@ -63,31 +57,10 @@ pub struct User {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct Sale {
-    pub id: u32,
-    pub rate: u8,
-    #[serde(deserialize_with = "deserialize_date")]
-    pub start_date: NaiveDateTime,
-    #[serde(deserialize_with = "deserialize_date")]
-    pub end_date: NaiveDateTime,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct GameEmbedData {
     pub width: u32,
     pub height: u32,
     pub fullscreen: bool,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Uploads {
-    #[serde(deserialize_with = "deserialize_empty_object")]
-    pub uploads: Vec<Upload>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct UploadResponse {
-    pub upload: Upload,
 }
 
 #[derive(Debug, Deserialize)]
@@ -142,11 +115,6 @@ pub struct BuildFile {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct ScannedArchiveResponse {
-    pub scanned_archive: ScannedArchive,
-}
-
-#[derive(Deserialize, Debug)]
 pub struct ScannedArchive {
     pub extracted_size: Option<u32>,
 }
@@ -182,9 +150,10 @@ pub enum GameClassification {
     GameMod,
     PhysicalGame,
     Soundtrack,
-    Other,
     Comic,
     Book,
+    #[serde(other)]
+    Other,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]
@@ -211,6 +180,7 @@ pub enum UploadType {
     AudioAssets,
     GraphicalAssets,
     Sourcecode,
+    #[serde(other)]
     Other,
 }
 
@@ -261,7 +231,6 @@ pub enum BuildFileSubType {
     Optimized,
 }
 
-// Deserialize date strings into actual dates
 fn deserialize_date<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
 where
     D: Deserializer<'de>,
@@ -270,7 +239,7 @@ where
     NaiveDateTime::parse_from_str(&s, "%Y-%m-%dT%H:%M:%S.%fZ").map_err(Error::custom)
 }
 
-// Deserialize empty objects as vecs. For some reason some fields can be an empty object ({}) instead of an array.
+// Some fields can be an empty object ({}) instead of an array.
 fn deserialize_empty_object<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,

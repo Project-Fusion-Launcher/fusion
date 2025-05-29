@@ -9,18 +9,6 @@
       "path": "../apps/desktop",
     },
     {
-      "name": "crates/wrapper-epicgames",
-      "path": "../crates/wrapper-epicgames",
-    },
-    {
-      "name": "crates/wrapper-itchio",
-      "path": "../crates/wrapper-itchio",
-    },
-    {
-      "name": "crates/wrapper-legacygames",
-      "path": "../crates/wrapper-legacygames",
-    },
-    {
       "name": "packages/config-eslint",
       "path": "../packages/config-eslint",
     },

@@ -2,10 +2,11 @@ use super::{DownloadStrategy, Storefront};
 use crate::{
     common::{database, result::Result, worker::WorkerPool},
     models::{config::Config, game::*},
+    storefronts::epicgames::download::{download_plan::DownloadPlan, strategy::EpicGamesStrategy},
     APP,
 };
 use api::{
-    models::{download_plan::DownloadPlan, manifest::Manifest, CategoryPath},
+    models::{CategoryPath, Manifest},
     services::Services,
 };
 use async_trait::async_trait;
@@ -14,13 +15,12 @@ use std::{
     path::PathBuf,
     sync::{Arc, RwLock},
 };
-use strategy::EpicGamesStrategy;
 use tauri::Manager;
 use tokio::{sync::mpsc, task};
 
 mod api;
 mod conversions;
-mod strategy;
+mod download;
 
 pub struct EpicGames {
     services: Option<Arc<Services>>,

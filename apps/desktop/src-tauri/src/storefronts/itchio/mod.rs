@@ -55,7 +55,7 @@ impl Storefront for Itchio {
             None => return Ok(()),
         };
 
-        self.services = Some(Arc::new(Services::from_api_key(api_key)));
+        self.services = Some(Arc::new(Services::from_api_key(api_key).await?));
 
         Ok(())
     }

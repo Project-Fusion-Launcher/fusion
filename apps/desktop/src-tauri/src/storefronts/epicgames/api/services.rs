@@ -1,7 +1,4 @@
-use super::{
-    endpoints,
-    models::{json_manifest::JsonManifest, manifest::Manifest, *},
-};
+use super::{endpoints, models::*};
 use crate::common::result::Result;
 use reqwest::{
     header::{AUTHORIZATION, CONTENT_TYPE, USER_AGENT},
@@ -21,11 +18,13 @@ impl Services {
         self.refresh_token.clone()
     }
 
-    pub async fn from_refresh_token(refresh_token: String) -> Result<Self> {
+    pub async fn from_refresh_token(token: String) -> Result<Self> {
         let http = reqwest::Client::new();
 
         let response =
-            Self::authenticate(&http, GrantType::RefreshToken, None, Some(refresh_token)).await?;
+            Self::authenticate(&http, GrantType::RefreshToken, None, Some(token)).await?;
+
+        println!("[Epic Games] Logged in as: {}", response.display_name);
 
         Ok(Self {
             http,
@@ -36,13 +35,20 @@ impl Services {
 
     pub async fn fetch_game_assets(&self, platform: &str) -> Result<Vec<Asset>> {
         let url = endpoints::assets(platform, "Live");
-        self.get_json(url).await
+        let response: AssetsResponse = self.get_json(url).await?;
+        match response {
+            AssetsResponse::Success(assets) => Ok(assets),
+            AssetsResponse::Error(e) => Err(e.error_code.into()),
+        }
     }
 
     pub async fn fetch_game_info(&self, namespace: &str, catalog_item_id: &str) -> Result<Game> {
         let url = endpoints::game_info(namespace, catalog_item_id);
         let response: GameInfoResponse = self.get_json(url).await?;
-        Ok(response.game)
+        match response {
+            GameInfoResponse::Game(game) => Ok(*game),
+            GameInfoResponse::Error(e) => Err(e.error_code.into()),
+        }
     }
 
     pub async fn fetch_cdn_urls(
@@ -121,11 +127,15 @@ impl Services {
         app_name: &str,
     ) -> Result<GameManifestElement> {
         let url = endpoints::game_manifest(platform, namespace, catalog_item_id, app_name, "Live");
-        let mut response: GameManifestResponse = self.get_json(url).await?;
-        Ok(response
-            .elements
-            .pop()
-            .ok_or("No game manifest element found")?)
+        let response: GameManifestResponse = self.get_json(url).await?;
+
+        match response {
+            GameManifestResponse::Elements(elements) => elements
+                .into_iter()
+                .next()
+                .ok_or_else(|| "No elements found".into()),
+            GameManifestResponse::Error(e) => Err(e.error_code.into()),
+        }
     }
 
     async fn authenticate(
@@ -133,7 +143,7 @@ impl Services {
         grant_type: GrantType,
         code: Option<String>,
         refresh_token: Option<String>,
-    ) -> Result<AccessTokenResponse> {
+    ) -> Result<AccessData> {
         let params = LoginParams {
             grant_type,
             token_type: "eg1",
@@ -141,7 +151,7 @@ impl Services {
             refresh_token,
         };
 
-        Ok(http
+        let response: AccessResponse = http
             .post(endpoints::oauth_token())
             .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
             .header(USER_AGENT, super::USER_AGENT)
@@ -150,7 +160,12 @@ impl Services {
             .send()
             .await?
             .json()
-            .await?)
+            .await?;
+
+        match response {
+            AccessResponse::Success(data) => Ok(data),
+            AccessResponse::Error(e) => Err(e.error_code.into()),
+        }
     }
 
     async fn get<U>(&self, url: U) -> Result<reqwest::Response>

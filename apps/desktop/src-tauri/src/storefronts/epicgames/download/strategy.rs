@@ -1,8 +1,10 @@
-use super::api::models::download_plan::{DownloadTask, WriteTask};
 use crate::{
     common::{result::Result, worker::WorkerPool},
     models::download::*,
-    storefronts::{epicgames::api::models::chunk::Chunk, get_epic_games, DownloadStrategy},
+    storefronts::{
+        epicgames::{api::models::*, download::download_plan::*},
+        get_epic_games, DownloadStrategy,
+    },
 };
 use async_trait::async_trait;
 use reqwest::Url;
@@ -22,7 +24,7 @@ use tokio::{
 };
 use tokio_util::sync::CancellationToken;
 
-pub(super) struct EpicGamesStrategy {}
+pub struct EpicGamesStrategy {}
 
 #[async_trait]
 impl DownloadStrategy for EpicGamesStrategy {

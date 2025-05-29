@@ -108,6 +108,12 @@ impl From<&str> for Error {
     }
 }
 
+impl From<Vec<String>> for Error {
+    fn from(e: Vec<String>) -> Self {
+        Self::Other(e.join(", "))
+    }
+}
+
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {

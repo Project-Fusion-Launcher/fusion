@@ -12,6 +12,15 @@ pub struct Services {
 }
 
 impl Services {
+    fn new(email: String) -> Self {
+        Self {
+            http: reqwest::Client::new(),
+            email,
+            token: None,
+            user_id: None,
+        }
+    }
+
     pub async fn from_email(email: String) -> Result<Self> {
         let services = Self::new(email);
 
@@ -41,7 +50,7 @@ impl Services {
             IsExistsByEmailData::UserData(user) => match user.wp_user {
                 WpUser::User { id, user_login } => {
                     services.user_id = Some(id);
-                    println!("Logged in as: {}", user_login);
+                    println!("[Legacy Games] Logged in as: {}", user_login);
                     Ok(services)
                 }
                 WpUser::False => Err("User does not exist".into()),
@@ -50,22 +59,13 @@ impl Services {
         }
     }
 
-    fn new(email: String) -> Self {
-        Self {
-            http: reqwest::Client::new(),
-            email,
-            token: None,
-            user_id: None,
-        }
-    }
-
     pub async fn fetch_products(&self) -> Result<Vec<Product>> {
-        let (mut giveaway_products, mut wp_products) = if self.is_wp() {
-            try_join!(self.fetch_giveaway_products(), self.fetch_wp_products())?
-        } else {
-            (self.fetch_giveaway_products().await?, Vec::new())
-        };
+        if !self.is_wp() {
+            return self.fetch_giveaway_products().await;
+        }
 
+        let (mut giveaway_products, mut wp_products) =
+            try_join!(self.fetch_giveaway_products(), self.fetch_wp_products())?;
         giveaway_products.append(&mut wp_products);
         Ok(giveaway_products)
     }

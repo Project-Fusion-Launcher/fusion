@@ -1,45 +1,18 @@
 use chrono::NaiveDateTime;
-use serde::{de::Error, Deserialize, Deserializer, Serialize};
+use serde::{de::Error, Deserialize, Deserializer};
 use std::collections::HashMap;
 
-pub mod chunk;
-pub mod download_plan;
-pub mod json_manifest;
-pub mod manifest;
+mod chunk;
+pub use chunk::*;
+mod json_manifest;
+pub use json_manifest::*;
+mod manifest;
+pub use manifest::*;
+mod responses;
+pub use responses::*;
+mod requests;
+pub use requests::*;
 mod utils;
-
-#[derive(Serialize)]
-pub struct LoginParams {
-    pub grant_type: GrantType,
-    pub token_type: &'static str,
-    pub code: Option<String>,
-    pub refresh_token: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct AccessTokenResponse {
-    pub access_token: String,
-    pub expires_in: u32,
-    #[serde(deserialize_with = "deserialize_date")]
-    pub expires_at: NaiveDateTime,
-    pub token_type: String,
-    pub refresh_token: String,
-    pub refresh_expires: u32,
-    #[serde(deserialize_with = "deserialize_date")]
-    pub refresh_expires_at: NaiveDateTime,
-    pub account_id: String,
-    pub client_id: String,
-    pub internal_client: bool,
-    pub client_service: String,
-    // pub scopes: Vec<String>,
-    #[serde(rename = "displayName")]
-    pub display_name: String,
-    pub app: String,
-    pub in_app_id: String,
-    pub acr: String,
-    #[serde(deserialize_with = "deserialize_date")]
-    pub auth_time: NaiveDateTime,
-}
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -59,28 +32,6 @@ pub struct Asset {
 pub struct AssetMetadata {
     pub installation_pool_id: Option<String>,
     pub update_type: Option<String>,
-}
-
-#[derive(Debug)]
-pub struct GameInfoResponse {
-    pub game: Game,
-}
-
-impl<'de> Deserialize<'de> for GameInfoResponse {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let map: HashMap<String, Game> = HashMap::deserialize(deserializer)?;
-
-        let game = map
-            .into_iter()
-            .next()
-            .ok_or_else(|| serde::de::Error::custom("expected at least one game"))?
-            .1;
-
-        Ok(GameInfoResponse { game })
-    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -122,12 +73,6 @@ pub struct Game {
 #[derive(Debug, Deserialize)]
 pub struct Category {
     pub path: CategoryPath,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GameManifestResponse {
-    pub elements: Vec<GameManifestElement>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -190,13 +135,6 @@ pub struct KeyImage {
     #[serde(deserialize_with = "deserialize_date")]
     pub uploaded_date: NaiveDateTime,
     pub alt: Option<String>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum GrantType {
-    AuthorizationCode,
-    RefreshToken,
 }
 
 #[derive(Debug, Deserialize)]

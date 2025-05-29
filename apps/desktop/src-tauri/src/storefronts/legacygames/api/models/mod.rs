@@ -1,23 +1,7 @@
 use serde::{Deserialize, Deserializer};
 
-#[derive(Deserialize, Debug)]
-pub struct IsExistsByEmail {
-    pub data: IsExistsByEmailData,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(untagged)]
-pub enum IsExistsByEmailData {
-    Error(String),
-    UserData(UserData),
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct UserData {
-    pub giveaway_user: GiveawayUser,
-    pub wp_user: WpUser,
-}
+mod responses;
+pub use responses::*;
 
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
@@ -34,28 +18,10 @@ pub enum GiveawayUser {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct TestLogin {
-    pub status: Status,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Products {
-    pub data: ProductsData,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(untagged)]
-pub enum ProductsData {
-    Error(String),
-    Products(Vec<Product>),
-}
-
-#[derive(Deserialize, Debug)]
 pub struct Product {
     pub id: u32,
     pub name: String,
     pub product_id: u32,
-    pub purchasable: bool,
     pub games: Vec<Game>,
     #[serde(default)]
     pub is_giveaway: bool,
@@ -73,33 +39,8 @@ pub struct Game {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct InstallerResponse {
-    pub data: InstallerResponseData,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(untagged)]
-pub enum InstallerResponseData {
-    Error(String),
-    Installer(Installer),
-}
-
-#[derive(Deserialize, Debug)]
 pub struct Installer {
     pub file: String,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum Status {
-    Ok,
-    Error,
-}
-
-impl Status {
-    pub fn is_success(&self) -> bool {
-        matches!(self, Status::Ok)
-    }
 }
 
 fn deserialize_game_name<'de, D>(deserializer: D) -> Result<String, D::Error>

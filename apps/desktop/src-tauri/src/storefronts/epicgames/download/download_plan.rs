@@ -1,4 +1,4 @@
-use super::manifest::Manifest;
+use crate::storefronts::epicgames::api::models::Manifest;
 use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug)]
