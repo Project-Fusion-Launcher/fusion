@@ -115,7 +115,7 @@ impl DownloadManager {
                         .download_strategy();
 
                     let result = strategy
-                        .download(&mut download, token.clone(), progress_tx)
+                        .start(&mut download, token.clone(), progress_tx)
                         .await;
 
                     progress_agregator.await.unwrap();

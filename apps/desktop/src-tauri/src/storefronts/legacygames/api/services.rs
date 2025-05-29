@@ -1,9 +1,6 @@
 use super::{endpoints, models::*};
 use crate::common::result::Result;
-use reqwest::{
-    header::{ACCEPT, AUTHORIZATION, CONTENT_LENGTH, CONTENT_TYPE},
-    IntoUrl,
-};
+use reqwest::{header::*, IntoUrl};
 use serde::de::DeserializeOwned;
 use tokio::try_join;
 
@@ -16,33 +13,50 @@ pub struct Services {
 
 impl Services {
     pub async fn from_email(email: String) -> Result<Self> {
-        let services = Self {
+        let services = Self::new(email);
+
+        let response = services.fetch_user_exists().await?;
+        match response.data {
+            IsExistsByEmailData::UserData(user) => match user.giveaway_user {
+                GiveawayUser::User { status } if status.is_success() => Ok(services),
+                GiveawayUser::User { .. } => Err("User is not a giveaway user".into()),
+                GiveawayUser::False => Err("User does not exist".into()),
+            },
+            IsExistsByEmailData::Error(e) => Err(e.into()),
+        }
+    }
+
+    pub async fn from_token(email: String, token: String) -> Result<Self> {
+        let mut services = Self::new(email);
+        services.token = Some(token);
+
+        let (response, is_token_valid) =
+            try_join!(services.fetch_user_exists(), services.test_user_login())?;
+
+        if !is_token_valid {
+            return Err("Invalid token".into());
+        }
+
+        match response.data {
+            IsExistsByEmailData::UserData(user) => match user.wp_user {
+                WpUser::User { id, user_login } => {
+                    services.user_id = Some(id);
+                    println!("Logged in as: {}", user_login);
+                    Ok(services)
+                }
+                WpUser::False => Err("User does not exist".into()),
+            },
+            IsExistsByEmailData::Error(e) => Err(e.into()),
+        }
+    }
+
+    fn new(email: String) -> Self {
+        Self {
             http: reqwest::Client::new(),
             email,
             token: None,
             user_id: None,
-        };
-
-        if let Ok(response) = services.fetch_user_exists().await {
-            if response.status.is_success() {
-                return Ok(services);
-            }
         }
-
-        Err("User does not exist".into())
-    }
-
-    pub async fn from_token(email: String, token: String) -> Result<Self> {
-        let mut services = Self::from_email(email).await?;
-        services.token = Some(token);
-        if let Ok(response) = services.fetch_test_login().await {
-            if let Some(user_id) = response.data.user_id {
-                services.user_id = Some(user_id);
-                return Ok(services);
-            }
-        }
-
-        Err("Invalid user token".into())
     }
 
     pub async fn fetch_products(&self) -> Result<Vec<Product>> {
@@ -143,9 +157,10 @@ impl Services {
         self.get(url).await
     }
 
-    async fn fetch_test_login(&self) -> Result<TestLogin> {
+    async fn test_user_login(&self) -> Result<bool> {
         let url = endpoints::user_login();
-        self.get(url).await
+        let response: TestLogin = self.get(url).await?;
+        Ok(response.status.is_success())
     }
 
     async fn get<D, U>(&self, url: U) -> Result<D>

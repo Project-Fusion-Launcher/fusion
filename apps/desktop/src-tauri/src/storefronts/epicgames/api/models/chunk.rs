@@ -1,7 +1,6 @@
 use super::utils::read;
 use crate::{common::result::Result, storefronts::epicgames::api::CHUNK_MAGIC};
 use flate2::bufread::ZlibDecoder;
-use sha1::{Digest, Sha1};
 use std::io::{Cursor, Read};
 
 #[derive(Debug)]

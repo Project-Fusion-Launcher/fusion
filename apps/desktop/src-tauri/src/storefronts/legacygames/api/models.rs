@@ -2,13 +2,19 @@ use serde::{Deserialize, Deserializer};
 
 #[derive(Deserialize, Debug)]
 pub struct IsExistsByEmail {
-    pub status: Status,
     pub data: IsExistsByEmailData,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum IsExistsByEmailData {
+    Error(String),
+    UserData(UserData),
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct IsExistsByEmailData {
+pub struct UserData {
     pub giveaway_user: GiveawayUser,
     pub wp_user: WpUser,
 }
@@ -16,49 +22,24 @@ pub struct IsExistsByEmailData {
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 pub enum WpUser {
-    False(bool),
-    User {
-        id: u32,
-        user_login: String,
-        nickname: String,
-    },
+    False,
+    User { id: u32, user_login: String },
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 pub enum GiveawayUser {
-    False(bool),
-    User {
-        status: Status,
-        data: Vec<GiveawayUserData>,
-    },
-}
-
-#[derive(Deserialize, Debug)]
-pub struct GiveawayUserData {
-    pub product_id: String,
-    pub game_id: String,
-    pub installer_uuid: String,
-    pub order_id: String,
+    False,
+    User { status: Status },
 }
 
 #[derive(Deserialize, Debug)]
 pub struct TestLogin {
     pub status: Status,
-    pub data: TestLoginData,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct TestLoginData {
-    pub code: Option<String>,
-    pub message: Option<String>,
-    pub user_id: Option<u32>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Products {
-    pub status: Status,
     pub data: ProductsData,
 }
 
@@ -75,7 +56,6 @@ pub struct Product {
     pub name: String,
     pub product_id: u32,
     pub purchasable: bool,
-    pub catalog_visibility: CatalogVisibility,
     pub games: Vec<Game>,
     #[serde(default)]
     pub is_giveaway: bool,
@@ -94,7 +74,6 @@ pub struct Game {
 
 #[derive(Deserialize, Debug)]
 pub struct InstallerResponse {
-    pub status: Status,
     pub data: InstallerResponseData,
 }
 
@@ -107,17 +86,7 @@ pub enum InstallerResponseData {
 
 #[derive(Deserialize, Debug)]
 pub struct Installer {
-    pub id: String,
-    pub name: String,
-    pub installer_uuid: String,
     pub file: String,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum CatalogVisibility {
-    Hidden,
-    Visible,
 }
 
 #[derive(Deserialize, Debug)]
@@ -139,7 +108,7 @@ where
 {
     let game_name: String = Deserialize::deserialize(deserializer)?;
     if game_name.is_empty() {
-        Ok(String::from("!noname"))
+        Ok(String::from("!Unknown Game"))
     } else {
         Ok(game_name)
     }

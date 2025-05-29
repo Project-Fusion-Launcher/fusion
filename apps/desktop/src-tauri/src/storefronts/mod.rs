@@ -1,21 +1,58 @@
-use crate::models::game::GameSource;
+use crate::{
+    common::result::Result,
+    models::{
+        download::{Download, DownloadProgress},
+        game::*,
+    },
+};
+use async_trait::async_trait;
 use epicgames::EpicGames;
 use itchio::Itchio;
 use legacygames::LegacyGames;
-use std::sync::{Arc, OnceLock};
-use storefront::Storefront;
+use std::{
+    path::PathBuf,
+    sync::{Arc, OnceLock},
+};
 use strum::IntoEnumIterator;
-use tokio::{sync::RwLock, task::JoinSet};
+use tokio::{
+    sync::{mpsc, RwLock},
+    task::JoinSet,
+};
+use tokio_util::sync::CancellationToken;
 
 mod epicgames;
 mod itchio;
 mod legacygames;
-#[macro_use]
-mod storefront;
 
 static ITCHIO: OnceLock<Arc<RwLock<Itchio>>> = OnceLock::new();
 static LEGACY_GAMES: OnceLock<Arc<RwLock<LegacyGames>>> = OnceLock::new();
 static EPIC_GAMES: OnceLock<Arc<RwLock<EpicGames>>> = OnceLock::new();
+
+#[async_trait]
+pub trait Storefront {
+    async fn init(&mut self) -> Result<()>;
+    async fn fetch_games(&self) -> Result<Vec<Game>>;
+    async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>>;
+    async fn fetch_game_version_info(
+        &self,
+        game: Game,
+        version_id: String,
+    ) -> Result<GameVersionInfo>;
+    fn download_strategy(&self) -> Arc<dyn DownloadStrategy>;
+    async fn post_download(&self, game_id: &str, path: PathBuf) -> Result<()>;
+    async fn launch_game(&self, game: Game) -> Result<()>;
+    async fn uninstall_game(&self, game: &Game) -> Result<()>;
+}
+
+#[async_trait]
+pub trait DownloadStrategy: Send + Sync {
+    async fn start(
+        &self,
+        download: &mut Download,
+        cancellation_token: CancellationToken,
+        progress_tx: mpsc::Sender<DownloadProgress>,
+    ) -> Result<()>;
+}
 
 pub fn get_storefront(source: &GameSource) -> Arc<RwLock<dyn Storefront + Send + Sync>> {
     match source {
@@ -37,7 +74,7 @@ fn get_epic_games() -> Arc<RwLock<EpicGames>> {
     get_or_init_store(&EPIC_GAMES)
 }
 
-pub async fn init_storefronts() -> Result<(), String> {
+pub async fn init_storefronts() -> Result<()> {
     let mut tasks = JoinSet::new();
 
     for source in GameSource::iter() {
@@ -52,8 +89,8 @@ pub async fn init_storefronts() -> Result<(), String> {
     while let Some(res) = tasks.join_next().await {
         match res {
             Ok(Ok(_)) => (),
-            Ok(Err(e)) => return Err(e.to_string()),
-            Err(e) => return Err(e.to_string()),
+            Ok(Err(e)) => return Err(e),
+            Err(e) => return Err(e.into()),
         }
     }
 

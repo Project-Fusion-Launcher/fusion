@@ -1,9 +1,8 @@
 use super::api::models::download_plan::{DownloadTask, WriteTask};
 use crate::{
     common::{result::Result, worker::WorkerPool},
-    downloads::DownloadStrategy,
     models::download::*,
-    storefronts::{epicgames::api::models::chunk::Chunk, get_epic_games},
+    storefronts::{epicgames::api::models::chunk::Chunk, get_epic_games, DownloadStrategy},
 };
 use async_trait::async_trait;
 use reqwest::Url;
@@ -27,17 +26,20 @@ pub(super) struct EpicGamesStrategy {}
 
 #[async_trait]
 impl DownloadStrategy for EpicGamesStrategy {
-    async fn download(
+    async fn start(
         &self,
         download: &mut Download,
         cancellation_token: CancellationToken,
         progress_tx: mpsc::Sender<DownloadProgress>,
     ) -> Result<()> {
+        let instant = std::time::Instant::now();
         let plan = get_epic_games()
             .read()
             .await
             .compute_download_plan(&download.game_id)
             .await?;
+        let elapsed = instant.elapsed();
+        println!("Download plan computed in {:?}", elapsed);
 
         let base_url = Arc::new(
             get_epic_games()
@@ -57,8 +59,6 @@ impl DownloadStrategy for EpicGamesStrategy {
         let total_written = Arc::new(AtomicU64::new(0));
         let total_downloaded = Arc::new(AtomicU64::new(0));
 
-        let cancellation_token_clone = cancellation_token.clone();
-
         let chunk_map = Arc::new(Mutex::new(HashMap::new()));
         let notify = Arc::new(Notify::new());
 
@@ -77,6 +77,8 @@ impl DownloadStrategy for EpicGamesStrategy {
 
         let mut tasks = plan.write_tasks;
         let download_path = download.path.clone();
+        let cancellation_token_clone = cancellation_token.clone();
+
         let writer = task::spawn(async move {
             let mut opened_file = None;
             while let Some(task) = tasks.pop_front() {
@@ -102,6 +104,9 @@ impl DownloadStrategy for EpicGamesStrategy {
                         chunk_offset,
                         size,
                     } => loop {
+                        if cancellation_token_clone.is_cancelled() {
+                            break;
+                        }
                         let chunk = { chunk_map.lock().await.remove(&chunk_guid) };
                         if let Some(chunk) = chunk {
                             if let Some(file) = opened_file.as_mut() {

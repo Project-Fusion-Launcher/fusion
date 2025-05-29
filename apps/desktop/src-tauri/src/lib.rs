@@ -6,7 +6,6 @@ use tauri::{AppHandle, Manager};
 
 pub mod commands;
 pub mod common;
-pub mod downloads;
 pub mod managers;
 pub mod models;
 pub mod schema;

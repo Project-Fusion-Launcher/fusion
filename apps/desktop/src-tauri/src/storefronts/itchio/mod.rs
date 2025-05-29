@@ -1,8 +1,7 @@
 use self::services::Services;
-use super::storefront::Storefront;
+use super::{DownloadStrategy, Storefront};
 use crate::{
     common::{database, result::Result},
-    downloads::DownloadStrategy,
     models::{
         config::Config,
         download::Download,

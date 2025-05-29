@@ -1,7 +1,6 @@
-use super::storefront::Storefront;
+use super::{DownloadStrategy, Storefront};
 use crate::{
     common::{database, result::Result, worker::WorkerPool},
-    downloads::DownloadStrategy,
     models::{config::Config, game::*},
     APP,
 };

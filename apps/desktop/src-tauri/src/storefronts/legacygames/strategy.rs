@@ -1,8 +1,7 @@
 use crate::{
     common::result::Result,
-    downloads::DownloadStrategy,
     models::download::{Download, DownloadProgress},
-    storefronts::get_legacy_games,
+    storefronts::{get_legacy_games, DownloadStrategy},
 };
 use async_trait::async_trait;
 use md5::{Digest, Md5};
@@ -23,7 +22,7 @@ pub(super) struct LegacyGamesStrategy {}
 
 #[async_trait]
 impl DownloadStrategy for LegacyGamesStrategy {
-    async fn download(
+    async fn start(
         &self,
         download: &mut Download,
         _cancellation_token: CancellationToken,

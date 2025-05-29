@@ -1,8 +1,7 @@
 use crate::{
     common::result::Result,
-    downloads::DownloadStrategy,
     models::download::{Download, DownloadProgress},
-    storefronts::get_itchio,
+    storefronts::{get_itchio, DownloadStrategy},
 };
 use async_trait::async_trait;
 use md5::{Digest, Md5};
@@ -30,7 +29,7 @@ pub(super) struct ItchioStrategy {}
 
 #[async_trait]
 impl DownloadStrategy for ItchioStrategy {
-    async fn download(
+    async fn start(
         &self,
         download: &mut Download,
         cancellation_token: CancellationToken,

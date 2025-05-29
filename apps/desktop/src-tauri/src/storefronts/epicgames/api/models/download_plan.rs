@@ -1,6 +1,5 @@
-use std::collections::{HashMap, VecDeque};
-
 use super::manifest::Manifest;
+use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug)]
 pub struct DownloadPlan {
@@ -11,9 +10,10 @@ pub struct DownloadPlan {
 
 impl DownloadPlan {
     pub fn new(manifest: Manifest) -> Self {
+        let capacity = manifest.cdl.elements.len();
         Self {
-            download_tasks: VecDeque::with_capacity(manifest.cdl.elements.len()),
-            write_tasks: VecDeque::with_capacity(manifest.cdl.elements.len()),
+            download_tasks: VecDeque::with_capacity(capacity),
+            write_tasks: VecDeque::with_capacity(capacity),
             manifest: Some(manifest),
         }
     }
@@ -21,50 +21,56 @@ impl DownloadPlan {
     pub fn compute(&mut self) {
         let manifest = self.manifest.take().unwrap();
 
-        let mut chunks_to_download = HashMap::new();
-        for element in manifest.cdl.elements {
-            chunks_to_download.insert(
-                element.guid,
-                DownloadTask {
-                    chunk_guid: element.guid,
-                    chunk_path: element.path(),
-                },
-            );
-        }
-
-        let mut files_per_chunk = HashMap::new();
-        for element in manifest.fml.elements.iter() {
-            for chunk_part in element.chunk_parts.iter() {
-                *files_per_chunk.entry(chunk_part.guid).or_insert(1) += 1_u32;
-            }
-        }
-
-        for element in manifest.fml.elements {
-            self.write_tasks.push_back(WriteTask::Open {
-                filename: element.filename,
+        let mut chunk_ref_counts: HashMap<_, u32> =
+            HashMap::with_capacity(manifest.cdl.elements.len());
+        manifest.fml.elements.iter().for_each(|file| {
+            file.chunk_parts.iter().for_each(|chunk| {
+                *chunk_ref_counts.entry(chunk.guid).or_insert(0) += 1;
             });
-            for chunk_part in element.chunk_parts {
-                if let Some(task) = chunks_to_download.remove(&chunk_part.guid) {
+        });
+
+        let mut download_map: HashMap<_, _> = manifest
+            .cdl
+            .elements
+            .into_iter()
+            .map(|element| {
+                (
+                    element.guid,
+                    DownloadTask {
+                        chunk_guid: element.guid,
+                        chunk_path: element.path(),
+                    },
+                )
+            })
+            .collect();
+
+        for file in manifest.fml.elements {
+            self.write_tasks.push_back(WriteTask::Open {
+                filename: file.filename,
+            });
+
+            for chunk_part in file.chunk_parts {
+                if let Some(task) = download_map.remove(&chunk_part.guid) {
                     self.download_tasks.push_back(task);
                 }
 
-                if let Some(remaining_files) = files_per_chunk.get_mut(&chunk_part.guid) {
-                    let remove_cache = *remaining_files == 1;
+                let count = chunk_ref_counts
+                    .get_mut(&chunk_part.guid)
+                    .expect("Missing chunk GUID in reference count");
 
-                    self.write_tasks.push_back(WriteTask::Write {
-                        chunk_guid: chunk_part.guid,
-                        chunk_offset: chunk_part.offset as usize,
-                        remove_cache,
-                        size: chunk_part.size as usize,
-                    });
+                let is_last_use = *count == 1;
 
-                    *remaining_files -= 1;
-                } else {
-                    panic!("Chunk GUID not found in files_per_chunk map");
-                }
+                self.write_tasks.push_back(WriteTask::Write {
+                    chunk_guid: chunk_part.guid,
+                    chunk_offset: chunk_part.offset as usize,
+                    size: chunk_part.size as usize,
+                    remove_cache: is_last_use,
+                });
+
+                *count -= 1;
             }
             self.write_tasks
-                .push_back(WriteTask::Close { sha1: element.sha1 });
+                .push_back(WriteTask::Close { sha1: file.sha1 });
         }
     }
 }
