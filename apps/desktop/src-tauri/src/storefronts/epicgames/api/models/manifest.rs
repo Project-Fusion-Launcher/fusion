@@ -105,22 +105,6 @@ impl ManifestHeader {
         })
     }
 
-    pub fn from_json(json: &Value) -> Result<Self> {
-        let version_string = json
-            .get("ManifestFileVersion")
-            .and_then(|v| v.as_str())
-            .ok_or("Missing or invalid ManifestFileVersion")?;
-
-        Ok(Self {
-            size: 0,
-            data_size: 0,
-            data_size_compressed: 0,
-            data_sha1: [0; 20],
-            stored_as: 0,
-            version: version_string.parse()?,
-        })
-    }
-
     pub fn compressed(&self) -> bool {
         self.stored_as & 0x1 != 0
     }
