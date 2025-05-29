@@ -15,6 +15,7 @@ pub enum Error {
     AcquireError(tokio::sync::AcquireError),
     RecvError(tokio::sync::oneshot::error::RecvError),
     ParseInt(std::num::ParseIntError),
+    TryFromSliceError(std::array::TryFromSliceError),
     Reqwest(reqwest::Error),
     SerdeJson(serde_json::Error),
     Tauri(tauri::Error),
@@ -63,6 +64,12 @@ impl From<tokio::sync::oneshot::error::RecvError> for Error {
 impl From<std::num::ParseIntError> for Error {
     fn from(e: std::num::ParseIntError) -> Self {
         Self::ParseInt(e)
+    }
+}
+
+impl From<std::array::TryFromSliceError> for Error {
+    fn from(e: std::array::TryFromSliceError) -> Self {
+        Self::TryFromSliceError(e)
     }
 }
 
@@ -124,6 +131,7 @@ impl Display for Error {
             Self::AcquireError(e) => write!(f, "Acquire error: {}", e),
             Self::RecvError(e) => write!(f, "Receive error: {}", e),
             Self::ParseInt(e) => write!(f, "Parse int error: {}", e),
+            Self::TryFromSliceError(e) => write!(f, "Try from slice error: {}", e),
             Self::Reqwest(e) => write!(f, "Reqwest error: {}", e),
             Self::SerdeJson(e) => write!(f, "Serde JSON error: {}", e),
             Self::Tauri(e) => write!(f, "Tauri error: {}", e),

@@ -27,7 +27,7 @@ impl Manifest {
 
         let mut decompressed_cursor = if header.compressed() {
             let mut decoder = ZlibDecoder::new(cursor);
-            let mut data = Vec::new();
+            let mut data = Vec::with_capacity(header.data_size as usize);
             decoder.read_to_end(&mut data)?;
 
             if data.len() != header.data_size as usize {

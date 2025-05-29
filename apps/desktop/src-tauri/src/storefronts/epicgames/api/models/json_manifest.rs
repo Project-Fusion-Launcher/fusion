@@ -208,26 +208,10 @@ fn hex_to_guid(hex_guid: &str) -> Result<(u32, u32, u32, u32)> {
         return Err("GUID must be 16 bytes (32 hex chars) long".into());
     }
 
-    let part1 = u32::from_be_bytes(
-        bytes[0..4]
-            .try_into()
-            .map_err(|_| "Failed to convert bytes to u32")?,
-    );
-    let part2 = u32::from_be_bytes(
-        bytes[4..8]
-            .try_into()
-            .map_err(|_| "Failed to convert bytes to u32")?,
-    );
-    let part3 = u32::from_be_bytes(
-        bytes[8..12]
-            .try_into()
-            .map_err(|_| "Failed to convert bytes to u32")?,
-    );
-    let part4 = u32::from_be_bytes(
-        bytes[12..16]
-            .try_into()
-            .map_err(|_| "Failed to convert bytes to u32")?,
-    );
+    let part1 = u32::from_be_bytes(bytes[0..4].try_into()?);
+    let part2 = u32::from_be_bytes(bytes[4..8].try_into()?);
+    let part3 = u32::from_be_bytes(bytes[8..12].try_into()?);
+    let part4 = u32::from_be_bytes(bytes[12..16].try_into()?);
 
     Ok((part1, part2, part3, part4))
 }
