@@ -58,18 +58,6 @@ impl Manifest {
             custom_fields,
         })
     }
-
-    pub fn chunk_files(&self, guid: (u32, u32, u32, u32)) -> Vec<&FileManifest> {
-        let mut result = Vec::new();
-
-        for file in &self.fml.elements {
-            if file.chunk_parts.iter().any(|part| part.guid == guid) {
-                result.push(file);
-            }
-        }
-
-        result
-    }
 }
 
 #[derive(Debug)]
@@ -316,13 +304,6 @@ impl ChunkInfo {
         )
     }
 
-    pub fn guid_num(&self) -> u128 {
-        ((self.guid.0 as u128) << 96)
-            | ((self.guid.1 as u128) << 64)
-            | ((self.guid.2 as u128) << 32)
-            | (self.guid.3 as u128)
-    }
-
     fn dir(&self) -> &'static str {
         if self.manifest_version >= 15 {
             "ChunksV4"
@@ -510,21 +491,11 @@ impl ManifestCustomFields {
         let version = read(cursor)?;
 
         let count: u32 = read(cursor)?;
-
-        let mut keys = Vec::with_capacity(count as usize);
-        let mut values = Vec::with_capacity(count as usize);
-
         let mut elements = HashMap::with_capacity(count as usize);
+        let keys: Vec<String> = (0..count).map(|_| read(cursor)).collect::<Result<_>>()?;
 
-        for _ in 0..count {
-            keys.push(read(cursor)?);
-        }
-
-        for _ in 0..count {
-            values.push(read(cursor)?);
-        }
-
-        for (key, value) in keys.into_iter().zip(values.into_iter()) {
+        for key in keys {
+            let value = read(cursor)?;
             elements.insert(key, value);
         }
 
