@@ -97,15 +97,41 @@ impl DownloadManager {
 
                     let download_size = download.download_size;
                     let install_size = download.install_size;
-                    let progress_agregator = tokio::spawn(async move {
+                    let reporter = tokio::spawn(async move {
+                        let mut downloaded = 0;
+                        let mut written = 0;
+
                         while let Some(update) = progress_rx.recv().await {
+                            let downloaded_pct = if download_size > 0 {
+                                update.downloaded as f64 * 100.0 / download_size as f64
+                            } else {
+                                0.0
+                            };
+
+                            let written_pct = if install_size > 0 {
+                                update.written as f64 * 100.0 / install_size as f64
+                            } else {
+                                0.0
+                            };
+
+                            let delta_download = update.downloaded.saturating_sub(downloaded);
+                            let delta_write = update.written.saturating_sub(written);
+
+                            let download_speed_mbps = (delta_download as f64 * 8.0) / 1_000_000.0;
+
                             println!(
                                 "[Progress Reporter] Downloaded: {} ({:.2}%), Written: {} ({:.2}%)",
-                                update.downloaded,
-                                update.downloaded * 100 / download_size,
-                                update.written,
-                                update.written * 100 / install_size
+                                update.downloaded, downloaded_pct, update.written, written_pct
                             );
+
+                            println!(
+                                "[Progress Reporter] Network usage: {:.2} Mbs, Disk usage: {:.2} MBs",
+                                download_speed_mbps,
+                                delta_write as f64 / 1_000_000.0
+                            );
+
+                            downloaded = update.downloaded;
+                            written = update.written;
                         }
                     });
 
@@ -118,7 +144,7 @@ impl DownloadManager {
                         .start(&mut download, token.clone(), progress_tx)
                         .await;
 
-                    progress_agregator.await.unwrap();
+                    reporter.await.unwrap();
                     println!("Download result: {:?}", result);
 
                     if !download.completed {
