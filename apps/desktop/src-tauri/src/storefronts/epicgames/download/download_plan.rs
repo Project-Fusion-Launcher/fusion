@@ -1,4 +1,4 @@
-use crate::storefronts::epicgames::api::models::Manifest;
+use crate::storefronts::epicgames::api::{models::Manifest, Guid};
 use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug)]
@@ -37,7 +37,6 @@ impl DownloadPlan {
                 (
                     element.guid,
                     DownloadTask {
-                        chunk_guid: element.guid,
                         chunk_path: element.path(),
                     },
                 )
@@ -77,7 +76,6 @@ impl DownloadPlan {
 
 #[derive(Debug)]
 pub struct DownloadTask {
-    pub chunk_guid: (u32, u32, u32, u32),
     pub chunk_path: String,
 }
 
@@ -87,7 +85,7 @@ pub enum WriteTask {
         filename: String,
     },
     Write {
-        chunk_guid: (u32, u32, u32, u32),
+        chunk_guid: Guid,
         chunk_offset: usize,
         size: usize,
         remove_cache: bool,

@@ -1,6 +1,6 @@
 use crate::{
     common::result::Result,
-    storefronts::epicgames::api::{models::utils::read, MANIFEST_MAGIC},
+    storefronts::epicgames::api::{models::utils::read, Guid, MANIFEST_MAGIC},
 };
 use flate2::bufread::ZlibDecoder;
 use serde_json::Value;
@@ -268,7 +268,7 @@ impl ManifestCDL {
 
 #[derive(Clone, Debug)]
 pub struct ChunkInfo {
-    pub guid: (u32, u32, u32, u32),
+    pub guid: Guid,
     pub hash: u64,
     pub sha1: [u8; 20],
     pub group_num: u8,
@@ -454,7 +454,7 @@ pub struct FileManifest {
 
 #[derive(Debug)]
 pub struct ChunkPart {
-    pub guid: (u32, u32, u32, u32),
+    pub guid: Guid,
     pub offset: u32,
     pub size: u32,
     pub file_offset: u64,

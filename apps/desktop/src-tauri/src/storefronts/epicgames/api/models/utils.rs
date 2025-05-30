@@ -1,4 +1,4 @@
-use crate::common::result::Result;
+use crate::{common::result::Result, storefronts::epicgames::api::Guid};
 use byteorder::{LittleEndian, ReadBytesExt};
 use std::{
     cmp::Ordering,
@@ -47,7 +47,7 @@ impl Readable for i64 {
     }
 }
 
-impl Readable for (u32, u32, u32, u32) {
+impl Readable for Guid {
     fn read<R: ReadBytesExt + Seek>(reader: &mut R) -> std::io::Result<Self> {
         let a = reader.read_u32::<LittleEndian>()?;
         let b = reader.read_u32::<LittleEndian>()?;

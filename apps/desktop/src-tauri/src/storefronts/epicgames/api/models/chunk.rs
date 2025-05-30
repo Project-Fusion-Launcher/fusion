@@ -1,5 +1,8 @@
 use super::utils::read;
-use crate::{common::result::Result, storefronts::epicgames::api::CHUNK_MAGIC};
+use crate::{
+    common::result::Result,
+    storefronts::epicgames::api::{Guid, CHUNK_MAGIC},
+};
 use flate2::bufread::ZlibDecoder;
 use std::io::{Cursor, Read};
 
@@ -54,7 +57,7 @@ pub struct ChunkHeader {
     pub version: u32,
     pub size: u32,
     pub compressed_size: u32,
-    pub guid: (u32, u32, u32, u32),
+    pub guid: Guid,
     pub hash: u64,
     pub stored_as: u8,
     pub data_sha1: Option<[u8; 20]>,

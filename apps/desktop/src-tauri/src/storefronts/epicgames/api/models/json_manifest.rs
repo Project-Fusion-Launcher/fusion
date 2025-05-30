@@ -1,5 +1,5 @@
 use super::manifest::*;
-use crate::common::result::Result;
+use crate::{common::result::Result, storefronts::epicgames::api::Guid};
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -201,7 +201,7 @@ fn blob_to_num(in_str: &str) -> u64 {
     num
 }
 
-fn hex_to_guid(hex_guid: &str) -> Result<(u32, u32, u32, u32)> {
+fn hex_to_guid(hex_guid: &str) -> Result<Guid> {
     let bytes = const_hex::decode(hex_guid).map_err(|_| "Invalid hex GUID format")?;
 
     if bytes.len() != 16 {
