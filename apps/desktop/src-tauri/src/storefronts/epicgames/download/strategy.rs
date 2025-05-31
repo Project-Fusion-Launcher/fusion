@@ -8,6 +8,7 @@ use crate::{
         },
         get_epic_games, DownloadStrategy,
     },
+    utils::file::OpenWithDirs,
 };
 use async_trait::async_trait;
 use reqwest::{header, RequestBuilder};
@@ -20,7 +21,7 @@ use std::{
     },
 };
 use tokio::{
-    fs::{self, OpenOptions},
+    fs::OpenOptions,
     io::AsyncWriteExt,
     select,
     sync::{mpsc, Notify},
@@ -145,18 +146,12 @@ async fn writer(
             WriteTask::Open { filename } => {
                 let path = download_path.join(&filename);
 
-                if let Some(parent) = path.parent() {
-                    if !parent.exists() {
-                        fs::create_dir_all(parent).await.unwrap();
-                    }
-                }
-
                 opened_file = Some(
                     OpenOptions::new()
                         .write(true)
                         .create(true)
                         .truncate(true)
-                        .open(&path)
+                        .open_with_dirs(&path)
                         .await
                         .unwrap(),
                 );

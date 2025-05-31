@@ -1,11 +1,16 @@
 use crate::{common::result::Result, APP};
+use async_trait::async_trait;
 use std::path::Path;
 use tauri::{path::BaseDirectory, Manager};
 #[cfg(unix)]
 use tokio::io::AsyncReadExt;
-use tokio::{fs, process::Command};
+use tokio::{
+    fs::{self, File, OpenOptions},
+    io,
+    process::Command,
+};
 
-const SKIP_EXTENSIONS: &[&str] = &["dylib", "bundle", "so", "dll"];
+const IGNORE_EXTENSIONS: &[&str] = &["dylib", "bundle", "so", "dll"];
 
 #[cfg(windows)]
 const NO_WINDOW_FLAG: u32 = 0x08000000;
@@ -100,7 +105,7 @@ where
 pub async fn is_executable(file_path: &Path) -> bool {
     if !file_path
         .extension()
-        .and_then(|e| Some(!SKIP_EXTENSIONS.contains(&e.to_str()?.to_lowercase().as_str())))
+        .and_then(|e| Some(!IGNORE_EXTENSIONS.contains(&e.to_str()?.to_lowercase().as_str())))
         .unwrap_or(true)
     {
         return false;
@@ -145,93 +150,18 @@ pub async fn set_permissions<P: AsRef<Path>>(file_path: P, mode: u32) -> Result<
     Ok(())
 }
 
-pub async fn open_or_create_file<P: AsRef<Path>>(file_path: P) -> Result<fs::File> {
-    let file_path = file_path.as_ref();
-
-    if !file_path.exists() {
-        fs::create_dir_all(file_path.parent().unwrap()).await?;
-    }
-
-    let file = fs::OpenOptions::new()
-        .create(true)
-        .truncate(false)
-        .read(true)
-        .write(true)
-        .open(file_path)
-        .await?;
-
-    Ok(file)
+#[async_trait]
+pub trait OpenWithDirs {
+    async fn open_with_dirs<P: AsRef<Path> + Send>(&self, path: P) -> io::Result<File>;
 }
 
-#[cfg(windows)]
-pub async fn write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
-    if let Some(parent) = Path::new(file_path).parent() {
-        if !parent.exists() {
+#[async_trait]
+impl OpenWithDirs for OpenOptions {
+    async fn open_with_dirs<P: AsRef<Path> + Send>(&self, path: P) -> io::Result<File> {
+        let path_ref = path.as_ref();
+        if let Some(parent) = path_ref.parent() {
             fs::create_dir_all(parent).await?;
         }
-    }
-
-    let mut attempts = 0;
-    loop {
-        match try_write_at(file_path, data, offset) {
-            Ok(res) => return Ok(res),
-            Err(_) if attempts < 5 => {
-                attempts += 1;
-                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-                continue;
-            }
-            Err(e) => return Err(e),
-        }
-    }
-}
-
-#[cfg(windows)]
-fn try_write_at(file_path: &str, data: &[u8], offset: u64) -> Result<()> {
-    use std::{ffi::OsStr, os::windows::ffi::OsStrExt};
-    use windows::{
-        core::*,
-        Win32::{Foundation::*, Storage::FileSystem::*, System::IO::OVERLAPPED},
-    };
-
-    let wide: Vec<u16> = OsStr::new(file_path).encode_wide().chain(Some(0)).collect();
-
-    let handle = unsafe {
-        windows::Win32::Storage::FileSystem::CreateFileW(
-            PCWSTR(wide.as_ptr()),
-            FILE_GENERIC_WRITE.0,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
-            None,
-            OPEN_ALWAYS,
-            FILE_ATTRIBUTE_NORMAL,
-            None,
-        )
-    };
-
-    let handle = match handle {
-        Ok(h) if h != INVALID_HANDLE_VALUE => h,
-        _ => return Err(Error::from_win32().to_string().into()),
-    };
-
-    let mut overlapped = OVERLAPPED::default();
-    overlapped.Anonymous.Anonymous.Offset = offset as u32;
-    overlapped.Anonymous.Anonymous.OffsetHigh = (offset >> 32) as u32;
-
-    let mut written = 0u32;
-    let res = unsafe {
-        WriteFile(
-            handle,
-            Some(data),
-            Some(&mut written),
-            Some(&mut overlapped),
-        )
-    };
-
-    unsafe {
-        let _ = CloseHandle(handle);
-    }
-
-    match res {
-        Ok(_) if written as usize == data.len() => Ok(()),
-        _ => Err(Error::from_win32().to_string().into()),
+        self.open(path_ref).await
     }
 }
