@@ -3,9 +3,7 @@ use std::{
     collections::VecDeque,
     path::{Path, PathBuf},
 };
-use tokio::fs;
-
-use super::file;
+use tokio::{fs, io::AsyncReadExt};
 
 const BLACKLISTED_LAUNCH_TARGETS: [&str; 6] = [
     "unitycrashhandler64.exe",
@@ -15,6 +13,18 @@ const BLACKLISTED_LAUNCH_TARGETS: [&str; 6] = [
     "dxwebsetup.exe",
     "uninstall.exe",
 ];
+
+const IGNORE_EXTENSIONS: &[&str] = &["dylib", "bundle", "so", "dll"];
+
+#[cfg(target_os = "macos")]
+const MACOS_MAGICS: &[[u8; 4]] = &[
+    [0xCA, 0xFE, 0xBA, 0xBE],
+    [0xCF, 0xFA, 0xED, 0xFE],
+    [0xCE, 0xFA, 0xED, 0xFE],
+];
+
+#[cfg(target_os = "linux")]
+const LINUX_MAGICS: &[[u8; 4]] = &[[0x7f, 0x45, 0x4c, 0x46]];
 
 /// Given a path, finds an appropriate launch target (e.g. an executable) to run.
 /// It may not return the proper launch target if there are multiple executables.
@@ -39,7 +49,7 @@ where
                 if path.is_file() {
                     if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
                         if !BLACKLISTED_LAUNCH_TARGETS.contains(&name.to_lowercase().as_str())
-                            && file::is_executable(&path).await
+                            && is_executable(&path).await
                         {
                             return Ok(Some(path));
                         }
@@ -58,11 +68,6 @@ where
 #[cfg(target_os = "macos")]
 async fn find_launch_target_in_macos_app<P: AsRef<Path>>(app_dir: P) -> Result<PathBuf> {
     let app_dir = app_dir.as_ref();
-
-    if !app_dir.is_dir() || !app_dir.to_string_lossy().ends_with(".app") {
-        return Err("Invalid app directory".into());
-    }
-
     let plist_path = app_dir.join("Contents").join("Info.plist");
 
     if !plist_path.exists() {
@@ -83,4 +88,43 @@ async fn find_launch_target_in_macos_app<P: AsRef<Path>>(app_dir: P) -> Result<P
         }
     }
     Err("Launch target not found".into())
+}
+
+async fn is_executable(file_path: &Path) -> bool {
+    if !file_path
+        .extension()
+        .and_then(|e| Some(!IGNORE_EXTENSIONS.contains(&e.to_str()?.to_lowercase().as_str())))
+        .unwrap_or(true)
+    {
+        return false;
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        if let Ok(mut file) = fs::File::open(file_path).await {
+            let mut magic = [0u8; 4];
+            if file.read_exact(&mut magic).await.is_ok() {
+                return LINUX_MAGICS.contains(&magic);
+            };
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(ext) = file_path.extension().and_then(|e| e.to_str()) {
+            return ["exe", "bat", "cmd", "com", "ps1"].contains(&ext.to_lowercase().as_str());
+        }
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(mut file) = fs::File::open(file_path).await {
+            let mut magic = [0u8; 4];
+            if file.read_exact(&mut magic).await.is_ok() {
+                return MACOS_MAGICS.contains(&magic);
+            };
+        }
+    }
+
+    false
 }

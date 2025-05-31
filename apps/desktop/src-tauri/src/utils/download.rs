@@ -32,8 +32,7 @@ pub async fn download_file(
         .write(true)
         .read(true)
         .open_with_dirs(&path)
-        .await
-        .unwrap();
+        .await?;
 
     let file_size = file.metadata().await?.len();
 
@@ -41,7 +40,8 @@ pub async fn download_file(
         let mut buffer = vec![0; 65536];
         let mut context = Md5::new();
 
-        while let Ok(bytes_read) = file.read(&mut buffer).await {
+        loop {
+            let bytes_read = file.read(&mut buffer).await?;
             if bytes_read == 0 {
                 break;
             }

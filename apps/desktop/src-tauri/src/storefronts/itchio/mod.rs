@@ -8,9 +8,13 @@ use crate::{
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
         payloads::DownloadPayload,
     },
-    utils, APP,
+    utils::{self, launch_target},
+    APP,
 };
-use api::{models::UploadTraits, services};
+use api::{
+    models::{GameClassification, UploadTraits},
+    services,
+};
 use async_trait::async_trait;
 use std::{
     path::{Path, PathBuf},
@@ -73,7 +77,13 @@ impl Storefront for Itchio {
             let owned_keys = services.fetch_owned_keys(page).await?;
             let current_page_count = owned_keys.owned_keys.len() as u8;
 
-            games.extend(owned_keys.owned_keys.into_iter().map(Game::from));
+            games.extend(
+                owned_keys
+                    .owned_keys
+                    .into_iter()
+                    .filter(|key| key.game.classification == GameClassification::Game)
+                    .map(Game::from),
+            );
 
             if current_page_count < owned_keys.per_page {
                 break;
@@ -227,7 +237,7 @@ async fn post_download(game_id: &str, path: PathBuf) -> Result<()> {
         utils::file::extract_file(&file_path, &path).await?;
     }
 
-    let mut launch_target = utils::fs::find_launch_target(&path).await?;
+    let mut launch_target = launch_target::find_launch_target(&path).await?;
 
     println!("Launch target: {:?}", launch_target);
 

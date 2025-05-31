@@ -6,7 +6,8 @@ use crate::{
         download::Download,
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
     },
-    utils, APP,
+    utils::{self, launch_target},
+    APP,
 };
 use api::services::Services;
 use async_trait::async_trait;
@@ -149,7 +150,7 @@ impl Storefront for LegacyGames {
         println!("Extracting game: {:?}", file_path);
         utils::file::extract_file(&file_path, &path).await?;
 
-        let mut launch_target = utils::fs::find_launch_target(&path).await?;
+        let mut launch_target = launch_target::find_launch_target(&path).await?;
 
         // Strip base path from launch target
         if let Some(target) = &launch_target {
