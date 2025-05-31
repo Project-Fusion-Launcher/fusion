@@ -20,7 +20,7 @@ pub async fn pause(
     if download_manager.is_paused() {
         download_manager.resume();
     } else {
-        download_manager.pause();
+        download_manager.pause().await;
     }
 
     Ok(())
@@ -29,6 +29,7 @@ pub async fn pause(
 pub struct DownloadManager {
     queue: Arc<Mutex<VecDeque<Download>>>,
     queue_notifier: Arc<Notify>,
+    requeue_notifier: Arc<Notify>,
     cancellation_token: Arc<Mutex<Option<CancellationToken>>>,
     is_paused: Arc<AtomicBool>,
 }
@@ -38,6 +39,7 @@ impl DownloadManager {
         let manager = Self {
             queue: Arc::new(Mutex::new(VecDeque::new())),
             queue_notifier: Arc::new(Notify::new()),
+            requeue_notifier: Arc::new(Notify::new()),
             cancellation_token: Arc::new(Mutex::new(None)),
             is_paused: Arc::new(AtomicBool::new(false)),
         };
@@ -57,11 +59,19 @@ impl DownloadManager {
         self.is_paused.load(Ordering::SeqCst)
     }
 
-    pub fn pause(&self) {
-        if let Some(token) = self.cancellation_token.lock().unwrap().take() {
-            token.cancel();
-        }
+    pub async fn pause(&self) {
         self.is_paused.store(true, Ordering::SeqCst);
+        let has_active_download = {
+            let token_lock = self.cancellation_token.lock().unwrap();
+            token_lock.is_some()
+        };
+
+        if has_active_download {
+            if let Some(token) = self.cancellation_token.lock().unwrap().take() {
+                token.cancel();
+            }
+            self.requeue_notifier.notified().await;
+        }
     }
 
     pub fn resume(&self) {
@@ -74,6 +84,7 @@ impl DownloadManager {
         let queue_notifier = Arc::clone(&self.queue_notifier);
         let cancellation_token = Arc::clone(&self.cancellation_token);
         let is_paused = Arc::clone(&self.is_paused);
+        let requeue_notifier = Arc::clone(&self.requeue_notifier);
 
         tokio::spawn(async move {
             loop {
@@ -150,6 +161,7 @@ impl DownloadManager {
                     if !download.completed {
                         let mut queue_lock = queue_clone.lock().unwrap();
                         queue_lock.push_front(download);
+                        requeue_notifier.notify_one();
                     } else {
                         get_storefront(&download.game_source)
                             .read()
