@@ -4,20 +4,20 @@ use crate::{
     storefronts::{get_itchio, DownloadStrategy},
 };
 use async_trait::async_trait;
-use md5::{Digest, Md5};
+use md5::{digest::core_api::CoreWrapper, Digest, Md5, Md5Core};
 use reqwest::{header::RANGE, RequestBuilder};
 use std::sync::{
     atomic::{AtomicU64, Ordering},
     Arc,
 };
 use tokio::{
-    fs::{self, OpenOptions},
+    fs::{self, File, OpenOptions},
     io::{AsyncReadExt, AsyncWriteExt},
     pin,
     sync::mpsc,
     task,
 };
-use tokio_util::sync::CancellationToken;
+use tokio_util::{bytes::Bytes, sync::CancellationToken};
 
 pub(super) struct ItchioDownload {
     pub request: RequestBuilder,
@@ -44,7 +44,7 @@ impl DownloadStrategy for ItchioStrategy {
         fs::create_dir_all(&download.path).await.unwrap();
 
         let file_path = download.path.join(&download_info.filename);
-        let mut file = OpenOptions::new()
+        let file = OpenOptions::new()
             .create(true)
             .append(true)
             .write(true)
@@ -54,7 +54,7 @@ impl DownloadStrategy for ItchioStrategy {
 
         let file_size = file.metadata().await?.len();
 
-        let mut hasher = if file_size > 0 && download_info.md5.is_some() {
+        let hasher = if file_size > 0 && download_info.md5.is_some() {
             let mut buffer = vec![0; 65536];
             let mut file_clone = OpenOptions::new()
                 .read(true)
@@ -74,66 +74,27 @@ impl DownloadStrategy for ItchioStrategy {
         } else {
             Md5::new()
         };
-        let (writer_tx, mut writer_rx) = mpsc::channel(16);
-        let (verifier_tx, mut verifier_rx) = mpsc::channel(16);
-
-        let downloader = task::spawn(async move {
-            let mut response = download_info
-                .request
-                .header(RANGE, format!("bytes={}-", file_size))
-                .send()
-                .await
-                .unwrap();
-
-            while let Some(chunk) = response.chunk().await.unwrap() {
-                if (writer_tx.send(chunk).await).is_err() {
-                    break;
-                }
-            }
-        });
+        let (writer_tx, writer_rx) = mpsc::channel(16);
+        let (verifier_tx, verifier_rx) = mpsc::channel(16);
 
         let md5_exists = download_info.md5.is_some();
         let total_written = Arc::new(AtomicU64::new(file_size));
         let total_downloaded = Arc::new(AtomicU64::new(file_size));
 
-        let total_written_clone = Arc::clone(&total_written);
-        let total_downloaded_clone = Arc::clone(&total_downloaded);
-
-        let writer = task::spawn(async move {
-            while let Some(chunk) = writer_rx.recv().await {
-                total_downloaded_clone.fetch_add(chunk.len() as u64, Ordering::Relaxed);
-                file.write_all(&chunk).await.unwrap();
-                total_written_clone.fetch_add(chunk.len() as u64, Ordering::Relaxed);
-                if md5_exists {
-                    verifier_tx.send(chunk).await.unwrap();
-                }
-            }
-        });
-
-        let verifier = task::spawn(async move {
-            while let Some(chunk) = verifier_rx.recv().await {
-                hasher.update(&chunk);
-            }
-            hasher.finalize()
-        });
-
-        let reporter = task::spawn(async move {
-            loop {
-                let downloaded = total_downloaded.load(Ordering::Relaxed);
-                let written = total_written.load(Ordering::Relaxed);
-                if progress_tx
-                    .send(DownloadProgress {
-                        downloaded,
-                        written,
-                    })
-                    .await
-                    .is_err()
-                {
-                    eprintln!("Progress reporter channel closed.");
-                }
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-            }
-        });
+        let reporter = task::spawn(reporter(
+            Arc::clone(&total_downloaded),
+            Arc::clone(&total_written),
+            progress_tx,
+        ));
+        let writer = task::spawn(writer(
+            writer_rx,
+            file,
+            total_written,
+            total_downloaded,
+            if md5_exists { Some(verifier_tx) } else { None },
+        ));
+        let verifier = task::spawn(verifier(verifier_rx, hasher));
+        let downloader = task::spawn(downloader(download_info.request, writer_tx, file_size));
 
         pin!(downloader);
         tokio::select! {
@@ -154,14 +115,73 @@ impl DownloadStrategy for ItchioStrategy {
         }
 
         if let Some(md5) = download_info.md5 {
-            println!("MD5: {:x}", verifier_result);
-            if format!("{:x}", verifier_result) != md5 {
+            if verifier_result != md5 {
                 println!("MD5 mismatch!");
             }
         }
 
         download.completed = true;
-
         Ok(())
+    }
+}
+
+async fn downloader(request: RequestBuilder, tx: mpsc::Sender<Bytes>, initial_size: u64) {
+    let mut response = request
+        .header(RANGE, format!("bytes={}-", initial_size))
+        .send()
+        .await
+        .unwrap();
+
+    while let Some(chunk) = response.chunk().await.unwrap() {
+        if (tx.send(chunk).await).is_err() {
+            break;
+        }
+    }
+}
+
+async fn writer(
+    mut rx: mpsc::Receiver<Bytes>,
+    mut file: File,
+    total_written: Arc<AtomicU64>,
+    total_downloaded: Arc<AtomicU64>,
+    tx: Option<mpsc::Sender<Bytes>>,
+) {
+    while let Some(chunk) = rx.recv().await {
+        total_downloaded.fetch_add(chunk.len() as u64, Ordering::Relaxed);
+        file.write_all(&chunk).await.unwrap();
+        total_written.fetch_add(chunk.len() as u64, Ordering::Relaxed);
+        if let Some(tx) = &tx {
+            tx.send(chunk).await.unwrap();
+        }
+    }
+}
+
+async fn verifier(mut rx: mpsc::Receiver<Bytes>, mut hasher: CoreWrapper<Md5Core>) -> String {
+    while let Some(chunk) = rx.recv().await {
+        hasher.update(&chunk);
+    }
+    let result = hasher.finalize();
+    format!("{:x}", result)
+}
+
+async fn reporter(
+    total_downloaded: Arc<AtomicU64>,
+    total_written: Arc<AtomicU64>,
+    tx: mpsc::Sender<DownloadProgress>,
+) {
+    loop {
+        let downloaded = total_downloaded.load(Ordering::Relaxed);
+        let written = total_written.load(Ordering::Relaxed);
+        if tx
+            .send(DownloadProgress {
+                downloaded,
+                written,
+            })
+            .await
+            .is_err()
+        {
+            eprintln!("Progress reporter channel closed.");
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
 }

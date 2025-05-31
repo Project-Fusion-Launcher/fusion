@@ -76,8 +76,8 @@ impl Storefront for LegacyGames {
     }
 
     async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {
-        #[cfg(unix)]
-        return Ok(vec![]);
+        /*#[cfg(unix)]
+        return Ok(vec![]);*/
 
         Ok(vec![GameVersion {
             id: game.id.clone(),
