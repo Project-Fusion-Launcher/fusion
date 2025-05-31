@@ -1,8 +1,9 @@
 use super::file::OpenWithDirs;
 use crate::{common::result::Result, models::download::DownloadProgress};
-use md5::{digest::core_api::CoreWrapper, Digest, Md5, Md5Core};
+use md5::{Digest, Md5};
 use reqwest::{header::RANGE, RequestBuilder};
 use std::{
+    io::SeekFrom,
     path::PathBuf,
     sync::{
         atomic::{AtomicU64, Ordering},
@@ -11,7 +12,7 @@ use std::{
 };
 use tokio::{
     fs::{File, OpenOptions},
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt},
     pin,
     sync::mpsc,
     task,
@@ -25,10 +26,11 @@ pub async fn download_file(
     progress_tx: mpsc::Sender<DownloadProgress>,
     md5: Option<String>,
 ) -> Result<bool> {
-    let file = OpenOptions::new()
+    let mut file = OpenOptions::new()
         .create(true)
-        .append(true)
+        .truncate(false)
         .write(true)
+        .read(true)
         .open_with_dirs(&path)
         .await
         .unwrap();
@@ -37,10 +39,9 @@ pub async fn download_file(
 
     let hasher = if file_size > 0 && md5.is_some() {
         let mut buffer = vec![0; 65536];
-        let mut file_clone = OpenOptions::new().read(true).open(&path).await.unwrap();
         let mut context = Md5::new();
 
-        while let Ok(bytes_read) = file_clone.read(&mut buffer).await {
+        while let Ok(bytes_read) = file.read(&mut buffer).await {
             if bytes_read == 0 {
                 break;
             }
@@ -49,6 +50,7 @@ pub async fn download_file(
 
         context
     } else {
+        file.seek(SeekFrom::End(0)).await?;
         Md5::new()
     };
 
@@ -135,7 +137,7 @@ async fn writer(
     }
 }
 
-async fn verifier(mut rx: mpsc::Receiver<Bytes>, mut hasher: CoreWrapper<Md5Core>) -> String {
+async fn verifier(mut rx: mpsc::Receiver<Bytes>, mut hasher: Md5) -> String {
     while let Some(chunk) = rx.recv().await {
         hasher.update(&chunk);
     }
