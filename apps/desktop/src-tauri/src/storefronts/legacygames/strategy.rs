@@ -21,14 +21,14 @@ pub(super) struct LegacyGamesStrategy {}
 impl DownloadStrategy for LegacyGamesStrategy {
     async fn start(
         &self,
-        download: &mut Download,
+        download: Download,
         cancellation_token: CancellationToken,
         progress_tx: mpsc::Sender<DownloadProgress>,
-    ) -> Result<()> {
+    ) -> Result<bool> {
         let download_info = get_legacy_games()
             .read()
             .await
-            .fetch_download_info(download)
+            .fetch_download_info(&download)
             .await?;
 
         let path = download.path.join(download_info.filename);
@@ -42,7 +42,6 @@ impl DownloadStrategy for LegacyGamesStrategy {
         )
         .await?;
 
-        download.completed = result;
-        Ok(())
+        Ok(result)
     }
 }

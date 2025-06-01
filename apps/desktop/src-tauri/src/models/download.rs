@@ -1,7 +1,7 @@
 use super::game::GameSource;
 use std::path::PathBuf;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Download {
     pub game_id: String,
     pub game_source: GameSource,
@@ -9,7 +9,8 @@ pub struct Download {
     pub path: PathBuf,
     pub download_size: u64,
     pub install_size: u64,
-    pub completed: bool,
+    pub downloaded: u64,
+    pub written: u64,
 }
 
 pub struct DownloadProgress {

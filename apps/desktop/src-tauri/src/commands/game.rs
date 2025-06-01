@@ -112,9 +112,10 @@ pub async fn download_game(
             game_source,
             game_version_id: version_id,
             path: complete_install_location,
-            completed: false,
             download_size: version_info.download_size,
             install_size: version_info.install_size,
+            downloaded: 0,
+            written: 0,
         })
         .await?;
 

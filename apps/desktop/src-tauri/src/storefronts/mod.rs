@@ -48,10 +48,10 @@ pub trait Storefront {
 pub trait DownloadStrategy: Send + Sync {
     async fn start(
         &self,
-        download: &mut Download,
+        download: Download,
         cancellation_token: CancellationToken,
         progress_tx: mpsc::Sender<DownloadProgress>,
-    ) -> Result<()>;
+    ) -> Result<bool>;
 }
 
 pub fn get_storefront(source: &GameSource) -> Arc<RwLock<dyn Storefront + Send + Sync>> {

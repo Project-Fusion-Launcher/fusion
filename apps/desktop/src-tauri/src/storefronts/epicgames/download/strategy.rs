@@ -36,10 +36,10 @@ pub struct EpicGamesStrategy {}
 impl DownloadStrategy for EpicGamesStrategy {
     async fn start(
         &self,
-        download: &mut Download,
+        download: Download,
         cancellation_token: CancellationToken,
         progress_tx: mpsc::Sender<DownloadProgress>,
-    ) -> Result<()> {
+    ) -> Result<bool> {
         let instant = std::time::Instant::now();
         let plan = get_epic_games()
             .read()
@@ -111,10 +111,9 @@ impl DownloadStrategy for EpicGamesStrategy {
         reporter.abort();
 
         let elapsed_time = start_time.elapsed();
-        download.completed = true;
         println!("Download completed in {:?}", elapsed_time);
 
-        Ok(())
+        Ok(true)
     }
 }
 
