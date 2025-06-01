@@ -3,21 +3,25 @@ use std::{
     collections::VecDeque,
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc, Mutex,
+        Arc,
     },
 };
-use tokio::sync::Notify;
+use tokio::sync::{Mutex, Notify};
 use tokio_util::sync::CancellationToken;
 
 #[tauri::command]
 pub async fn pause(
     download_manager: tauri::State<'_, DownloadManager>,
 ) -> core::result::Result<(), String> {
-    /*if download_manager.is_paused() {
+    if download_manager.is_paused() {
+        println!("Command: resuming");
         download_manager.resume();
+        println!("Command: resumed");
     } else {
+        println!("Command: pausing");
         download_manager.pause().await;
-    }*/
+        println!("Command: paused");
+    }
 
     Ok(())
 }
@@ -26,9 +30,9 @@ pub struct DownloadManager {
     downloading: Arc<Mutex<Option<Arc<Download>>>>,
     up_next_queue: Arc<Mutex<VecDeque<Arc<Download>>>>,
     error_queue: Arc<Mutex<VecDeque<Arc<Download>>>>,
-    up_next_notifier: Arc<Notify>,
+    queue_notifier: Arc<Notify>,
+    pause_notifier: Arc<Notify>,
 
-    requeue_notifier: Arc<Notify>,
     cancellation_token: Arc<Mutex<Option<CancellationToken>>>,
     is_paused: Arc<AtomicBool>,
 }
@@ -39,9 +43,8 @@ impl DownloadManager {
             downloading: Arc::new(Mutex::new(None)),
             up_next_queue: Arc::new(Mutex::new(VecDeque::new())),
             error_queue: Arc::new(Mutex::new(VecDeque::new())),
-
-            up_next_notifier: Arc::new(Notify::new()),
-            requeue_notifier: Arc::new(Notify::new()),
+            queue_notifier: Arc::new(Notify::new()),
+            pause_notifier: Arc::new(Notify::new()),
             cancellation_token: Arc::new(Mutex::new(None)),
             is_paused: Arc::new(AtomicBool::new(false)),
         };
@@ -51,9 +54,9 @@ impl DownloadManager {
     }
 
     pub async fn enqueue(&self, download: Download) -> Result<()> {
-        let mut queue = self.up_next_queue.lock().unwrap();
+        let mut queue = self.up_next_queue.lock().await;
         queue.push_back(Arc::new(download));
-        self.up_next_notifier.notify_waiters();
+        self.queue_notifier.notify_waiters();
         Ok(())
     }
 
@@ -61,49 +64,69 @@ impl DownloadManager {
         self.is_paused.load(Ordering::SeqCst)
     }
 
-    /*pub async fn pause(&self) {
-        self.is_paused.store(true, Ordering::SeqCst);
+    pub async fn pause(&self) {
+        if self.is_paused() {
+            return;
+        }
+
         let has_active_download = {
-            let token_lock = self.cancellation_token.lock().unwrap();
+            let token_lock = self.cancellation_token.lock().await;
             token_lock.is_some()
         };
 
         if has_active_download {
-            if let Some(token) = self.cancellation_token.lock().unwrap().take() {
+            self.is_paused.store(true, Ordering::SeqCst);
+
+            if let Some(token) = self.cancellation_token.lock().await.take() {
                 token.cancel();
             }
-            self.requeue_notifier.notified().await;
+            self.pause_notifier.notified().await;
+        } else {
+            self.is_paused.store(false, Ordering::SeqCst);
         }
     }
 
     pub fn resume(&self) {
+        if !self.is_paused() {
+            return;
+        }
+
         self.is_paused.store(false, Ordering::SeqCst);
-        self.queue_notifier.notify_one();
-    } */
+        self.queue_notifier.notify_waiters();
+    }
 
     fn process_queue(&self) {
         let downloading = Arc::clone(&self.downloading);
         let up_next_queue = Arc::clone(&self.up_next_queue);
         let error_queue = Arc::clone(&self.error_queue);
-        let up_next_notifier = Arc::clone(&self.up_next_notifier);
+        let queue_notifier = Arc::clone(&self.queue_notifier);
         let cancellation_token = Arc::clone(&self.cancellation_token);
         let is_paused = Arc::clone(&self.is_paused);
-        // let requeue_notifier = Arc::clone(&self.requeue_notifier);
+        let pause_notifier = Arc::clone(&self.pause_notifier);
 
         tokio::spawn(async move {
             loop {
-                let download = {
-                    let mut queue_lock = up_next_queue.lock().unwrap();
+                let download = if downloading.lock().await.is_some() {
+                    if is_paused.load(Ordering::SeqCst) {
+                        println!("Download is paused, waiting for resume...");
+                        None
+                    } else {
+                        println!("Resuming download...");
+                        downloading.lock().await.take()
+                    }
+                } else {
+                    let mut queue_lock = up_next_queue.lock().await;
                     queue_lock.pop_front()
                 };
 
                 if let Some(download) = download {
                     let token = CancellationToken::new();
+                    is_paused.store(false, Ordering::SeqCst);
 
                     {
-                        let mut downloading_lock = downloading.lock().unwrap();
+                        let mut downloading_lock = downloading.lock().await;
                         *downloading_lock = Some(Arc::clone(&download));
-                        let mut token_lock = cancellation_token.lock().unwrap();
+                        let mut token_lock = cancellation_token.lock().await;
                         *token_lock = Some(token.clone());
                     }
 
@@ -121,7 +144,7 @@ impl DownloadManager {
                         Ok(true) => {
                             println!("Download completed successfully.");
                             let download = {
-                                let mut downloading_lock = downloading.lock().unwrap();
+                                let mut downloading_lock = downloading.lock().await;
                                 downloading_lock.take().unwrap()
                             };
 
@@ -134,22 +157,22 @@ impl DownloadManager {
                         }
                         Ok(false) => {
                             println!("Download was cancelled or failed.");
-                            is_paused.store(true, Ordering::SeqCst);
+                            pause_notifier.notify_waiters();
                         }
                         Err(e) => {
                             println!("Error during download: {:?}", e);
-                            let mut downloading_lock = downloading.lock().unwrap();
+                            let mut downloading_lock = downloading.lock().await;
                             let download = downloading_lock.take().unwrap();
-                            let mut error_queue_lock = error_queue.lock().unwrap();
+                            let mut error_queue_lock = error_queue.lock().await;
                             error_queue_lock.push_back(download);
                         }
                     }
 
-                    let mut token_lock = cancellation_token.lock().unwrap();
+                    let mut token_lock = cancellation_token.lock().await;
                     *token_lock = None;
                 } else {
                     println!("Waiting for downloads...");
-                    up_next_notifier.notified().await;
+                    queue_notifier.notified().await;
                     println!("Processing downloads...");
                 }
             }
