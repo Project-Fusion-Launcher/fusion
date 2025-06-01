@@ -12,7 +12,7 @@ use crate::{
     storefronts::get_storefront,
 };
 use strum::IntoEnumIterator;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, State};
 use tauri_specta::Event;
 use tokio::task::JoinSet;
 
@@ -107,6 +107,8 @@ pub async fn download_game(
     game.path = Some(complete_install_location.to_string_lossy().to_string());
     game.update(&mut connection).unwrap();
 
+    let game_title = game.title.clone();
+
     let version_info = get_storefront(&game_source)
         .read()
         .await
@@ -118,6 +120,7 @@ pub async fn download_game(
         .enqueue(Download {
             game_id,
             game_source,
+            game_title,
             game_version_id: version_id,
             path: complete_install_location,
             download_size: version_info.download_size,

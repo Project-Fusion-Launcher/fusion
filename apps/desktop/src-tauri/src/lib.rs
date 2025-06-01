@@ -35,7 +35,11 @@ pub async fn run() {
         .events(collect_events![
             models::events::GameHidden,
             models::events::GameUninstalling,
-            models::events::GameUninstalled
+            models::events::GameUninstalled,
+            models::events::GameDownloadQueued,
+            models::events::GameDownloadProgress,
+            models::events::GameDownloadFinished,
+            models::events::GameInstalled,
         ]);
 
     #[cfg(debug_assertions)]

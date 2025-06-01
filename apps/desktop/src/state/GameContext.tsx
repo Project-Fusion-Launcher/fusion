@@ -74,18 +74,19 @@ const ContextProvider = (props: StateProps) => {
   }
 
   const gameHiddenUnlisten = events.gameHidden.listen((e) => {
+    const payload = e.payload;
     setState("games", (games) =>
       games.filter(
-        (g) =>
-          !(g.id === e.payload.gameId && g.source === e.payload.gameSource),
+        (g) => !(g.id === payload.gameId && g.source === payload.gameSource),
       ),
     );
   });
 
   const gameUninstallingUnlisten = events.gameUninstalling.listen((e) => {
+    const payload = e.payload;
     setState(
       "games",
-      (g) => g.id === e.payload.gameId && g.source === e.payload.gameSource,
+      (g) => g.id === payload.gameId && g.source === payload.gameSource,
       produce((g) => {
         g.status = "uninstalling";
       }),
@@ -93,31 +94,102 @@ const ContextProvider = (props: StateProps) => {
   });
 
   const gameUninstalledUnlisten = events.gameUninstalled.listen((e) => {
+    const payload = e.payload;
     setState(
       "games",
-      (g) => g.id === e.payload.gameId && g.source === e.payload.gameSource,
+      (g) => g.id === payload.gameId && g.source === payload.gameSource,
       produce((g) => {
         g.status = "notInstalled";
       }),
     );
   });
 
-  /*const downloadQueuedUnlisten = listen<DownloadItem>(
-    "download-queued",
-    (event) => {
-      const payload = event.payload;
-      setState("downloadQueue", state.downloadQueue.length, payload);
+  const gameDownloadQueuedUnlisten = events.gameDownloadQueued.listen((e) => {
+    const payload = e.payload;
+    setState("downloadQueue", state.downloadQueue.length, {
+      gameId: payload.gameId,
+      gameSource: payload.gameSource,
+      gameTitle: payload.gameTitle,
+      downloadSize: payload.downloadSize,
+      downloaded: payload.downloaded,
+    });
+    setState(
+      "games",
+      (g) => g.id === payload.gameId && g.source === payload.gameSource,
+      produce((g) => {
+        g.status = "downloading";
+      }),
+    );
+  });
+
+  const gameDownloadProgressUnlisten = events.gameDownloadProgress.listen(
+    (e) => {
+      const payload = e.payload;
       setState(
-        "games",
-        (g) => g.id === payload.gameId && g.source === payload.gameSource,
-        produce((g) => {
-          g.status = "downloading";
+        "downloadQueue",
+        (i) =>
+          i.gameId === payload.gameId && i.gameSource === payload.gameSource,
+        produce((i) => {
+          i.downloaded = payload.downloaded;
         }),
       );
     },
   );
 
-  const downloadExternalUnlisten = listen<DownloadItem>(
+  const gameDownloadFinishedUnlisten = events.gameDownloadFinished.listen(
+    (e) => {
+      const payload = e.payload;
+      setState(
+        "downloadQueue",
+        (i) =>
+          i.gameId === payload.gameId && i.gameSource === payload.gameSource,
+        produce((i) => {
+          i.downloaded = i.downloadSize;
+        }),
+      );
+      /*setState(
+        "externalDownloads",
+        (i) =>
+          i.gameId === payload.gameId && i.gameSource === payload.gameSource,
+        produce((i) => {
+          i.downloadSize = payload.downloadSize;
+          i.downloaded = payload.downloadSize;
+        }),
+      );*/
+    },
+  );
+
+  const gameInstalledUnlisten = events.gameInstalled.listen((e) => {
+    const payload = e.payload;
+    setState("downloadQueue", (items) =>
+      items.filter((i) => {
+        if (
+          i.gameId === payload.gameId &&
+          i.gameSource === payload.gameSource
+        ) {
+          setState("completedDownloads", state.completedDownloads.length, i);
+          return false;
+        }
+        return true;
+      }),
+    );
+    /*setState("externalDownloads", (items) =>
+      items.filter(
+        (i) =>
+          !(i.gameId === payload.gameId && i.gameSource === payload.gameSource),
+      ),
+    );*/
+
+    setState(
+      "games",
+      (g) => g.id === payload.gameId && g.source === payload.gameSource,
+      produce((g) => {
+        g.status = "installed";
+      }),
+    );
+  });
+
+  /*const downloadExternalUnlisten = listen<DownloadItem>(
     "download-external",
     (event) => {
       const payload = event.payload;
@@ -130,88 +202,17 @@ const ContextProvider = (props: StateProps) => {
         }),
       );
     },
-  );
-
-  const downloadProgressUnlisten = listen<DownloadItem>(
-    "download-progress",
-    (event) => {
-      const payload = event.payload;
-      setState(
-        "downloadQueue",
-        (i) =>
-          i.gameId === payload.gameId && i.gameSource === payload.gameSource,
-        produce((i) => {
-          i.downloaded = payload.downloaded;
-        }),
-      );
-    },
-  );
-
-  const downloadFinishedUnlisten = listen<DownloadItem>(
-    "download-finished",
-    (event) => {
-      const payload = event.payload;
-      setState(
-        "downloadQueue",
-        (i) =>
-          i.gameId === payload.gameId && i.gameSource === payload.gameSource,
-        produce((i) => {
-          i.downloaded = payload.downloadSize;
-        }),
-      );
-      setState(
-        "externalDownloads",
-        (i) =>
-          i.gameId === payload.gameId && i.gameSource === payload.gameSource,
-        produce((i) => {
-          i.downloadSize = payload.downloadSize;
-          i.downloaded = payload.downloadSize;
-        }),
-      );
-    },
-  );
-
-  const downloadInstalledUnlisten = listen<DownloadItem>(
-    "download-installed",
-    (event) => {
-      const payload = event.payload;
-      setState("downloadQueue", (items) =>
-        items.filter(
-          (i) =>
-            !(
-              i.gameId === payload.gameId && i.gameSource === payload.gameSource
-            ),
-        ),
-      );
-      setState("externalDownloads", (items) =>
-        items.filter(
-          (i) =>
-            !(
-              i.gameId === payload.gameId && i.gameSource === payload.gameSource
-            ),
-        ),
-      );
-      setState("completedDownloads", state.completedDownloads.length, payload);
-
-      setState(
-        "games",
-        (g) => g.id === payload.gameId && g.source === payload.gameSource,
-        produce((g) => {
-          g.status = "installed";
-        }),
-      );
-    },
   );*/
 
   onCleanup(() => {
     gameHiddenUnlisten.then((u) => u());
     gameUninstallingUnlisten.then((u) => u());
     gameUninstalledUnlisten.then((u) => u());
-    /*downloadQueuedUnlisten.then((u) => u());
-    downloadExternalUnlisten.then((u) => u());
-    downloadProgressUnlisten.then((u) => u());
-    downloadFinishedUnlisten.then((u) => u());
-    downloadInstalledUnlisten.then((u) => u());*/
+    gameDownloadQueuedUnlisten.then((u) => u());
+    gameDownloadProgressUnlisten.then((u) => u());
+    gameDownloadFinishedUnlisten.then((u) => u());
+    gameInstalledUnlisten.then((u) => u());
+    //downloadExternalUnlisten.then((u) => u());
   });
 
   return (

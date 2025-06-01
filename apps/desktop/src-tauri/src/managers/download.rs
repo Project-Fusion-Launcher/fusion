@@ -1,4 +1,12 @@
-use crate::{common::result::Result, models::download::Download, storefronts::get_storefront};
+use crate::{
+    common::result::Result,
+    models::{
+        download::Download,
+        events::{GameDownloadFinished, GameDownloadProgress, GameDownloadQueued, GameInstalled},
+    },
+    storefronts::get_storefront,
+    APP,
+};
 use std::{
     collections::VecDeque,
     sync::{
@@ -6,6 +14,7 @@ use std::{
         Arc,
     },
 };
+use tauri_specta::Event;
 use tokio::sync::{Mutex, Notify};
 use tokio_util::sync::CancellationToken;
 
@@ -55,8 +64,13 @@ impl DownloadManager {
     }
 
     pub async fn enqueue(&self, download: Download) -> Result<()> {
+        let event = GameDownloadQueued::from(&download);
+
         let mut queue = self.up_next_queue.lock().await;
         queue.push_back(Arc::new(download));
+
+        event.emit(APP.get().unwrap()).unwrap();
+
         self.queue_notifier.notify_waiters();
         Ok(())
     }
@@ -144,10 +158,17 @@ impl DownloadManager {
                     match result {
                         Ok(true) => {
                             println!("Download completed successfully.");
+
                             let download = {
                                 let mut downloading_lock = downloading.lock().await;
                                 downloading_lock.take().unwrap()
                             };
+
+                            let app_handle = APP.get().unwrap();
+
+                            GameDownloadFinished::from(&download)
+                                .emit(app_handle)
+                                .unwrap();
 
                             get_storefront(&download.game_source)
                                 .read()
@@ -155,6 +176,8 @@ impl DownloadManager {
                                 .post_download(&download.game_id, download.path.clone())
                                 .await
                                 .unwrap();
+
+                            GameInstalled::from(&download).emit(app_handle).unwrap();
                         }
                         Ok(false) => {
                             println!("Download was cancelled or failed.");
@@ -184,6 +207,8 @@ impl DownloadManager {
 async fn reporter(download: Arc<Download>) {
     let mut last_downloaded = download.downloaded();
     let mut last_written = download.written();
+
+    let handle = APP.get().unwrap();
 
     loop {
         let downloaded = download.downloaded();
@@ -216,6 +241,8 @@ async fn reporter(download: Arc<Download>) {
             download_speed_mbps,
             delta_write as f64 / 1_000_000.0
         );
+
+        GameDownloadProgress::from(&download).emit(handle).unwrap();
 
         last_downloaded = downloaded;
         last_written = written;
