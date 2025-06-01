@@ -1,12 +1,11 @@
-use std::path::Path;
-
+use super::payloads::GameFilters;
 use crate::{common::result::Result, schema::games::dsl::*};
 use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use serde::{Deserialize, Serialize};
+use specta::Type;
+use std::path::Path;
 use strum_macros::EnumIter;
-
-use super::payloads::GameFiltersPayload;
 
 #[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug, Serialize)]
 #[diesel(table_name = crate::schema::games)]
@@ -80,10 +79,11 @@ impl Game {
 }
 
 /// This is a reduced version of the Game model used to avoid sending unnecessary data to the frontend.
-#[derive(Queryable, Selectable, Clone, Debug, Serialize)]
+#[derive(Queryable, Selectable, Clone, Debug, Serialize, Type)]
 #[diesel(table_name = crate::schema::games)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[serde(rename_all = "camelCase")]
+#[serde(rename = "Game")]
 pub struct ReducedGame {
     pub id: String,
     pub source: GameSource,
@@ -96,10 +96,26 @@ pub struct ReducedGame {
     pub cover_url: Option<String>,
 }
 
+impl From<Game> for ReducedGame {
+    fn from(game: Game) -> Self {
+        ReducedGame {
+            id: game.id,
+            source: game.source,
+            title: game.title,
+            developer: game.developer,
+            path: game.path,
+            status: game.status,
+            favorite: game.favorite,
+            hidden: game.hidden,
+            cover_url: game.cover_url,
+        }
+    }
+}
+
 impl ReducedGame {
     pub fn select(
         connection: &mut SqliteConnection,
-        filters: Option<GameFiltersPayload>,
+        filters: Option<GameFilters>,
     ) -> Result<Vec<ReducedGame>> {
         let mut statement = games.select(ReducedGame::as_select()).into_boxed();
 
@@ -119,7 +135,7 @@ impl ReducedGame {
     }
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct GameVersion {
     pub id: String,
@@ -127,14 +143,14 @@ pub struct GameVersion {
     pub external: bool,
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct GameVersionInfo {
     pub install_size: u64,
     pub download_size: u64,
 }
 
-#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, EnumIter, Copy)]
+#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, EnumIter, Copy, Type)]
 #[serde(rename_all = "camelCase")]
 pub enum GameSource {
     Itchio,
@@ -142,7 +158,7 @@ pub enum GameSource {
     EpicGames,
 }
 
-#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, Type)]
 #[serde(rename_all = "camelCase")]
 pub enum GameStatus {
     Installed,

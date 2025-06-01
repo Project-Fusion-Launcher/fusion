@@ -26,14 +26,9 @@ import {
 } from "solid-js";
 import { Download, Folder, HardDrive, LoaderCircle } from "lucide-solid";
 import { open } from "@tauri-apps/plugin-dialog";
-import type { GameVersion, GameVersionInfo } from "../models/types";
-import { type Game } from "../models/types";
+import type { GameVersion, GameVersionInfo, Game } from "../bindings";
+import { commands } from "../bindings";
 import { bytesToSize } from "../utils/string";
-import {
-  downloadGame,
-  fetchGameVersionInfo,
-  fetchGameVersions,
-} from "../services/game";
 
 interface InstallDialogProps {
   selectedGame: Game | null;
@@ -57,19 +52,39 @@ const InstallDialog = (props: InstallDialogProps) => {
 
   async function fetchVersions(): Promise<GameVersion[]> {
     if (!props.selectedGame) return [];
-    const versions = await fetchGameVersions(props.selectedGame).catch(
-      () => [],
+    const versions = await commands.fetchGameVersions(
+      props.selectedGame.id,
+      props.selectedGame.source,
     );
-    if (versions.length === 1) setSelectedVersion(versions[0]);
-    return versions;
+
+    if (versions.status === "error") {
+      console.error("Failed to fetch game versions:", versions.error);
+      return [];
+    }
+
+    if (versions.data.length === 0) {
+      console.warn("No game versions available.");
+      return [];
+    }
+
+    setSelectedVersion(versions.data[0]);
+    return versions.data;
   }
 
   async function fetchVersionInfo(): Promise<GameVersionInfo | null> {
     const version = selectedVersion();
     if (!props.selectedGame || !version) return null;
-    return await fetchGameVersionInfo(props.selectedGame, version).catch(
-      () => ({ installSize: 0, downloadSize: 0 }),
+    const versionInfo = await commands.fetchGameVersionInfo(
+      props.selectedGame.id,
+      props.selectedGame.source,
+      version.id,
     );
+
+    if (versionInfo.status === "error") {
+      console.error("Failed to fetch game version info:", versionInfo.error);
+      return null;
+    }
+    return versionInfo.data;
   }
 
   createEffect(() => {
@@ -103,12 +118,19 @@ const InstallDialog = (props: InstallDialogProps) => {
       return;
     setPreparingToInstall(true);
 
-    downloadGame(props.selectedGame, version, {
-      installLocation: location,
-    }).then(() => {
-      handleDialogClose();
-      setPreparingToInstall(false);
-    });
+    commands
+      .downloadGame(
+        props.selectedGame.id,
+        props.selectedGame.source,
+        version.id,
+        {
+          installLocation: location,
+        },
+      )
+      .then(() => {
+        handleDialogClose();
+        setPreparingToInstall(false);
+      });
   }
 
   function handleDialogClose() {
@@ -137,7 +159,7 @@ const InstallDialog = (props: InstallDialogProps) => {
         <div class="mb-40 flex min-w-[300px] gap-32">
           <div class="w-192 h-288 border-border flex shrink-0 overflow-hidden rounded-md border">
             <img
-              src={props.selectedGame?.coverUrl}
+              src={props.selectedGame?.coverUrl ?? undefined}
               class="h-auto w-auto object-cover"
             />
           </div>

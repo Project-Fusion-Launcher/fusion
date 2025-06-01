@@ -5,19 +5,22 @@ use crate::{
     managers::download::DownloadManager,
     models::{
         download::Download,
+        events::{GameHidden, GameUninstalled, GameUninstalling},
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo, ReducedGame},
-        payloads::{DownloadOptions, GameFiltersPayload},
+        payloads::{DownloadOptions, GameFilters},
     },
     storefronts::get_storefront,
 };
 use strum::IntoEnumIterator;
 use tauri::{AppHandle, Emitter, State};
+use tauri_specta::Event;
 use tokio::task::JoinSet;
 
 #[tauri::command]
+#[specta::specta]
 pub async fn get_games(
     refetch: bool,
-    filters: Option<GameFiltersPayload>,
+    filters: Option<GameFilters>,
 ) -> Result<Vec<ReducedGame>, String> {
     let mut connection: diesel::SqliteConnection = database::create_connection()?;
 
@@ -50,6 +53,7 @@ pub async fn get_games(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn fetch_game_versions(
     game_id: String,
     game_source: GameSource,
@@ -67,6 +71,7 @@ pub async fn fetch_game_versions(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn fetch_game_version_info(
     game_id: String,
     game_source: GameSource,
@@ -84,6 +89,7 @@ pub async fn fetch_game_version_info(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn download_game(
     download_manager: State<'_, DownloadManager>,
     game_id: String,
@@ -125,6 +131,7 @@ pub async fn download_game(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(), String> {
     let mut connection = database::create_connection()?;
     let game = Game::select_one(&mut connection, &game_source, &game_id)?;
@@ -138,6 +145,7 @@ pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(),
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn uninstall_game(
     app: AppHandle,
     game_id: String,
@@ -149,8 +157,7 @@ pub async fn uninstall_game(
     game.status = GameStatus::Uninstalling;
     game.update(&mut connection)?;
 
-    app.emit("game-uninstalling", &game)
-        .map_err(|e| e.to_string())?;
+    GameUninstalling::from(&game).emit(&app).unwrap();
 
     get_storefront(&game_source)
         .read()
@@ -162,13 +169,13 @@ pub async fn uninstall_game(
     game.status = GameStatus::NotInstalled;
     game.update(&mut connection)?;
 
-    app.emit("game-uninstalled", &game)
-        .map_err(|e| e.to_string())?;
+    GameUninstalled::from(&game).emit(&app).unwrap();
 
     Ok(())
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn hide_game(
     app: AppHandle,
     game_id: String,
@@ -180,7 +187,7 @@ pub async fn hide_game(
     game.hidden = true;
     game.update(&mut connection)?;
 
-    app.emit("game-hidden", &game).map_err(|e| e.to_string())?;
+    GameHidden::from(&game).emit(&app).unwrap();
 
     Ok(())
 }

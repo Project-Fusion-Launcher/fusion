@@ -6,7 +6,6 @@ use crate::{
         config::Config,
         download::Download,
         game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
-        payloads::DownloadPayload,
     },
     utils::{self, launch_target},
     APP,
@@ -17,12 +16,12 @@ use api::{
 };
 use async_trait::async_trait;
 use std::{
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::{Arc, RwLock},
     time::Duration,
 };
 use strategy::ItchioDownload;
-use tauri::{webview::DownloadEvent, Emitter, Manager, Url, WebviewUrl, WebviewWindow};
+use tauri::Manager;
 use tokio::{fs, time};
 
 mod api;
@@ -255,7 +254,7 @@ async fn post_download(game_id: &str, path: PathBuf) -> Result<()> {
     Ok(())
 }
 
-async fn post_download_external(
+/*async fn post_download_external(
     game_id: &str,
     path: PathBuf,
     file_name: &str,
@@ -393,3 +392,4 @@ async fn handle_external_download(
     .build()?;
     Ok(())
 }
+*/

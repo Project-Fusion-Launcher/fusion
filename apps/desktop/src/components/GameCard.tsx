@@ -1,8 +1,8 @@
 import { Button } from "@kobalte/core/button";
 import { ArrowDownToLine, LoaderCircle, Play } from "lucide-solid";
 import { Match, Switch } from "solid-js";
-import { type Game } from "../models/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@repo/ui";
+import type { Game } from "../bindings";
 
 interface GameCardProps {
   game: Game;
@@ -20,7 +20,7 @@ const GameCard = (props: GameCardProps) => {
       <div class="bg-secondary h-288 group-hover:outline-accent relative w-full overflow-hidden rounded-md outline-2 outline-offset-4 outline-transparent transition-all group-hover:shadow-[0_0_1.2rem_rgba(255,255,255,0.25)]">
         <img
           class="absolute h-full object-cover"
-          src={props.game.coverUrl}
+          src={props.game.coverUrl ?? undefined}
           loading="lazy"
         />
         <div

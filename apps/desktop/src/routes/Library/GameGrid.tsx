@@ -3,8 +3,8 @@ import { groupArrayElements } from "../../utils/array";
 import { WindowEventListener } from "@solid-primitives/event-listener";
 import { Virtualizer } from "virtua/solid";
 import GameCard from "../../components/GameCard";
-import { type Game } from "../../models/types";
 import GameContextMenu from "../../components/GameContextMenu";
+import type { Game } from "../../bindings";
 
 interface GameGridProps {
   games: Game[];

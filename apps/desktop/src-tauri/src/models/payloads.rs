@@ -1,26 +1,15 @@
+use serde::Deserialize;
+use specta::Type;
 use std::path::PathBuf;
 
-use super::game::GameSource;
-use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize)]
+#[derive(Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct DownloadOptions {
     pub install_location: PathBuf,
 }
 
-#[derive(Serialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Type)]
 #[serde(rename_all = "camelCase")]
-pub struct DownloadPayload {
-    pub game_id: String,
-    pub game_source: GameSource,
-    pub game_title: String,
-    pub download_size: u64,
-    pub downloaded: u64,
-}
-
-#[derive(Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct GameFiltersPayload {
+pub struct GameFilters {
     pub query: Option<String>,
 }

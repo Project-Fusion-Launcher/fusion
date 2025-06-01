@@ -1,10 +1,9 @@
 import type { JSXElement } from "solid-js";
 import { createContext, createEffect, onCleanup } from "solid-js";
-import type { DownloadItem, Game, GameFilters } from "../models/types";
+import type { DownloadItem } from "../models/types";
 import type { SetStoreFunction } from "solid-js/store";
 import { createStore, produce } from "solid-js/store";
-import { listen } from "@tauri-apps/api/event";
-import { getGames as getGamesFromBackend } from "../services/game";
+import { commands, events, type Game, type GameFilters } from "../bindings";
 
 export const GameContext = createContext<{
   state: {
@@ -64,45 +63,46 @@ const ContextProvider = (props: StateProps) => {
     );
   }
 
-  function getGames(refetch = false, filters?: GameFilters) {
-    getGamesFromBackend(refetch, filters).then((games) => {
-      setState("games", games);
+  function getGames(refetch = false, filters: GameFilters | null = null) {
+    commands.getGames(refetch, filters).then((games) => {
+      if (games.status === "error") {
+        console.error("Failed to fetch games:", games.error);
+        return;
+      }
+      setState("games", games.data);
     });
   }
 
-  const gameHiddenUnlisten = listen<Game>("game-hidden", (event) => {
-    const game = event.payload;
+  const gameHiddenUnlisten = events.gameHidden.listen((e) => {
     setState("games", (games) =>
-      games.filter((g) => !(g.id === game.id && g.source === game.source)),
+      games.filter(
+        (g) =>
+          !(g.id === e.payload.gameId && g.source === e.payload.gameSource),
+      ),
     );
   });
 
-  const gameUninstallingUnlisten = listen<Game>(
-    "game-uninstalling",
-    (event) => {
-      const game = event.payload;
-      setState(
-        "games",
-        (g) => g.id === game.id && g.source === game.source,
-        produce((g) => {
-          g.status = "uninstalling";
-        }),
-      );
-    },
-  );
-
-  const gameUninstalledUnlisten = listen<Game>("game-uninstalled", (event) => {
-    const game = event.payload;
+  const gameUninstallingUnlisten = events.gameUninstalling.listen((e) => {
     setState(
       "games",
-      (g) => g.id === game.id && g.source === game.source,
+      (g) => g.id === e.payload.gameId && g.source === e.payload.gameSource,
+      produce((g) => {
+        g.status = "uninstalling";
+      }),
+    );
+  });
+
+  const gameUninstalledUnlisten = events.gameUninstalled.listen((e) => {
+    setState(
+      "games",
+      (g) => g.id === e.payload.gameId && g.source === e.payload.gameSource,
       produce((g) => {
         g.status = "notInstalled";
       }),
     );
   });
 
-  const downloadQueuedUnlisten = listen<DownloadItem>(
+  /*const downloadQueuedUnlisten = listen<DownloadItem>(
     "download-queued",
     (event) => {
       const payload = event.payload;
@@ -201,17 +201,17 @@ const ContextProvider = (props: StateProps) => {
         }),
       );
     },
-  );
+  );*/
 
   onCleanup(() => {
     gameHiddenUnlisten.then((u) => u());
     gameUninstallingUnlisten.then((u) => u());
     gameUninstalledUnlisten.then((u) => u());
-    downloadQueuedUnlisten.then((u) => u());
+    /*downloadQueuedUnlisten.then((u) => u());
     downloadExternalUnlisten.then((u) => u());
     downloadProgressUnlisten.then((u) => u());
     downloadFinishedUnlisten.then((u) => u());
-    downloadInstalledUnlisten.then((u) => u());
+    downloadInstalledUnlisten.then((u) => u());*/
   });
 
   return (

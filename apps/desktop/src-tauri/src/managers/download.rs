@@ -10,6 +10,7 @@ use tokio::sync::{Mutex, Notify};
 use tokio_util::sync::CancellationToken;
 
 #[tauri::command]
+#[specta::specta]
 pub async fn pause(
     download_manager: tauri::State<'_, DownloadManager>,
 ) -> core::result::Result<(), String> {

@@ -9,12 +9,12 @@ import {
 } from "solid-js";
 import { RefreshCcw } from "lucide-solid";
 import InstallDialog from "../../components/InstallDialog";
-import { type GameFiltersStatus, type Game } from "../../models/types";
+import { type GameFiltersStatus } from "../../models/types";
 import GameGrid from "./GameGrid";
 import { useSearchParams } from "@solidjs/router";
 import { parseSearchParam } from "../../utils/string";
 import { GameContext } from "../../state/GameContext";
-import { launchGame } from "../../services/game";
+import { commands, type Game } from "../../bindings";
 
 interface StatusFilterButtonProps {
   status: GameFiltersStatus;
@@ -58,12 +58,12 @@ const Library = () => {
   });
 
   function getGames(refetch: boolean) {
-    state.getGames(refetch, { query: query() });
+    state.getGames(refetch, { query: query() || null });
   }
 
   function handleMainAction(game: Game) {
     if (game.status === "installed") {
-      launchGame(game);
+      commands.launchGame(game.id, game.source);
     } else if (game.status === "notInstalled") {
       setSelectedGame(game);
       setIsDialogOpen(true);

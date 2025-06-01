@@ -1,7 +1,7 @@
 import { Button, IconButton, TextField, TextFieldInput } from "@repo/ui";
-import { invoke } from "@tauri-apps/api/core";
 import { Search, X } from "lucide-solid";
 import { Show } from "solid-js";
+import { commands } from "../bindings";
 
 interface HeaderProps {
   title: string;
@@ -52,7 +52,7 @@ const Header = (props: HeaderProps) => {
             </div>
           </TextField>
         </Show>
-        <Button onClick={() => invoke("pause")} size="md">
+        <Button onClick={() => commands.pause()} size="md">
           Pause
         </Button>
       </div>

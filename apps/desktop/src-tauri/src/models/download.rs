@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 use super::game::GameSource;
 use std::{
     path::PathBuf,

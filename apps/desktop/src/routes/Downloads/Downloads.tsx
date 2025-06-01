@@ -2,12 +2,12 @@ import type { JSXElement } from "solid-js";
 import { For, useContext, Show, Switch, Match } from "solid-js";
 import Header from "../../components/Header";
 import DownloadItem from "./DownloadItem";
-import type { GameSource } from "../../models/types";
 import { TransitionGroup } from "solid-transition-group";
 import { Info } from "lucide-solid";
 import { Button } from "@repo/ui";
 import DownloadDetails from "./DownloadDetails";
 import { GameContext } from "../../state/GameContext";
+import type { GameSource } from "../../bindings";
 
 interface SectionProps {
   title: string;
