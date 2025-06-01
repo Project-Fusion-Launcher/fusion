@@ -3,7 +3,9 @@ use std::{
     collections::VecDeque,
     path::{Path, PathBuf},
 };
-use tokio::{fs, io::AsyncReadExt};
+use tokio::fs;
+#[cfg(unix)]
+use tokio::io::AsyncReadExt;
 
 const BLACKLISTED_LAUNCH_TARGETS: [&str; 6] = [
     "unitycrashhandler64.exe",
