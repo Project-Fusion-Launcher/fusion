@@ -1,12 +1,12 @@
 use crate::{
     common::result::Result,
-    models::download::{Download, DownloadProgress},
+    models::download::Download,
     storefronts::{get_itchio, DownloadStrategy},
     utils::download::download_file,
 };
 use async_trait::async_trait;
 use reqwest::RequestBuilder;
-use tokio::sync::mpsc;
+use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
 pub(super) struct ItchioDownload {
@@ -21,9 +21,8 @@ pub(super) struct ItchioStrategy {}
 impl DownloadStrategy for ItchioStrategy {
     async fn start(
         &self,
-        download: Download,
+        download: Arc<Download>,
         cancellation_token: CancellationToken,
-        progress_tx: mpsc::Sender<DownloadProgress>,
     ) -> Result<bool> {
         let download_info = get_itchio()
             .read()
@@ -34,11 +33,11 @@ impl DownloadStrategy for ItchioStrategy {
         let path = download.path.join(download_info.filename);
 
         let result = download_file(
-            download_info.request,
             path,
+            download_info.request,
             cancellation_token,
-            progress_tx,
             download_info.md5,
+            Some(download),
         )
         .await?;
 

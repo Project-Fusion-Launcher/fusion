@@ -1,8 +1,4 @@
-use crate::{
-    common::result::Result,
-    models::download::{Download, DownloadProgress},
-    storefronts::get_storefront,
-};
+use crate::{common::result::Result, models::download::Download, storefronts::get_storefront};
 use std::{
     collections::VecDeque,
     sync::{
@@ -10,7 +6,7 @@ use std::{
         Arc, Mutex,
     },
 };
-use tokio::sync::{mpsc, Notify};
+use tokio::sync::Notify;
 use tokio_util::sync::CancellationToken;
 
 #[tauri::command]
@@ -27,10 +23,9 @@ pub async fn pause(
 }
 
 pub struct DownloadManager {
-    downloading: Arc<Mutex<Option<Download>>>,
-    up_next_queue: Arc<Mutex<VecDeque<Download>>>,
-    error_queue: Arc<Mutex<VecDeque<Download>>>,
-
+    downloading: Arc<Mutex<Option<Arc<Download>>>>,
+    up_next_queue: Arc<Mutex<VecDeque<Arc<Download>>>>,
+    error_queue: Arc<Mutex<VecDeque<Arc<Download>>>>,
     up_next_notifier: Arc<Notify>,
 
     requeue_notifier: Arc<Notify>,
@@ -57,7 +52,7 @@ impl DownloadManager {
 
     pub async fn enqueue(&self, download: Download) -> Result<()> {
         let mut queue = self.up_next_queue.lock().unwrap();
-        queue.push_back(download);
+        queue.push_back(Arc::new(download));
         self.up_next_notifier.notify_waiters();
         Ok(())
     }
@@ -107,40 +102,33 @@ impl DownloadManager {
 
                     {
                         let mut downloading_lock = downloading.lock().unwrap();
-                        *downloading_lock = Some(download.clone());
+                        *downloading_lock = Some(Arc::clone(&download));
                         let mut token_lock = cancellation_token.lock().unwrap();
                         *token_lock = Some(token.clone());
                     }
 
-                    let (progress_tx, progress_rx) = mpsc::channel::<DownloadProgress>(50);
-
-                    let download_size = download.download_size;
-                    let install_size = download.install_size;
-                    let reporter = tokio::spawn(reporter(progress_rx, download_size, install_size));
+                    let reporter = tokio::spawn(reporter(Arc::clone(&download)));
 
                     let strategy = get_storefront(&download.game_source)
                         .read()
                         .await
                         .download_strategy();
+                    let result = strategy.start(download, token.clone()).await;
 
-                    let result = strategy.start(download, token.clone(), progress_tx).await;
-                    let (downloaded, written) = reporter.await.unwrap();
+                    reporter.abort();
 
                     match result {
                         Ok(true) => {
                             println!("Download completed successfully.");
-                            let mut download = {
+                            let download = {
                                 let mut downloading_lock = downloading.lock().unwrap();
                                 downloading_lock.take().unwrap()
                             };
 
-                            download.downloaded = downloaded;
-                            download.written = written;
-
                             get_storefront(&download.game_source)
                                 .read()
                                 .await
-                                .post_download(&download.game_id, download.path)
+                                .post_download(&download.game_id, download.path.clone())
                                 .await
                                 .unwrap();
                         }
@@ -169,35 +157,34 @@ impl DownloadManager {
     }
 }
 
-async fn reporter(
-    mut rx: mpsc::Receiver<DownloadProgress>,
-    download_size: u64,
-    install_size: u64,
-) -> (u64, u64) {
-    let mut downloaded = 0;
-    let mut written = 0;
+async fn reporter(download: Arc<Download>) {
+    let mut last_downloaded = download.downloaded();
+    let mut last_written = download.written();
 
-    while let Some(update) = rx.recv().await {
-        let downloaded_pct = if download_size > 0 {
-            update.downloaded as f64 * 100.0 / download_size as f64
+    loop {
+        let downloaded = download.downloaded();
+        let written = download.written();
+
+        let downloaded_pct = if download.download_size > 0 {
+            downloaded as f64 * 100.0 / download.download_size as f64
         } else {
             0.0
         };
 
-        let written_pct = if install_size > 0 {
-            update.written as f64 * 100.0 / install_size as f64
+        let written_pct = if download.install_size > 0 {
+            written as f64 * 100.0 / download.install_size as f64
         } else {
             0.0
         };
 
-        let delta_download = update.downloaded.saturating_sub(downloaded);
-        let delta_write = update.written.saturating_sub(written);
+        let delta_download = downloaded.saturating_sub(last_downloaded);
+        let delta_write = written.saturating_sub(last_written);
 
         let download_speed_mbps = (delta_download as f64 * 8.0) / 1_000_000.0;
 
         println!(
             "[Progress Reporter] Downloaded: {} ({:.2}%), Written: {} ({:.2}%)",
-            update.downloaded, downloaded_pct, update.written, written_pct
+            downloaded, downloaded_pct, written, written_pct
         );
 
         println!(
@@ -206,8 +193,9 @@ async fn reporter(
             delta_write as f64 / 1_000_000.0
         );
 
-        downloaded = update.downloaded;
-        written = update.written;
+        last_downloaded = downloaded;
+        last_written = written;
+
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
-    (downloaded, written)
 }

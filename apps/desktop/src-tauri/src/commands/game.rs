@@ -1,3 +1,5 @@
+use std::sync::atomic::AtomicU64;
+
 use crate::{
     common::database,
     managers::download::DownloadManager,
@@ -114,8 +116,8 @@ pub async fn download_game(
             path: complete_install_location,
             download_size: version_info.download_size,
             install_size: version_info.install_size,
-            downloaded: 0,
-            written: 0,
+            downloaded: AtomicU64::new(0),
+            written: AtomicU64::new(0),
         })
         .await?;
 

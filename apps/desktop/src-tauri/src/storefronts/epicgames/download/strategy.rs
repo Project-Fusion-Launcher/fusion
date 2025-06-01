@@ -12,14 +12,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use reqwest::{header, RequestBuilder};
-use std::{
-    collections::VecDeque,
-    path::PathBuf,
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc,
-    },
-};
+use std::{collections::VecDeque, sync::Arc};
 use tokio::{
     fs::OpenOptions,
     io::AsyncWriteExt,
@@ -36,9 +29,8 @@ pub struct EpicGamesStrategy {}
 impl DownloadStrategy for EpicGamesStrategy {
     async fn start(
         &self,
-        download: Download,
+        download: Arc<Download>,
         cancellation_token: CancellationToken,
-        progress_tx: mpsc::Sender<DownloadProgress>,
     ) -> Result<bool> {
         let instant = std::time::Instant::now();
         let plan = get_epic_games()
@@ -63,27 +55,22 @@ impl DownloadStrategy for EpicGamesStrategy {
 
         let http = reqwest::Client::new();
 
-        let total_written = Arc::new(AtomicU64::new(0));
-        let total_downloaded = Arc::new(AtomicU64::new(0));
-
         let chunk_map: ShardMap<Guid, Chunk> = ShardMap::new();
         let notify = Arc::new(Notify::new());
 
         let decoder = task::spawn(decoder(
             rx,
-            Arc::clone(&total_downloaded),
+            Arc::clone(&download),
             chunk_map.clone(),
             Arc::clone(&notify),
         ));
         let writer = task::spawn(writer(
             plan.write_tasks,
-            Arc::clone(&total_written),
-            download.path.clone(),
+            download,
             cancellation_token.clone(),
             chunk_map,
             notify,
         ));
-        let reporter = task::spawn(reporter(total_downloaded, total_written, progress_tx));
 
         let start_time = std::time::Instant::now();
 
@@ -108,7 +95,6 @@ impl DownloadStrategy for EpicGamesStrategy {
         dl_pool.shutdown().await;
         decoder.await?;
         writer.await?;
-        reporter.abort();
 
         let elapsed_time = start_time.elapsed();
         println!("Download completed in {:?}", elapsed_time);
@@ -119,12 +105,12 @@ impl DownloadStrategy for EpicGamesStrategy {
 
 async fn decoder(
     mut rx: mpsc::Receiver<Vec<u8>>,
-    total_downloaded: Arc<AtomicU64>,
+    download: Arc<Download>,
     chunk_map: ShardMap<Guid, Chunk>,
     notify: Arc<Notify>,
 ) {
     while let Some(data) = rx.recv().await {
-        total_downloaded.fetch_add(data.len() as u64, Ordering::Relaxed);
+        download.add_downloaded(data.len() as u64);
         let chunk = Chunk::new(data).unwrap();
         chunk_map.insert(chunk.header.guid, chunk).await;
         notify.notify_one();
@@ -133,8 +119,7 @@ async fn decoder(
 
 async fn writer(
     mut tasks: VecDeque<WriteTask>,
-    total_written: Arc<AtomicU64>,
-    download_path: PathBuf,
+    download: Arc<Download>,
     cancellation_token: CancellationToken,
     chunk_map: ShardMap<Guid, Chunk>,
     notify: Arc<Notify>,
@@ -143,7 +128,7 @@ async fn writer(
     while let Some(task) = tasks.pop_front() {
         match task {
             WriteTask::Open { filename } => {
-                let path = download_path.join(&filename);
+                let path = download.path.join(&filename);
 
                 opened_file = Some(
                     OpenOptions::new()
@@ -170,7 +155,7 @@ async fn writer(
                         file.write_all(&chunk.data[chunk_offset..chunk_offset + size])
                             .await
                             .unwrap();
-                        total_written.fetch_add(size as u64, Ordering::Relaxed);
+                        download.add_written(size as u64);
                     }
 
                     if !remove_cache {
@@ -190,28 +175,6 @@ async fn writer(
                 drop(to_close);
             }
         };
-    }
-}
-
-async fn reporter(
-    total_downloaded: Arc<AtomicU64>,
-    total_written: Arc<AtomicU64>,
-    tx: mpsc::Sender<DownloadProgress>,
-) {
-    loop {
-        let downloaded = total_downloaded.load(Ordering::Relaxed);
-        let written = total_written.load(Ordering::Relaxed);
-        if tx
-            .send(DownloadProgress {
-                downloaded,
-                written,
-            })
-            .await
-            .is_err()
-        {
-            eprintln!("Progress reporter channel closed.");
-        }
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
 }
 

@@ -1,9 +1,6 @@
 use crate::{
     common::result::Result,
-    models::{
-        download::{Download, DownloadProgress},
-        game::*,
-    },
+    models::{download::Download, game::*},
 };
 use async_trait::async_trait;
 use epicgames::EpicGames;
@@ -14,10 +11,7 @@ use std::{
     sync::{Arc, OnceLock},
 };
 use strum::IntoEnumIterator;
-use tokio::{
-    sync::{mpsc, RwLock},
-    task::JoinSet,
-};
+use tokio::{sync::RwLock, task::JoinSet};
 use tokio_util::sync::CancellationToken;
 
 mod epicgames;
@@ -48,9 +42,8 @@ pub trait Storefront {
 pub trait DownloadStrategy: Send + Sync {
     async fn start(
         &self,
-        download: Download,
+        download: Arc<Download>,
         cancellation_token: CancellationToken,
-        progress_tx: mpsc::Sender<DownloadProgress>,
     ) -> Result<bool>;
 }
 

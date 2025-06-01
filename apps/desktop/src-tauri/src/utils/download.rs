@@ -1,15 +1,8 @@
 use super::file::OpenWithDirs;
-use crate::{common::result::Result, models::download::DownloadProgress};
+use crate::{common::result::Result, models::download::Download};
 use md5::{Digest, Md5};
 use reqwest::{header::RANGE, RequestBuilder};
-use std::{
-    io::SeekFrom,
-    path::PathBuf,
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc,
-    },
-};
+use std::{io::SeekFrom, path::PathBuf, sync::Arc};
 use tokio::{
     fs::{File, OpenOptions},
     io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt},
@@ -20,11 +13,11 @@ use tokio::{
 use tokio_util::{bytes::Bytes, sync::CancellationToken};
 
 pub async fn download_file(
-    request: RequestBuilder,
     path: PathBuf,
+    request: RequestBuilder,
     cancellation_token: CancellationToken,
-    progress_tx: mpsc::Sender<DownloadProgress>,
     md5: Option<String>,
+    download: Option<Arc<Download>>,
 ) -> Result<bool> {
     let mut file = OpenOptions::new()
         .create(true)
@@ -57,19 +50,10 @@ pub async fn download_file(
     let (writer_tx, writer_rx) = mpsc::channel(16);
     let (verifier_tx, verifier_rx) = mpsc::channel(16);
 
-    let total_written = Arc::new(AtomicU64::new(file_size));
-    let total_downloaded = Arc::new(AtomicU64::new(file_size));
-
-    let reporter = task::spawn(reporter(
-        Arc::clone(&total_downloaded),
-        Arc::clone(&total_written),
-        progress_tx,
-    ));
     let writer = task::spawn(writer(
         writer_rx,
         file,
-        total_written,
-        total_downloaded,
+        download,
         if md5.is_some() {
             Some(verifier_tx)
         } else {
@@ -90,7 +74,6 @@ pub async fn download_file(
 
     writer.await?;
     let verifier_result = verifier.await?;
-    reporter.abort();
 
     if cancellation_token.is_cancelled() {
         println!("Download cancelled.");
@@ -123,14 +106,20 @@ async fn downloader(request: RequestBuilder, tx: mpsc::Sender<Bytes>, initial_si
 async fn writer(
     mut rx: mpsc::Receiver<Bytes>,
     mut file: File,
-    total_written: Arc<AtomicU64>,
-    total_downloaded: Arc<AtomicU64>,
+    download: Option<Arc<Download>>,
     tx: Option<mpsc::Sender<Bytes>>,
 ) {
     while let Some(chunk) = rx.recv().await {
-        total_downloaded.fetch_add(chunk.len() as u64, Ordering::Relaxed);
+        if let Some(download) = &download {
+            download.add_downloaded(chunk.len() as u64);
+        }
+
         file.write_all(&chunk).await.unwrap();
-        total_written.fetch_add(chunk.len() as u64, Ordering::Relaxed);
+
+        if let Some(download) = &download {
+            download.add_written(chunk.len() as u64);
+        }
+
         if let Some(tx) = &tx {
             tx.send(chunk).await.unwrap();
         }
@@ -143,26 +132,4 @@ async fn verifier(mut rx: mpsc::Receiver<Bytes>, mut hasher: Md5) -> String {
     }
     let result = hasher.finalize();
     format!("{:x}", result)
-}
-
-async fn reporter(
-    total_downloaded: Arc<AtomicU64>,
-    total_written: Arc<AtomicU64>,
-    tx: mpsc::Sender<DownloadProgress>,
-) {
-    loop {
-        let downloaded = total_downloaded.load(Ordering::Relaxed);
-        let written = total_written.load(Ordering::Relaxed);
-        if tx
-            .send(DownloadProgress {
-                downloaded,
-                written,
-            })
-            .await
-            .is_err()
-        {
-            eprintln!("Progress reporter channel closed.");
-        }
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-    }
 }
