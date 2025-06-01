@@ -30,8 +30,8 @@ pub struct Game {
 impl Game {
     pub fn select_one(
         connection: &mut SqliteConnection,
-        game_source: &GameSource,
         game_id: &str,
+        game_source: &GameSource,
     ) -> Result<Game> {
         let game = games
             .filter(source.eq(game_source))

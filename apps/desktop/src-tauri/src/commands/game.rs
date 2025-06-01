@@ -60,7 +60,7 @@ pub async fn fetch_game_versions(
 ) -> Result<Vec<GameVersion>, String> {
     let mut connection = database::create_connection().map_err(|e| e.to_string())?;
     let game =
-        Game::select_one(&mut connection, &game_source, &game_id).map_err(|e| e.to_string())?;
+        Game::select_one(&mut connection, &game_id, &game_source).map_err(|e| e.to_string())?;
 
     get_storefront(&game_source)
         .read()
@@ -78,7 +78,7 @@ pub async fn fetch_game_version_info(
     version_id: String,
 ) -> Result<GameVersionInfo, String> {
     let mut connection = database::create_connection()?;
-    let game = Game::select_one(&mut connection, &game_source, &game_id)?;
+    let game = Game::select_one(&mut connection, &game_id, &game_source)?;
 
     get_storefront(&game_source)
         .read()
@@ -98,13 +98,14 @@ pub async fn download_game(
     download_options: DownloadOptions,
 ) -> Result<(), String> {
     let mut connection = database::create_connection()?;
-    let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
+    let mut game = Game::select_one(&mut connection, &game_id, &game_source)?;
 
     let complete_install_location = download_options
         .install_location
         .join(game.title.replace(" :", " -").replace(":", " -"));
 
     game.path = Some(complete_install_location.to_string_lossy().to_string());
+    game.status = GameStatus::Downloading;
     game.update(&mut connection).unwrap();
 
     let game_title = game.title.clone();
@@ -137,7 +138,7 @@ pub async fn download_game(
 #[specta::specta]
 pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(), String> {
     let mut connection = database::create_connection()?;
-    let game = Game::select_one(&mut connection, &game_source, &game_id)?;
+    let game = Game::select_one(&mut connection, &game_id, &game_source)?;
 
     get_storefront(&game_source)
         .read()
@@ -155,7 +156,7 @@ pub async fn uninstall_game(
     game_source: GameSource,
 ) -> Result<(), String> {
     let mut connection = database::create_connection()?;
-    let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
+    let mut game = Game::select_one(&mut connection, &game_id, &game_source)?;
 
     game.status = GameStatus::Uninstalling;
     game.update(&mut connection)?;
@@ -185,7 +186,7 @@ pub async fn hide_game(
     game_source: GameSource,
 ) -> Result<(), String> {
     let mut connection = database::create_connection()?;
-    let mut game = Game::select_one(&mut connection, &game_source, &game_id)?;
+    let mut game = Game::select_one(&mut connection, &game_id, &game_source)?;
 
     game.hidden = true;
     game.update(&mut connection)?;

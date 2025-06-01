@@ -5,7 +5,7 @@ use crate::{
     models::{
         config::Config,
         download::Download,
-        game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
+        game::{Game, GameStatus, GameVersion, GameVersionInfo},
     },
     utils::{self, launch_target},
     APP,
@@ -183,8 +183,8 @@ impl Storefront for Itchio {
         Ok(())
     }
 
-    async fn post_download(&self, game_id: &str, path: PathBuf) -> Result<()> {
-        post_download(game_id, path).await
+    async fn post_download(&self, game: &mut Game, path: PathBuf) -> Result<()> {
+        post_download(game, path).await
     }
 
     fn download_strategy(&self) -> Arc<dyn DownloadStrategy> {
@@ -200,7 +200,7 @@ impl Itchio {
         };
 
         let mut connection = database::create_connection()?;
-        let game = Game::select_one(&mut connection, &download.game_source, &download.game_id)?;
+        let game = Game::select_one(&mut connection, &download.game_id, &download.game_source)?;
 
         let upload_id: u32 = download.game_version_id.parse()?;
         let game_key: u32 = game.key.clone().unwrap().parse()?;
@@ -217,7 +217,7 @@ impl Itchio {
     }
 }
 
-async fn post_download(game_id: &str, path: PathBuf) -> Result<()> {
+async fn post_download(game: &mut Game, path: PathBuf) -> Result<()> {
     let mut entries = fs::read_dir(&path).await?;
     let entry = entries.next_entry().await?;
     let entry = entry.ok_or("No files found in the directory")?;
@@ -226,7 +226,6 @@ async fn post_download(game_id: &str, path: PathBuf) -> Result<()> {
     let file_path = path.join(file_name);
 
     let mut connection = database::create_connection()?;
-    let mut game = Game::select_one(&mut connection, &GameSource::Itchio, game_id)?;
 
     if file_path.extension().unwrap() == "zip"
         || file_path.extension().unwrap() == "7z"

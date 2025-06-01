@@ -165,7 +165,7 @@ impl Storefront for EpicGames {
         Ok(())
     }
 
-    async fn post_download(&self, _game_id: &str, _path: PathBuf) -> Result<()> {
+    async fn post_download(&self, _game: &mut Game, _path: PathBuf) -> Result<()> {
         Ok(())
     }
 

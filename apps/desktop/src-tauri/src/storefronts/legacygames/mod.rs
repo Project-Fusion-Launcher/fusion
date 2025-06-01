@@ -4,7 +4,7 @@ use crate::{
     models::{
         config::Config,
         download::Download,
-        game::{Game, GameSource, GameStatus, GameVersion, GameVersionInfo},
+        game::{Game, GameStatus, GameVersion, GameVersionInfo},
     },
     utils::{self, launch_target},
     APP,
@@ -136,7 +136,7 @@ impl Storefront for LegacyGames {
         Ok(())
     }
 
-    async fn post_download(&self, game_id: &str, path: PathBuf) -> Result<()> {
+    async fn post_download(&self, game: &mut Game, path: PathBuf) -> Result<()> {
         let mut entries = fs::read_dir(&path).await?;
         let entry = entries.next_entry().await?;
         let entry = entry.ok_or("No files found in the directory")?;
@@ -145,7 +145,6 @@ impl Storefront for LegacyGames {
         let file_path = path.join(file_name);
 
         let mut connection = database::create_connection()?;
-        let mut game = Game::select_one(&mut connection, &GameSource::LegacyGames, game_id)?;
 
         println!("Extracting game: {:?}", file_path);
         utils::file::extract_file(&file_path, &path).await?;
@@ -182,7 +181,7 @@ impl LegacyGames {
         };
 
         let mut connection = database::create_connection()?;
-        let game = Game::select_one(&mut connection, &download.game_source, &download.game_id)?;
+        let game = Game::select_one(&mut connection, &download.game_id, &download.game_source)?;
 
         let url = if let Some(ref key) = game.key {
             services.fetch_wp_installer(key.parse()?, &game.id).await?

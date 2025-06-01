@@ -33,7 +33,7 @@ pub trait Storefront {
         version_id: String,
     ) -> Result<GameVersionInfo>;
     fn download_strategy(&self) -> Arc<dyn DownloadStrategy>;
-    async fn post_download(&self, game_id: &str, path: PathBuf) -> Result<()>;
+    async fn post_download(&self, game: &mut Game, path: PathBuf) -> Result<()>;
     async fn launch_game(&self, game: Game) -> Result<()>;
     async fn uninstall_game(&self, game: &Game) -> Result<()>;
 }
