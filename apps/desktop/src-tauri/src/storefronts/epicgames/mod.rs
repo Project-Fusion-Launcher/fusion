@@ -16,7 +16,10 @@ use std::{
     sync::{Arc, RwLock},
 };
 use tauri::Manager;
-use tokio::{sync::mpsc, task};
+use tokio::{
+    sync::{mpsc, oneshot},
+    task,
+};
 
 mod api;
 mod conversions;
@@ -137,19 +140,8 @@ impl Storefront for EpicGames {
     ) -> Result<GameVersionInfo> {
         let manifest = self.get_game_manifest(&game.id).await?;
 
-        let download_size = manifest
-            .cdl
-            .elements
-            .iter()
-            .map(|chunk| chunk.file_size as u64)
-            .sum::<u64>();
-
-        let install_size = manifest
-            .fml
-            .elements
-            .iter()
-            .map(|file| file.size)
-            .sum::<u64>();
+        let install_size = manifest.install_size();
+        let download_size = manifest.download_size();
 
         Ok(GameVersionInfo {
             install_size,
@@ -225,12 +217,15 @@ impl EpicGames {
     pub async fn compute_download_plan(&self, game_id: &str) -> Result<DownloadPlan> {
         let manifest = self.get_game_manifest(game_id).await?;
 
-        let plan = task::spawn_blocking(move || {
+        let (tx, rx) = oneshot::channel();
+
+        rayon::spawn(move || {
             let mut plan = DownloadPlan::new(manifest);
             plan.compute();
-            plan
-        })
-        .await?;
+            let _ = tx.send(plan);
+        });
+
+        let plan = rx.await?;
 
         Ok(plan)
     }

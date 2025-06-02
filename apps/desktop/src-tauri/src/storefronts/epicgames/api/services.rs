@@ -6,6 +6,7 @@ use reqwest::{
 };
 use serde::de::DeserializeOwned;
 use sha1::{Digest, Sha1};
+use tokio::sync::oneshot;
 
 pub struct Services {
     http: reqwest::Client,
@@ -102,17 +103,31 @@ impl Services {
                 Err(_) => continue,
             };
 
-            let computed_sha1 = format!("{:x}", Sha1::digest(&bytes));
-            if computed_sha1 != element.hash {
-                continue;
-            }
+            let (tx, rx) = oneshot::channel();
+            let hash = element.hash.clone();
 
-            if bytes[0] == b'{' {
-                if let Ok(json_manifest) = serde_json::from_slice::<JsonManifest>(&bytes) {
-                    return Ok(Manifest::from(json_manifest));
-                }
-            } else if let Ok(manifest) = Manifest::new(bytes.into()) {
-                return Ok(manifest);
+            rayon::spawn(move || {
+                let result = (|| {
+                    let computed_sha1 = format!("{:x}", Sha1::digest(&bytes));
+                    if computed_sha1 != hash {
+                        return Err("SHA1 hash mismatch".into());
+                    }
+
+                    if bytes.first() == Some(&b'{') {
+                        if let Ok(json_manifest) = serde_json::from_slice::<JsonManifest>(&bytes) {
+                            return Ok(Manifest::from(json_manifest));
+                        }
+                    }
+
+                    Manifest::new(bytes.into())
+                })();
+
+                let _ = tx.send(result);
+            });
+
+            match rx.await {
+                Ok(manifest) => return manifest,
+                Err(_) => continue,
             }
         }
 

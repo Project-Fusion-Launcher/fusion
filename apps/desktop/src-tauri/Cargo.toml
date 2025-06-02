@@ -33,6 +33,7 @@ diesel-derive-enum = { version = "2", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.30", features = ["bundled"] }
 reqwest = { version = "0.12", features = ["json"] }
 tokio = { version = "1.41", features = ["full"] }
+rayon = "1.10.0"
 md-5 = "0.10.6"
 async-trait = "0.1.87"
 strum = "0.27.1"

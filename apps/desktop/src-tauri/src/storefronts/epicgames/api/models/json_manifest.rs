@@ -131,6 +131,7 @@ impl From<JsonManifest> for Manifest {
             size: 0,
             version: 0,
             elements: Vec::with_capacity(json_manifest.chunk_hash_list.len()),
+            total_file_size: 0,
         };
 
         for (guid, hash) in json_manifest.chunk_hash_list {
@@ -148,6 +149,8 @@ impl From<JsonManifest> for Manifest {
                 .get(&guid)
                 .map(|s| blob_to_num(s) as u8);
 
+            cdl.total_file_size += file_size.unwrap_or(0) as u64;
+
             cdl.elements.push(ChunkInfo {
                 guid: hex_to_guid(&guid).unwrap_or_default(),
                 hash,
@@ -159,14 +162,23 @@ impl From<JsonManifest> for Manifest {
             });
         }
 
+        let mut total_size = 0;
+
+        let elements: Vec<FileManifest> = json_manifest
+            .file_manifest_list
+            .into_iter()
+            .map(|fm| {
+                let file_manifest: FileManifest = fm.into();
+                total_size += file_manifest.size;
+                file_manifest
+            })
+            .collect();
+
         let fml = ManifestFML {
             size: 0,
             version: 0,
-            elements: json_manifest
-                .file_manifest_list
-                .into_iter()
-                .map(|fm| fm.into())
-                .collect(),
+            elements,
+            total_size,
         };
 
         let custom_fields = ManifestCustomFields {

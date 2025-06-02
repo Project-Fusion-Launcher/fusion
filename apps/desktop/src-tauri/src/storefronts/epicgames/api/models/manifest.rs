@@ -3,7 +3,6 @@ use crate::{
     storefronts::epicgames::api::{models::utils::read, Guid, MANIFEST_MAGIC},
 };
 use flate2::bufread::ZlibDecoder;
-use serde_json::Value;
 use sha1::{Digest, Sha1};
 use std::{
     collections::HashMap,
@@ -57,6 +56,14 @@ impl Manifest {
             fml,
             custom_fields,
         })
+    }
+
+    pub fn download_size(&self) -> u64 {
+        self.cdl.total_file_size + self.fml.total_size
+    }
+
+    pub fn install_size(&self) -> u64 {
+        self.fml.total_size
     }
 }
 
@@ -205,6 +212,7 @@ pub struct ManifestCDL {
     pub size: u32,
     pub version: u8,
     pub elements: Vec<ChunkInfo>,
+    pub total_file_size: u64,
 }
 
 impl ManifestCDL {
@@ -245,8 +253,11 @@ impl ManifestCDL {
             element.window_size = read(cursor)?;
         }
 
+        let mut total_file_size = 0;
+
         for element in &mut elements {
             element.file_size = read(cursor)?;
+            total_file_size += element.file_size as u64;
         }
 
         if size as u64 != cursor.position() - initial_position {
@@ -262,6 +273,7 @@ impl ManifestCDL {
             size,
             version,
             elements,
+            total_file_size,
         })
     }
 }
@@ -313,6 +325,7 @@ pub struct ManifestFML {
     pub size: u32,
     pub version: u8,
     pub elements: Vec<FileManifest>,
+    pub total_size: u64,
 }
 
 impl ManifestFML {
@@ -413,12 +426,15 @@ impl ManifestFML {
             }
         }
 
+        let mut total_size = 0;
+
         for element in &mut elements {
             element.size = element
                 .chunk_parts
                 .iter()
                 .map(|part| part.size as u64)
                 .sum();
+            total_size += element.size;
         }
 
         if cursor.position() - initial_position != size as u64 {
@@ -434,6 +450,7 @@ impl ManifestFML {
             size,
             version,
             elements,
+            total_size,
         })
     }
 }
