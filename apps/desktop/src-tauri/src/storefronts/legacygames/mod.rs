@@ -1,6 +1,6 @@
 use super::{DownloadStrategy, Storefront};
 use crate::{
-    common::{database, result::Result},
+    common::result::Result,
     models::{
         config::Config,
         download::Download,
@@ -144,8 +144,6 @@ impl Storefront for LegacyGames {
 
         let file_path = path.join(file_name);
 
-        let mut connection = database::create_connection()?;
-
         println!("Extracting game: {:?}", file_path);
         utils::file::extract_file(&file_path, &path).await?;
 
@@ -160,7 +158,7 @@ impl Storefront for LegacyGames {
 
         game.launch_target = launch_target.map(|target| target.to_string_lossy().into_owned());
         game.status = GameStatus::Installed;
-        game.update(&mut connection).unwrap();
+        game.update()?;
 
         Ok(())
     }
@@ -180,8 +178,7 @@ impl LegacyGames {
             None => return Err("Legacy Games services not initialized".into()),
         };
 
-        let mut connection = database::create_connection()?;
-        let game = Game::select_one(&mut connection, &download.game_id, &download.game_source)?;
+        let game = Game::select_one(&download.game_id, &download.game_source)?;
 
         let url = if let Some(ref key) = game.key {
             services.fetch_wp_installer(key.parse()?, &game.id).await?

@@ -1,5 +1,5 @@
 use super::payloads::GameFilters;
-use crate::{common::result::Result, schema::games::dsl::*};
+use crate::{common::result::Result, managers::database::DatabaseManager, schema::games::dsl::*};
 use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use serde::{Deserialize, Serialize};
@@ -7,9 +7,11 @@ use specta::Type;
 use std::path::Path;
 use strum_macros::EnumIter;
 
-#[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug, Serialize)]
+#[derive(Queryable, Selectable, Insertable, AsChangeset, Clone, Debug, Serialize, Identifiable)]
 #[diesel(table_name = crate::schema::games)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[diesel(treat_none_as_null = true)]
+#[diesel(primary_key(id, source))]
 #[serde(rename_all = "camelCase")]
 pub struct Game {
     pub id: String,
@@ -28,40 +30,48 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn select_one(
-        connection: &mut SqliteConnection,
-        game_id: &str,
-        game_source: &GameSource,
-    ) -> Result<Game> {
+    pub fn select_one(game_id: &str, game_source: &GameSource) -> Result<Game> {
+        let mut connection = DatabaseManager::connection();
         let game = games
             .filter(source.eq(game_source))
             .filter(id.eq(game_id))
-            .first(connection)?;
+            .first(&mut connection)?;
 
         Ok(game)
     }
 
-    pub fn update(&self, connection: &mut SqliteConnection) -> Result<()> {
-        diesel::update(games.filter(id.eq(&self.id)))
-            .set(self)
-            .execute(connection)?;
+    pub fn update(&self) -> Result<()> {
+        let mut connection = DatabaseManager::connection();
+        diesel::update(self).set(self).execute(&mut connection)?;
 
         Ok(())
     }
 
-    pub fn insert_or_ignore(connection: &mut SqliteConnection, values: &[Game]) -> Result<()> {
+    pub fn insert_or_ignore(values: &[Game]) -> Result<()> {
+        let mut connection = DatabaseManager::connection();
         diesel::insert_or_ignore_into(games)
             .values(values)
-            .execute(connection)?;
+            .execute(&mut connection)?;
+
+        Ok(())
+    }
+
+    pub fn update_status(&mut self, new_status: GameStatus) -> Result<()> {
+        let mut connection = DatabaseManager::connection();
+        self.status = new_status;
+        diesel::update(&*self)
+            .set(status.eq(&self.status))
+            .execute(&mut connection)?;
 
         Ok(())
     }
 
     /// Refreshes the status of installed games in case they were manually removed.
-    pub fn refresh_installed(connection: &mut SqliteConnection) -> Result<()> {
+    pub fn refresh_installed() -> Result<()> {
+        let mut connection = DatabaseManager::connection();
         let installed_games = games
             .filter(status.eq(GameStatus::Installed))
-            .load::<Game>(connection)?;
+            .load::<Game>(&mut connection)?;
 
         for mut game in installed_games {
             if let Some(game_path) = &game.path {
@@ -70,8 +80,7 @@ impl Game {
                 }
             }
 
-            game.status = GameStatus::NotInstalled;
-            game.update(connection)?;
+            game.update_status(GameStatus::NotInstalled)?;
         }
 
         Ok(())
@@ -113,10 +122,7 @@ impl From<Game> for ReducedGame {
 }
 
 impl ReducedGame {
-    pub fn select(
-        connection: &mut SqliteConnection,
-        filters: Option<GameFilters>,
-    ) -> Result<Vec<ReducedGame>> {
+    pub fn select(filters: Option<GameFilters>) -> Result<Vec<ReducedGame>> {
         let mut statement = games.select(ReducedGame::as_select()).into_boxed();
 
         statement = statement.filter(hidden.eq(false)).order(sort_title.asc());
@@ -129,7 +135,8 @@ impl ReducedGame {
             }
         }
 
-        let results: Vec<ReducedGame> = statement.load(connection).unwrap();
+        let mut connection = DatabaseManager::connection();
+        let results: Vec<ReducedGame> = statement.load(&mut connection).unwrap();
 
         Ok(results)
     }
@@ -150,7 +157,9 @@ pub struct GameVersionInfo {
     pub download_size: u64,
 }
 
-#[derive(DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, EnumIter, Copy, Type)]
+#[derive(
+    DbEnum, Serialize, Deserialize, Clone, Debug, PartialEq, EnumIter, Copy, Type, Eq, Hash,
+)]
 #[serde(rename_all = "camelCase")]
 pub enum GameSource {
     Itchio,

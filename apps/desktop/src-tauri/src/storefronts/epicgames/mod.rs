@@ -1,6 +1,6 @@
 use super::{DownloadStrategy, Storefront};
 use crate::{
-    common::{database, result::Result, worker::WorkerPool},
+    common::{result::Result, worker::WorkerPool},
     models::{config::Config, game::*},
     storefronts::epicgames::download::{download_plan::DownloadPlan, strategy::EpicGamesStrategy},
     APP,
@@ -52,11 +52,10 @@ impl Storefront for EpicGames {
         let services = Services::from_refresh_token(refresh_token.unwrap()).await?;
         let new_refresh_token = services.refresh_token();
 
-        let mut connection = database::create_connection()?;
         config_lock
             .write()
             .unwrap()
-            .set_epic_games_refresh_token(Some(new_refresh_token), &mut connection)?;
+            .set_epic_games_refresh_token(Some(new_refresh_token))?;
 
         self.services = Some(Arc::new(services));
 

@@ -1,4 +1,3 @@
-use common::database;
 use managers::download::DownloadManager;
 use models::config::Config;
 #[cfg(debug_assertions)]
@@ -6,6 +5,8 @@ use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::sync::{OnceLock, RwLock};
 use tauri::{AppHandle, Manager};
 use tauri_specta::{collect_commands, collect_events, Builder};
+
+use crate::managers::database::DatabaseManager;
 
 pub mod commands;
 pub mod common;
@@ -64,13 +65,10 @@ pub async fn run() {
                 .expect("Error setting up global app handle");
 
             // Initialize states/managers. The order is important, as one may depend on another.
-            database::init().expect("Error initializing database");
-            let mut connection = database::create_connection().expect("Error creating connection");
-
+            app.manage(DatabaseManager::init().expect("Error initializing database manager"));
             app.manage(RwLock::new(
-                Config::select(&mut connection).expect("Error selecting config"),
+                Config::select().expect("Error selecting config"),
             ));
-
             app.manage(DownloadManager::init());
 
             storefronts::init_storefronts();

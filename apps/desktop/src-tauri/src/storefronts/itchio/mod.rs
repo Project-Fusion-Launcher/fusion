@@ -1,7 +1,7 @@
 use self::services::Services;
 use super::{DownloadStrategy, Storefront};
 use crate::{
-    common::{database, result::Result},
+    common::result::Result,
     models::{
         config::Config,
         download::Download,
@@ -199,8 +199,7 @@ impl Itchio {
             None => return Err("itch.io api key not set".into()),
         };
 
-        let mut connection = database::create_connection()?;
-        let game = Game::select_one(&mut connection, &download.game_id, &download.game_source)?;
+        let game = Game::select_one(&download.game_id, &download.game_source)?;
 
         let upload_id: u32 = download.game_version_id.parse()?;
         let game_key: u32 = game.key.clone().unwrap().parse()?;
@@ -225,8 +224,6 @@ async fn post_download(game: &mut Game, path: PathBuf) -> Result<()> {
 
     let file_path = path.join(file_name);
 
-    let mut connection = database::create_connection()?;
-
     if file_path.extension().unwrap() == "zip"
         || file_path.extension().unwrap() == "7z"
         || file_path.extension().unwrap() == "rar"
@@ -248,7 +245,7 @@ async fn post_download(game: &mut Game, path: PathBuf) -> Result<()> {
 
     game.launch_target = launch_target.map(|target| target.to_string_lossy().into_owned());
     game.status = GameStatus::Installed;
-    game.update(&mut connection).unwrap();
+    game.update().unwrap();
 
     Ok(())
 }

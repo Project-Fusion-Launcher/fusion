@@ -1,7 +1,6 @@
 use std::sync::atomic::AtomicU64;
 
 use crate::{
-    common::database,
     managers::download::DownloadManager,
     models::{
         download::Download,
@@ -22,8 +21,6 @@ pub async fn get_games(
     refetch: bool,
     filters: Option<GameFilters>,
 ) -> Result<Vec<ReducedGame>, String> {
-    let mut connection: diesel::SqliteConnection = database::create_connection()?;
-
     if refetch {
         let mut tasks = JoinSet::new();
         let mut games_to_return = Vec::new();
@@ -43,12 +40,12 @@ pub async fn get_games(
             }
         }
 
-        Game::insert_or_ignore(&mut connection, &games_to_return)?;
+        Game::insert_or_ignore(&games_to_return)?;
     }
 
-    Game::refresh_installed(&mut connection)?;
+    Game::refresh_installed()?;
 
-    let results = ReducedGame::select(&mut connection, filters)?;
+    let results = ReducedGame::select(filters)?;
     Ok(results)
 }
 
@@ -58,9 +55,7 @@ pub async fn fetch_game_versions(
     game_id: String,
     game_source: GameSource,
 ) -> Result<Vec<GameVersion>, String> {
-    let mut connection = database::create_connection().map_err(|e| e.to_string())?;
-    let game =
-        Game::select_one(&mut connection, &game_id, &game_source).map_err(|e| e.to_string())?;
+    let game = Game::select_one(&game_id, &game_source).map_err(|e| e.to_string())?;
 
     get_storefront(&game_source)
         .read()
@@ -77,8 +72,7 @@ pub async fn fetch_game_version_info(
     game_source: GameSource,
     version_id: String,
 ) -> Result<GameVersionInfo, String> {
-    let mut connection = database::create_connection()?;
-    let game = Game::select_one(&mut connection, &game_id, &game_source)?;
+    let game = Game::select_one(&game_id, &game_source)?;
 
     get_storefront(&game_source)
         .read()
@@ -97,8 +91,7 @@ pub async fn download_game(
     version_id: String,
     download_options: DownloadOptions,
 ) -> Result<(), String> {
-    let mut connection = database::create_connection()?;
-    let mut game = Game::select_one(&mut connection, &game_id, &game_source)?;
+    let mut game = Game::select_one(&game_id, &game_source)?;
 
     let complete_install_location = download_options
         .install_location
@@ -106,7 +99,7 @@ pub async fn download_game(
 
     game.path = Some(complete_install_location.to_string_lossy().to_string());
     game.status = GameStatus::Downloading;
-    game.update(&mut connection).unwrap();
+    game.update()?;
 
     let game_title = game.title.clone();
 
@@ -137,8 +130,7 @@ pub async fn download_game(
 #[tauri::command]
 #[specta::specta]
 pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(), String> {
-    let mut connection = database::create_connection()?;
-    let game = Game::select_one(&mut connection, &game_id, &game_source)?;
+    let game = Game::select_one(&game_id, &game_source)?;
 
     get_storefront(&game_source)
         .read()
@@ -155,12 +147,9 @@ pub async fn uninstall_game(
     game_id: String,
     game_source: GameSource,
 ) -> Result<(), String> {
-    let mut connection = database::create_connection()?;
-    let mut game = Game::select_one(&mut connection, &game_id, &game_source)?;
+    let mut game = Game::select_one(&game_id, &game_source)?;
 
-    game.status = GameStatus::Uninstalling;
-    game.update(&mut connection)?;
-
+    game.update_status(GameStatus::Uninstalling)?;
     GameUninstalling::from(&game).emit(&app).unwrap();
 
     get_storefront(&game_source)
@@ -171,7 +160,7 @@ pub async fn uninstall_game(
 
     game.path = None;
     game.status = GameStatus::NotInstalled;
-    game.update(&mut connection)?;
+    game.update()?;
 
     GameUninstalled::from(&game).emit(&app).unwrap();
 
@@ -185,11 +174,10 @@ pub async fn hide_game(
     game_id: String,
     game_source: GameSource,
 ) -> Result<(), String> {
-    let mut connection = database::create_connection()?;
-    let mut game = Game::select_one(&mut connection, &game_id, &game_source)?;
+    let mut game = Game::select_one(&game_id, &game_source)?;
 
     game.hidden = true;
-    game.update(&mut connection)?;
+    game.update()?;
 
     GameHidden::from(&game).emit(&app).unwrap();
 

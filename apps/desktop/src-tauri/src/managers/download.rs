@@ -1,5 +1,5 @@
 use crate::{
-    common::{database, result::Result},
+    common::result::Result,
     models::{
         download::Download,
         events::{GameDownloadFinished, GameDownloadProgress, GameDownloadQueued, GameInstalled},
@@ -171,16 +171,10 @@ impl DownloadManager {
                                 .emit(app_handle)
                                 .unwrap();
 
-                            let mut connection = database::create_connection().unwrap();
-                            let mut game = Game::select_one(
-                                &mut connection,
-                                &download.game_id,
-                                &download.game_source,
-                            )
-                            .unwrap();
+                            let mut game =
+                                Game::select_one(&download.game_id, &download.game_source).unwrap();
 
-                            game.status = GameStatus::Installing;
-                            game.update(&mut connection).unwrap();
+                            game.update_status(GameStatus::Installing).unwrap();
 
                             get_storefront(&download.game_source)
                                 .read()
@@ -190,7 +184,7 @@ impl DownloadManager {
                                 .unwrap();
 
                             game.status = GameStatus::Installed;
-                            game.update(&mut connection).unwrap();
+                            game.update().unwrap();
 
                             GameInstalled::from(&download).emit(app_handle).unwrap();
                         }
