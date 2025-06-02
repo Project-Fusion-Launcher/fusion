@@ -224,8 +224,14 @@ impl EpicGames {
 
     pub async fn compute_download_plan(&self, game_id: &str) -> Result<DownloadPlan> {
         let manifest = self.get_game_manifest(game_id).await?;
-        let mut plan = DownloadPlan::new(manifest);
-        plan.compute();
+
+        let plan = task::spawn_blocking(move || {
+            let mut plan = DownloadPlan::new(manifest);
+            plan.compute();
+            plan
+        })
+        .await?;
+
         Ok(plan)
     }
 }
