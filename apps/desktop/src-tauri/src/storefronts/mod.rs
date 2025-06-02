@@ -67,27 +67,27 @@ fn get_epic_games() -> Arc<RwLock<EpicGames>> {
     get_or_init_store(&EPIC_GAMES)
 }
 
-pub async fn init_storefronts() -> Result<()> {
-    let mut tasks = JoinSet::new();
+pub fn init_storefronts() {
+    tokio::task::spawn(async {
+        let mut tasks = JoinSet::new();
 
-    for source in GameSource::iter() {
-        let store = get_storefront(&source);
+        for source in GameSource::iter() {
+            let store = get_storefront(&source);
 
-        tasks.spawn(async move {
-            let mut store = store.write().await;
-            store.init().await
-        });
-    }
-
-    while let Some(res) = tasks.join_next().await {
-        match res {
-            Ok(Ok(_)) => (),
-            Ok(Err(e)) => return Err(e),
-            Err(e) => return Err(e.into()),
+            tasks.spawn(async move {
+                let mut store = store.write().await;
+                store.init().await
+            });
         }
-    }
 
-    Ok(())
+        while let Some(res) = tasks.join_next().await {
+            match res {
+                Ok(Ok(_)) => (),
+                Ok(Err(e)) => panic!("Error initializing storefront: {:?}", e),
+                Err(e) => panic!("Error joining task: {:?}", e),
+            }
+        }
+    });
 }
 
 fn get_or_init_store<T: Default + 'static>(

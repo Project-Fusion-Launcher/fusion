@@ -2,8 +2,7 @@ use common::database;
 use managers::download::DownloadManager;
 use models::config::Config;
 #[cfg(debug_assertions)]
-use specta_typescript::BigIntExportBehavior;
-use specta_typescript::Typescript;
+use specta_typescript::{BigIntExportBehavior, Typescript};
 use std::sync::{OnceLock, RwLock};
 use tauri::{AppHandle, Manager};
 use tauri_specta::{collect_commands, collect_events, Builder};
@@ -45,7 +44,9 @@ pub async fn run() {
     #[cfg(debug_assertions)]
     builder
         .export(
-            Typescript::default().bigint(BigIntExportBehavior::Number),
+            Typescript::default()
+                .bigint(BigIntExportBehavior::Number)
+                .header("// @ts-nocheck\n"),
             "../src/bindings.ts",
         )
         .expect("Failed to export typescript bindings");
@@ -59,24 +60,20 @@ pub async fn run() {
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             builder.mount_events(app);
-
             APP.set(app.handle().clone())
                 .expect("Error setting up global app handle");
 
+            // Initialize states/managers. The order is important, as one may depend on another.
             database::init().expect("Error initializing database");
             let mut connection = database::create_connection().expect("Error creating connection");
 
-            // Initialize states/managers. The order is important, as one may depend on another.
             app.manage(RwLock::new(
                 Config::select(&mut connection).expect("Error selecting config"),
             ));
+
             app.manage(DownloadManager::init());
 
-            tauri::async_runtime::spawn(async {
-                storefronts::init_storefronts()
-                    .await
-                    .expect("Error initializing storefronts");
-            });
+            storefronts::init_storefronts();
 
             Ok(())
         })
