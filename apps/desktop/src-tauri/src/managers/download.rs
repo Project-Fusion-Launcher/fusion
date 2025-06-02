@@ -12,11 +12,11 @@ use std::{
     collections::VecDeque,
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc,
+        Arc, Mutex,
     },
 };
 use tauri_specta::Event;
-use tokio::sync::{Mutex, Notify};
+use tokio::sync::Notify;
 use tokio_util::sync::CancellationToken;
 
 #[tauri::command]
@@ -67,7 +67,7 @@ impl DownloadManager {
     pub async fn enqueue(&self, download: Download) -> Result<()> {
         let event = GameDownloadQueued::from(&download);
 
-        let mut queue = self.up_next_queue.lock().await;
+        let mut queue = self.up_next_queue.lock().unwrap();
         queue.push_back(Arc::new(download));
 
         event.emit(APP.get().unwrap()).unwrap();
@@ -86,14 +86,14 @@ impl DownloadManager {
         }
 
         let has_active_download = {
-            let token_lock = self.cancellation_token.lock().await;
+            let token_lock = self.cancellation_token.lock().unwrap();
             token_lock.is_some()
         };
 
         if has_active_download {
             self.is_paused.store(true, Ordering::SeqCst);
 
-            if let Some(token) = self.cancellation_token.lock().await.take() {
+            if let Some(token) = self.cancellation_token.lock().unwrap().take() {
                 token.cancel();
             }
             self.pause_notifier.notified().await;
@@ -122,16 +122,16 @@ impl DownloadManager {
 
         tokio::spawn(async move {
             loop {
-                let download = if downloading.lock().await.is_some() {
+                let download = if downloading.lock().unwrap().is_some() {
                     if is_paused.load(Ordering::SeqCst) {
                         println!("Download is paused, waiting for resume...");
                         None
                     } else {
                         println!("Resuming download...");
-                        downloading.lock().await.take()
+                        downloading.lock().unwrap().take()
                     }
                 } else {
-                    let mut queue_lock = up_next_queue.lock().await;
+                    let mut queue_lock = up_next_queue.lock().unwrap();
                     queue_lock.pop_front()
                 };
 
@@ -140,9 +140,9 @@ impl DownloadManager {
                     is_paused.store(false, Ordering::SeqCst);
 
                     {
-                        let mut downloading_lock = downloading.lock().await;
+                        let mut downloading_lock = downloading.lock().unwrap();
                         *downloading_lock = Some(Arc::clone(&download));
-                        let mut token_lock = cancellation_token.lock().await;
+                        let mut token_lock = cancellation_token.lock().unwrap();
                         *token_lock = Some(token.clone());
                     }
 
@@ -161,7 +161,7 @@ impl DownloadManager {
                             println!("Download completed successfully.");
 
                             let download = {
-                                let mut downloading_lock = downloading.lock().await;
+                                let mut downloading_lock = downloading.lock().unwrap();
                                 downloading_lock.take().unwrap()
                             };
 
@@ -200,14 +200,14 @@ impl DownloadManager {
                         }
                         Err(e) => {
                             println!("Error during download: {:?}", e);
-                            let mut downloading_lock = downloading.lock().await;
+                            let mut downloading_lock = downloading.lock().unwrap();
                             let download = downloading_lock.take().unwrap();
-                            let mut error_queue_lock = error_queue.lock().await;
+                            let mut error_queue_lock = error_queue.lock().unwrap();
                             error_queue_lock.push_back(download);
                         }
                     }
 
-                    let mut token_lock = cancellation_token.lock().await;
+                    let mut token_lock = cancellation_token.lock().unwrap();
                     *token_lock = None;
                 } else {
                     println!("Waiting for downloads...");
