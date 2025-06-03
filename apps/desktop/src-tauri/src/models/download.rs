@@ -1,4 +1,4 @@
-use crate::models::game::GameSource;
+use crate::models::game::Game;
 use std::{
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
@@ -6,10 +6,8 @@ use std::{
 
 #[derive(Debug)]
 pub struct Download {
-    pub game_id: String,
-    pub game_source: GameSource,
+    pub game: Game,
     pub game_version_id: String,
-    pub game_title: String,
     pub path: PathBuf,
     pub download_size: u64,
     pub install_size: u64,

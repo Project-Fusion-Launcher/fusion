@@ -117,7 +117,7 @@ impl Storefront for EpicGames {
         Ok(result.await?)
     }
 
-    async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {
+    async fn fetch_game_versions(&self, game: &Game) -> Result<Vec<GameVersion>> {
         let services = match &self.services {
             Some(c) => c,
             None => return Err("Epic Games client not initialized".into()),
@@ -134,7 +134,7 @@ impl Storefront for EpicGames {
 
     async fn fetch_game_version_info(
         &self,
-        game: Game,
+        game: &Game,
         _version_id: String,
     ) -> Result<GameVersionInfo> {
         let manifest = self.get_game_manifest(&game.id).await?;

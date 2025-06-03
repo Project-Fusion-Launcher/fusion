@@ -26,7 +26,7 @@ pub async fn get_games(
         let mut games_to_return = Vec::new();
 
         for source in GameSource::iter() {
-            let store = get_storefront(&source);
+            let store = get_storefront(source);
             tasks.spawn(async move { store.read().await.fetch_games().await });
         }
 
@@ -55,12 +55,12 @@ pub async fn fetch_game_versions(
     game_id: String,
     game_source: GameSource,
 ) -> Result<Vec<GameVersion>, String> {
-    let game = Game::select_one(&game_id, &game_source).map_err(|e| e.to_string())?;
+    let game = Game::select_one(&game_id, game_source).map_err(|e| e.to_string())?;
 
-    get_storefront(&game_source)
+    get_storefront(game_source)
         .read()
         .await
-        .fetch_game_versions(game)
+        .fetch_game_versions(&game)
         .await
         .map_err(|e| e.to_string())
 }
@@ -72,12 +72,12 @@ pub async fn fetch_game_version_info(
     game_source: GameSource,
     version_id: String,
 ) -> Result<GameVersionInfo, String> {
-    let game = Game::select_one(&game_id, &game_source)?;
+    let game = Game::select_one(&game_id, game_source)?;
 
-    get_storefront(&game_source)
+    get_storefront(game_source)
         .read()
         .await
-        .fetch_game_version_info(game, version_id)
+        .fetch_game_version_info(&game, version_id)
         .await
         .map_err(|e| e.to_string())
 }
@@ -91,7 +91,7 @@ pub async fn download_game(
     version_id: String,
     download_options: DownloadOptions,
 ) -> Result<(), String> {
-    let mut game = Game::select_one(&game_id, &game_source)?;
+    let mut game = Game::select_one(&game_id, game_source)?;
 
     let complete_install_location = download_options
         .install_location
@@ -101,20 +101,16 @@ pub async fn download_game(
     game.status = GameStatus::Downloading;
     game.update()?;
 
-    let game_title = game.title.clone();
-
-    let version_info = get_storefront(&game_source)
+    let version_info = get_storefront(game_source)
         .read()
         .await
-        .fetch_game_version_info(game, version_id.clone())
+        .fetch_game_version_info(&game, version_id.clone())
         .await
         .map_err(|e| e.to_string())?;
 
     download_manager
         .enqueue(Download {
-            game_id,
-            game_source,
-            game_title,
+            game,
             game_version_id: version_id,
             path: complete_install_location,
             download_size: version_info.download_size,
@@ -130,9 +126,9 @@ pub async fn download_game(
 #[tauri::command]
 #[specta::specta]
 pub async fn launch_game(game_id: String, game_source: GameSource) -> Result<(), String> {
-    let game = Game::select_one(&game_id, &game_source)?;
+    let game = Game::select_one(&game_id, game_source)?;
 
-    get_storefront(&game_source)
+    get_storefront(game_source)
         .read()
         .await
         .launch_game(game)
@@ -147,12 +143,12 @@ pub async fn uninstall_game(
     game_id: String,
     game_source: GameSource,
 ) -> Result<(), String> {
-    let mut game = Game::select_one(&game_id, &game_source)?;
+    let mut game = Game::select_one(&game_id, game_source)?;
 
     game.update_status(GameStatus::Uninstalling)?;
     GameUninstalling::from(&game).emit(&app).unwrap();
 
-    get_storefront(&game_source)
+    get_storefront(game_source)
         .read()
         .await
         .uninstall_game(&game)
@@ -174,7 +170,7 @@ pub async fn hide_game(
     game_id: String,
     game_source: GameSource,
 ) -> Result<(), String> {
-    let mut game = Game::select_one(&game_id, &game_source)?;
+    let mut game = Game::select_one(&game_id, game_source)?;
 
     game.hidden = true;
     game.update()?;

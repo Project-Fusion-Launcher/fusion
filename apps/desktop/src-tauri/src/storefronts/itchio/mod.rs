@@ -5,7 +5,7 @@ use crate::{
     models::{
         config::Config,
         download::Download,
-        game::{Game, GameStatus, GameVersion, GameVersionInfo},
+        game::{Game, GameVersion, GameVersionInfo},
     },
     utils::{self, launch_target},
     APP,
@@ -94,14 +94,14 @@ impl Storefront for Itchio {
         Ok(games)
     }
 
-    async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {
+    async fn fetch_game_versions(&self, game: &Game) -> Result<Vec<GameVersion>> {
         let services = match &self.services {
             Some(s) => s,
             None => return Err("itch.io api key not set".into()),
         };
 
         let game_id: u32 = game.id.parse()?;
-        let game_key: u32 = game.key.unwrap().parse()?;
+        let game_key: u32 = game.key.as_ref().unwrap().parse()?;
         let uploads = services.fetch_game_uploads(game_id, game_key).await?;
 
         #[cfg(target_os = "linux")]
@@ -122,7 +122,7 @@ impl Storefront for Itchio {
 
     async fn fetch_game_version_info(
         &self,
-        game: Game,
+        game: &Game,
         version_id: String,
     ) -> Result<GameVersionInfo> {
         let services = match &self.services {
@@ -131,7 +131,7 @@ impl Storefront for Itchio {
         };
 
         let upload_id: u32 = version_id.parse()?;
-        let game_key: u32 = game.key.unwrap().parse()?;
+        let game_key: u32 = game.key.as_ref().unwrap().parse()?;
 
         let services_clone = Arc::clone(services);
 
@@ -199,10 +199,8 @@ impl Itchio {
             None => return Err("itch.io api key not set".into()),
         };
 
-        let game = Game::select_one(&download.game_id, &download.game_source)?;
-
         let upload_id: u32 = download.game_version_id.parse()?;
-        let game_key: u32 = game.key.clone().unwrap().parse()?;
+        let game_key: u32 = download.game.key.as_ref().unwrap().parse()?;
 
         let upload = services.fetch_upload(upload_id, game_key).await?;
 
@@ -244,8 +242,6 @@ async fn post_download(game: &mut Game, path: PathBuf) -> Result<()> {
     }
 
     game.launch_target = launch_target.map(|target| target.to_string_lossy().into_owned());
-    game.status = GameStatus::Installed;
-    game.update().unwrap();
 
     Ok(())
 }

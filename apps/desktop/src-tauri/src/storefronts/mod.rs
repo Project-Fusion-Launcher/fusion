@@ -26,10 +26,10 @@ static EPIC_GAMES: OnceLock<Arc<RwLock<EpicGames>>> = OnceLock::new();
 pub trait Storefront {
     async fn init(&mut self) -> Result<()>;
     async fn fetch_games(&self) -> Result<Vec<Game>>;
-    async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>>;
+    async fn fetch_game_versions(&self, game: &Game) -> Result<Vec<GameVersion>>;
     async fn fetch_game_version_info(
         &self,
-        game: Game,
+        game: &Game,
         version_id: String,
     ) -> Result<GameVersionInfo>;
     fn download_strategy(&self) -> Arc<dyn DownloadStrategy>;
@@ -47,7 +47,7 @@ pub trait DownloadStrategy: Send + Sync {
     ) -> Result<bool>;
 }
 
-pub fn get_storefront(source: &GameSource) -> Arc<RwLock<dyn Storefront + Send + Sync>> {
+pub fn get_storefront(source: GameSource) -> Arc<RwLock<dyn Storefront + Send + Sync>> {
     match source {
         GameSource::Itchio => get_itchio(),
         GameSource::LegacyGames => get_legacy_games(),
@@ -72,7 +72,7 @@ pub fn init_storefronts() {
         let mut tasks = JoinSet::new();
 
         for source in GameSource::iter() {
-            let store = get_storefront(&source);
+            let store = get_storefront(source);
 
             tasks.spawn(async move {
                 let mut store = store.write().await;

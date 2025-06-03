@@ -4,7 +4,7 @@ use crate::{
     models::{
         config::Config,
         download::Download,
-        game::{Game, GameStatus, GameVersion, GameVersionInfo},
+        game::{Game, GameVersion, GameVersionInfo},
     },
     utils::{self, launch_target},
     APP,
@@ -76,20 +76,21 @@ impl Storefront for LegacyGames {
         Ok(games)
     }
 
-    async fn fetch_game_versions(&self, game: Game) -> Result<Vec<GameVersion>> {
-        /*#[cfg(unix)]
-        return Ok(vec![]);*/
+    async fn fetch_game_versions(&self, game: &Game) -> Result<Vec<GameVersion>> {
+        #[cfg(unix)]
+        return Ok(vec![]);
 
+        #[cfg(windows)]
         Ok(vec![GameVersion {
             id: game.id.clone(),
-            name: game.title,
+            name: game.title.clone(),
             external: false,
         }])
     }
 
     async fn fetch_game_version_info(
         &self,
-        game: Game,
+        game: &Game,
         _version_id: String,
     ) -> Result<GameVersionInfo> {
         let services = match &self.services {
@@ -157,8 +158,6 @@ impl Storefront for LegacyGames {
         }
 
         game.launch_target = launch_target.map(|target| target.to_string_lossy().into_owned());
-        game.status = GameStatus::Installed;
-        game.update()?;
 
         Ok(())
     }
@@ -178,12 +177,12 @@ impl LegacyGames {
             None => return Err("Legacy Games services not initialized".into()),
         };
 
-        let game = Game::select_one(&download.game_id, &download.game_source)?;
-
-        let url = if let Some(ref key) = game.key {
-            services.fetch_wp_installer(key.parse()?, &game.id).await?
+        let url = if let Some(ref key) = download.game.key {
+            services
+                .fetch_wp_installer(key.parse()?, &download.game.id)
+                .await?
         } else {
-            services.fetch_giveaway_installer(&game.id).await?
+            services.fetch_giveaway_installer(&download.game.id).await?
         };
 
         let http = reqwest::Client::new();

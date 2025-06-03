@@ -3,7 +3,7 @@ use crate::{
     models::{
         download::Download,
         events::{GameDownloadFinished, GameDownloadProgress, GameDownloadQueued, GameInstalled},
-        game::{Game, GameStatus},
+        game::GameStatus,
     },
     storefronts::get_storefront,
     APP,
@@ -148,7 +148,7 @@ impl DownloadManager {
 
                     let reporter = tokio::spawn(reporter(Arc::clone(&download)));
 
-                    let strategy = get_storefront(&download.game_source)
+                    let strategy = get_storefront(download.game.source)
                         .read()
                         .await
                         .download_strategy();
@@ -160,33 +160,33 @@ impl DownloadManager {
                         Ok(true) => {
                             println!("Download completed successfully.");
 
-                            let download = {
+                            let mut download = {
                                 let mut downloading_lock = downloading.lock().unwrap();
-                                downloading_lock.take().unwrap()
+                                Arc::try_unwrap(downloading_lock.take().unwrap()).unwrap()
                             };
 
                             let app_handle = APP.get().unwrap();
 
-                            GameDownloadFinished::from(&download)
+                            GameDownloadFinished::from(&download.game)
                                 .emit(app_handle)
                                 .unwrap();
 
-                            let mut game =
-                                Game::select_one(&download.game_id, &download.game_source).unwrap();
+                            let _ = download.game.refresh();
+                            download.game.update_status(GameStatus::Installing).unwrap();
 
-                            game.update_status(GameStatus::Installing).unwrap();
-
-                            get_storefront(&download.game_source)
+                            get_storefront(download.game.source)
                                 .read()
                                 .await
-                                .post_download(&mut game, download.path.clone())
+                                .post_download(&mut download.game, download.path.clone())
                                 .await
                                 .unwrap();
 
-                            game.status = GameStatus::Installed;
-                            game.update().unwrap();
+                            download.game.status = GameStatus::Installed;
+                            download.game.update().unwrap();
 
-                            GameInstalled::from(&download).emit(app_handle).unwrap();
+                            GameInstalled::from(&download.game)
+                                .emit(app_handle)
+                                .unwrap();
                         }
                         Ok(false) => {
                             println!("Download was cancelled or failed.");

@@ -30,7 +30,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn select_one(game_id: &str, game_source: &GameSource) -> Result<Game> {
+    pub fn select_one(game_id: &str, game_source: GameSource) -> Result<Game> {
         let mut connection = DatabaseManager::connection();
         let game = games
             .filter(source.eq(game_source))
@@ -42,7 +42,7 @@ impl Game {
 
     pub fn update(&self) -> Result<()> {
         let mut connection = DatabaseManager::connection();
-        diesel::update(self).set(self).execute(&mut connection)?;
+        self.save_changes::<Self>(&mut connection)?;
 
         Ok(())
     }
@@ -63,6 +63,17 @@ impl Game {
             .set(status.eq(&self.status))
             .execute(&mut connection)?;
 
+        Ok(())
+    }
+
+    pub fn refresh(&mut self) -> Result<()> {
+        let mut connection = DatabaseManager::connection();
+        let updated_game = games
+            .filter(id.eq(&self.id))
+            .filter(source.eq(&self.source))
+            .first::<Game>(&mut connection)?;
+
+        *self = updated_game;
         Ok(())
     }
 
