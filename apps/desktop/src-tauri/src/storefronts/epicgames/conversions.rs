@@ -39,3 +39,13 @@ impl From<Asset> for GameVersion {
         }
     }
 }
+
+impl From<String> for GameVersion {
+    fn from(id: String) -> Self {
+        Self {
+            id: id.clone(),
+            name: id,
+            external: false,
+        }
+    }
+}

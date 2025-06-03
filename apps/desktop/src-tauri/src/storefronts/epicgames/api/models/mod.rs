@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-use serde::{de::Error, Deserialize, Deserializer};
+use serde::{de::Error, Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
 mod chunk;
@@ -14,7 +14,7 @@ mod requests;
 pub use requests::*;
 mod utils;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Asset {
     pub app_name: String,
@@ -27,7 +27,7 @@ pub struct Asset {
     pub sidecar_rvn: Option<u32>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AssetMetadata {
     pub installation_pool_id: Option<String>,
@@ -64,7 +64,7 @@ pub struct Game {
     #[serde(default)]
     pub main_game_item_list: Vec<Game>,
     // pub age_gatings
-    pub application_id: Option<String>,
+    pub application_id: String,
     #[serde(default)]
     pub requires_secure_account: bool,
     pub unsearchable: bool,

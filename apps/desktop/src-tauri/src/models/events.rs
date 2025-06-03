@@ -101,12 +101,12 @@ impl From<&Arc<Download>> for GameDownloadProgress {
 
 #[derive(Serialize, Debug, Type, Event, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct GameDownloadFinished {
+pub struct GameInstalling {
     pub game_id: String,
     pub game_source: GameSource,
 }
 
-impl From<&Game> for GameDownloadFinished {
+impl From<&Game> for GameInstalling {
     fn from(game: &Game) -> Self {
         Self {
             game_id: game.id().clone(),

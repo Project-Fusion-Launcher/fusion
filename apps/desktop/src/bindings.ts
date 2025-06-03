@@ -128,19 +128,19 @@ export const commands = {
 /** user-defined events **/
 
 export const events = __makeEvents__<{
-  gameDownloadFinished: GameDownloadFinished;
   gameDownloadProgress: GameDownloadProgress;
   gameDownloadQueued: GameDownloadQueued;
   gameHidden: GameHidden;
   gameInstalled: GameInstalled;
+  gameInstalling: GameInstalling;
   gameUninstalled: GameUninstalled;
   gameUninstalling: GameUninstalling;
 }>({
-  gameDownloadFinished: "game-download-finished",
   gameDownloadProgress: "game-download-progress",
   gameDownloadQueued: "game-download-queued",
   gameHidden: "game-hidden",
   gameInstalled: "game-installed",
+  gameInstalling: "game-installing",
   gameUninstalled: "game-uninstalled",
   gameUninstalling: "game-uninstalling",
 });
@@ -164,7 +164,6 @@ export type Game = {
   hidden: boolean;
   coverUrl: string | null;
 };
-export type GameDownloadFinished = { gameId: string; gameSource: GameSource };
 export type GameDownloadProgress = {
   gameId: string;
   gameSource: GameSource;
@@ -180,6 +179,7 @@ export type GameDownloadQueued = {
 export type GameFilters = { query: string | null };
 export type GameHidden = { gameId: string; gameSource: GameSource };
 export type GameInstalled = { gameId: string; gameSource: GameSource };
+export type GameInstalling = { gameId: string; gameSource: GameSource };
 export type GameSource = "itchio" | "legacyGames" | "epicGames";
 export type GameStatus =
   | "installed"

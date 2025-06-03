@@ -1,14 +1,11 @@
 use super::{DownloadStrategy, Storefront};
 use crate::{
     common::{result::Result, worker::WorkerPool},
-    models::{config::Config, game::*},
+    models::{config::Config, download::Download, game::*},
     storefronts::epicgames::download::{download_plan::DownloadPlan, strategy::EpicGamesStrategy},
     APP,
 };
-use api::{
-    models::{CategoryPath, Manifest},
-    services::Services,
-};
+use api::{models::CategoryPath, services::Services};
 use async_trait::async_trait;
 use reqwest::Url;
 use std::{
@@ -129,15 +126,35 @@ impl Storefront for EpicGames {
             .find(|asset| &asset.catalog_item_id == game.id())
             .ok_or("Game not found")?;
 
-        Ok(vec![GameVersion::from(asset)])
+        let mut stored = services
+            .list_stored_manifests(game.id())
+            .await?
+            .into_iter()
+            .map(GameVersion::from)
+            .collect::<Vec<_>>();
+
+        let asset_version = GameVersion::from(asset);
+
+        if !stored.contains(&asset_version) {
+            stored.push(asset_version);
+        }
+
+        Ok(stored)
     }
 
     async fn fetch_game_version_info(
         &self,
         game: &Game,
-        _version_id: String,
+        version_id: String,
     ) -> Result<GameVersionInfo> {
-        let manifest = self.get_game_manifest(game.id()).await?;
+        let services = match &self.services {
+            Some(c) => c,
+            None => return Err("Epic Games client not initialized".into()),
+        };
+
+        let manifest = services
+            .get_game_manifest("Windows", game.id(), &version_id)
+            .await?;
 
         let install_size = manifest.install_size();
         let download_size = manifest.download_size();
@@ -191,30 +208,15 @@ impl EpicGames {
         Ok(url)
     }
 
-    pub async fn get_game_manifest(&self, game_id: &str) -> Result<Manifest> {
+    pub async fn compute_download_plan(&self, download: &Download) -> Result<DownloadPlan> {
         let services = match &self.services {
             Some(c) => c,
             None => return Err("Epic Games client not initialized".into()),
         };
 
-        let assets = services.fetch_game_assets("Windows").await?;
-        let asset = assets
-            .into_iter()
-            .find(|asset| asset.catalog_item_id == game_id)
-            .ok_or("Game not found")?;
-
-        services
-            .fetch_game_manifest(
-                "Windows",
-                &asset.namespace,
-                &asset.catalog_item_id,
-                &asset.app_name,
-            )
-            .await
-    }
-
-    pub async fn compute_download_plan(&self, game_id: &str) -> Result<DownloadPlan> {
-        let manifest = self.get_game_manifest(game_id).await?;
+        let manifest = services
+            .get_game_manifest("Windows", download.game.id(), &download.game_version_id)
+            .await?;
 
         let (tx, rx) = oneshot::channel();
 

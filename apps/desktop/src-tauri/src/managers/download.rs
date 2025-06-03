@@ -2,7 +2,7 @@ use crate::{
     common::result::Result,
     models::{
         download::Download,
-        events::{GameDownloadFinished, GameDownloadProgress, GameDownloadQueued, GameInstalled},
+        events::{GameDownloadProgress, GameDownloadQueued},
         game::GameStatus,
     },
     storefronts::get_storefront,
@@ -156,6 +156,7 @@ impl DownloadManager {
                     let result = strategy.start(download, token.clone()).await;
 
                     reporter.abort();
+                    let _ = reporter.await;
 
                     match result {
                         Ok(true) => {
@@ -165,12 +166,6 @@ impl DownloadManager {
                                 let mut downloading_lock = downloading.lock().unwrap();
                                 Arc::try_unwrap(downloading_lock.take().unwrap()).unwrap()
                             };
-
-                            let app_handle = APP.get().unwrap();
-
-                            GameDownloadFinished::from(&download.game)
-                                .emit(app_handle)
-                                .unwrap();
 
                             download.game.set_status(GameStatus::Installing).unwrap();
 
@@ -182,10 +177,6 @@ impl DownloadManager {
                                 .unwrap();
 
                             download.game.set_status(GameStatus::Installed).unwrap();
-
-                            GameInstalled::from(&download.game)
-                                .emit(app_handle)
-                                .unwrap();
                         }
                         Ok(false) => {
                             println!("Download was cancelled or failed.");

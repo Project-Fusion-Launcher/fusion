@@ -142,6 +142,8 @@ impl Game {
         match new_status {
             GameStatus::NotInstalled => GameUninstalled::from(&*self).emit(app_handle),
             GameStatus::Uninstalling => GameUninstalling::from(&*self).emit(app_handle),
+            GameStatus::Installing => GameInstalling::from(&*self).emit(app_handle),
+            GameStatus::Installed => GameInstalled::from(&*self).emit(app_handle),
             _ => Ok(()),
         }?;
 
@@ -219,7 +221,7 @@ impl ReducedGame {
     }
 }
 
-#[derive(Serialize, Clone, Debug, Type)]
+#[derive(Serialize, Clone, Debug, Type, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct GameVersion {
     pub id: String,

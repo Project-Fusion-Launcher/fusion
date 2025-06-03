@@ -38,7 +38,7 @@ pub async fn run() {
             models::events::GameUninstalled,
             models::events::GameDownloadQueued,
             models::events::GameDownloadProgress,
-            models::events::GameDownloadFinished,
+            models::events::GameInstalling,
             models::events::GameInstalled,
         ]);
 

@@ -1205,7 +1205,6 @@ dependencies = [
  "diesel_migrations",
  "flate2",
  "libsqlite3-sys",
- "lru",
  "md-5",
  "plist",
  "rayon",
@@ -2281,15 +2280,6 @@ name = "log"
 version = "0.4.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
-
-[[package]]
-name = "lru"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f8cc7106155f10bdf99a6f379688f543ad6596a415375b36a59a054ceda1198"
-dependencies = [
- "hashbrown 0.15.3",
-]
 
 [[package]]
 name = "mac"
