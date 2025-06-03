@@ -14,7 +14,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn select() -> Result<Config> {
+    pub fn init() -> Result<Config> {
         let mut connection = DatabaseManager::connection();
         let config = configs
             .limit(1)
@@ -26,7 +26,7 @@ impl Config {
         Ok(config)
     }
 
-    pub fn update(&self) -> Result<()> {
+    fn update(&self) -> Result<()> {
         let mut connection = DatabaseManager::connection();
         diesel::update(self).set(self).execute(&mut connection)?;
 

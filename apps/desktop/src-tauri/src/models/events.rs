@@ -17,8 +17,8 @@ pub struct GameHidden {
 impl From<&Game> for GameHidden {
     fn from(game: &Game) -> Self {
         Self {
-            game_id: game.id.clone(),
-            game_source: game.source,
+            game_id: game.id().clone(),
+            game_source: game.source(),
         }
     }
 }
@@ -33,8 +33,8 @@ pub struct GameUninstalling {
 impl From<&Game> for GameUninstalling {
     fn from(game: &Game) -> Self {
         Self {
-            game_id: game.id.clone(),
-            game_source: game.source,
+            game_id: game.id().clone(),
+            game_source: game.source(),
         }
     }
 }
@@ -49,8 +49,8 @@ pub struct GameUninstalled {
 impl From<&Game> for GameUninstalled {
     fn from(game: &Game) -> Self {
         Self {
-            game_id: game.id.clone(),
-            game_source: game.source,
+            game_id: game.id().clone(),
+            game_source: game.source(),
         }
     }
 }
@@ -68,9 +68,9 @@ pub struct GameDownloadQueued {
 impl From<&Download> for GameDownloadQueued {
     fn from(download: &Download) -> Self {
         Self {
-            game_id: download.game.id.clone(),
-            game_source: download.game.source,
-            game_title: download.game.title.clone(),
+            game_id: download.game.id().clone(),
+            game_source: download.game.source(),
+            game_title: download.game.title().clone(),
             download_size: download.download_size,
             downloaded: download
                 .downloaded
@@ -90,8 +90,8 @@ pub struct GameDownloadProgress {
 impl From<&Arc<Download>> for GameDownloadProgress {
     fn from(download: &Arc<Download>) -> Self {
         Self {
-            game_id: download.game.id.clone(),
-            game_source: download.game.source,
+            game_id: download.game.id().clone(),
+            game_source: download.game.source(),
             downloaded: download
                 .downloaded
                 .load(std::sync::atomic::Ordering::Relaxed),
@@ -109,8 +109,8 @@ pub struct GameDownloadFinished {
 impl From<&Game> for GameDownloadFinished {
     fn from(game: &Game) -> Self {
         Self {
-            game_id: game.id.clone(),
-            game_source: game.source,
+            game_id: game.id().clone(),
+            game_source: game.source(),
         }
     }
 }
@@ -125,8 +125,8 @@ pub struct GameInstalled {
 impl From<&Game> for GameInstalled {
     fn from(game: &Game) -> Self {
         Self {
-            game_id: game.id.clone(),
-            game_source: game.source,
+            game_id: game.id().clone(),
+            game_source: game.source(),
         }
     }
 }

@@ -82,8 +82,8 @@ impl Storefront for LegacyGames {
 
         #[cfg(windows)]
         Ok(vec![GameVersion {
-            id: game.id.clone(),
-            name: game.title.clone(),
+            id: game.id().clone(),
+            name: game.title().clone(),
             external: false,
         }])
     }
@@ -98,12 +98,12 @@ impl Storefront for LegacyGames {
             None => return Err("Legacy Games services not initialized".into()),
         };
 
-        let download_size = if let Some(ref key) = game.key {
+        let download_size = if let Some(key) = game.key() {
             services
-                .fetch_wp_installer_size(key.parse()?, &game.id)
+                .fetch_wp_installer_size(key.parse()?, game.id())
                 .await?
         } else {
-            services.fetch_giveaway_installer_size(&game.id).await?
+            services.fetch_giveaway_installer_size(game.id()).await?
         } as u64;
 
         // There is no way to fetch the installed size that I know.
@@ -115,10 +115,10 @@ impl Storefront for LegacyGames {
     }
 
     async fn launch_game(&self, game: Game) -> Result<()> {
-        let game_path = game.path.unwrap();
-        let launch_target = game.launch_target.unwrap();
+        let game_path = game.path().unwrap();
+        let launch_target = game.launch_target().unwrap();
 
-        let target_path = PathBuf::from(&game_path).join(&launch_target);
+        let target_path = PathBuf::from(&game_path).join(launch_target);
 
         utils::file::execute_file(&target_path)?;
 
@@ -126,7 +126,7 @@ impl Storefront for LegacyGames {
     }
 
     async fn uninstall_game(&self, game: &Game) -> Result<()> {
-        let path = PathBuf::from(game.path.as_ref().unwrap());
+        let path = PathBuf::from(game.path().unwrap());
 
         // The uninstaller requires admin. Removing the directory should be enough
         // as nothing is created in the registry (we also don't use the installer).
@@ -157,7 +157,7 @@ impl Storefront for LegacyGames {
             launch_target = Some(target.strip_prefix(&path).unwrap().to_path_buf());
         }
 
-        game.launch_target = launch_target.map(|target| target.to_string_lossy().into_owned());
+        game.set_launch_target(launch_target.map(|target| target.to_string_lossy().into_owned()))?;
 
         Ok(())
     }
@@ -177,12 +177,14 @@ impl LegacyGames {
             None => return Err("Legacy Games services not initialized".into()),
         };
 
-        let url = if let Some(ref key) = download.game.key {
+        let url = if let Some(key) = download.game.key() {
             services
-                .fetch_wp_installer(key.parse()?, &download.game.id)
+                .fetch_wp_installer(key.parse()?, download.game.id())
                 .await?
         } else {
-            services.fetch_giveaway_installer(&download.game.id).await?
+            services
+                .fetch_giveaway_installer(download.game.id())
+                .await?
         };
 
         let http = reqwest::Client::new();

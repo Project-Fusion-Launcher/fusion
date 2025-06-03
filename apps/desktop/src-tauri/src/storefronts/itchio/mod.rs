@@ -100,8 +100,8 @@ impl Storefront for Itchio {
             None => return Err("itch.io api key not set".into()),
         };
 
-        let game_id: u32 = game.id.parse()?;
-        let game_key: u32 = game.key.as_ref().unwrap().parse()?;
+        let game_id: u32 = game.id().parse()?;
+        let game_key: u32 = game.key().unwrap().parse()?;
         let uploads = services.fetch_game_uploads(game_id, game_key).await?;
 
         #[cfg(target_os = "linux")]
@@ -131,7 +131,7 @@ impl Storefront for Itchio {
         };
 
         let upload_id: u32 = version_id.parse()?;
-        let game_key: u32 = game.key.as_ref().unwrap().parse()?;
+        let game_key: u32 = game.key().unwrap().parse()?;
 
         let services_clone = Arc::clone(services);
 
@@ -163,10 +163,10 @@ impl Storefront for Itchio {
     }
 
     async fn launch_game(&self, game: Game) -> Result<()> {
-        let game_path = game.path.unwrap();
-        let launch_target = game.launch_target.unwrap();
+        let game_path = game.path().unwrap();
+        let launch_target = game.launch_target().unwrap();
 
-        let target_path = PathBuf::from(&game_path).join(&launch_target);
+        let target_path = PathBuf::from(&game_path).join(launch_target);
 
         utils::file::execute_file(&target_path)?;
 
@@ -174,7 +174,7 @@ impl Storefront for Itchio {
     }
 
     async fn uninstall_game(&self, game: &Game) -> Result<()> {
-        let path = PathBuf::from(game.path.as_ref().unwrap());
+        let path = PathBuf::from(game.path().unwrap());
 
         if path.exists() {
             fs::remove_dir_all(&path).await?;
@@ -200,7 +200,7 @@ impl Itchio {
         };
 
         let upload_id: u32 = download.game_version_id.parse()?;
-        let game_key: u32 = download.game.key.as_ref().unwrap().parse()?;
+        let game_key: u32 = download.game.key().unwrap().parse()?;
 
         let upload = services.fetch_upload(upload_id, game_key).await?;
 
@@ -241,7 +241,7 @@ async fn post_download(game: &mut Game, path: PathBuf) -> Result<()> {
         launch_target = Some(target.strip_prefix(&path).unwrap().to_path_buf());
     }
 
-    game.launch_target = launch_target.map(|target| target.to_string_lossy().into_owned());
+    game.set_launch_target(launch_target.map(|target| target.to_string_lossy().into_owned()))?;
 
     Ok(())
 }

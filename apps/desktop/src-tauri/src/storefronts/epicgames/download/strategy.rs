@@ -36,7 +36,7 @@ impl DownloadStrategy for EpicGamesStrategy {
         let plan = get_epic_games()
             .read()
             .await
-            .compute_download_plan(&download.game.id)
+            .compute_download_plan(download.game.id())
             .await?;
         let elapsed = instant.elapsed();
         println!("Download plan computed in {:?}", elapsed);
@@ -45,7 +45,7 @@ impl DownloadStrategy for EpicGamesStrategy {
             get_epic_games()
                 .read()
                 .await
-                .get_cdn_url(&download.game.id)
+                .get_cdn_url(download.game.id())
                 .await?,
         );
 

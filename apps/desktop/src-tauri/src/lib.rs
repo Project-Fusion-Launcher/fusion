@@ -66,9 +66,7 @@ pub async fn run() {
 
             // Initialize states/managers. The order is important, as one may depend on another.
             app.manage(DatabaseManager::init().expect("Error initializing database manager"));
-            app.manage(RwLock::new(
-                Config::select().expect("Error selecting config"),
-            ));
+            app.manage(RwLock::new(Config::init().expect("Error selecting config")));
             app.manage(DownloadManager::init());
 
             storefronts::init_storefronts();

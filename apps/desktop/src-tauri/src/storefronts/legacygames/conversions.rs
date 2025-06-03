@@ -1,5 +1,5 @@
 use super::api::models::Product;
-use crate::models::game::{Game, GameSource, GameStatus};
+use crate::models::game::{Game, GameBuilder, GameSource};
 
 impl From<Product> for Vec<Game> {
     fn from(product: Product) -> Self {
@@ -13,21 +13,15 @@ impl From<Product> for Vec<Game> {
                     (game.game_id.to_string(), Some(product.id.to_string()))
                 };
 
-                Game {
-                    id: game_id,
-                    title: game.game_name.clone(),
-                    source: GameSource::LegacyGames,
-                    key: product_id,
-                    developer: None,
-                    launch_target: None,
-                    path: None,
-                    version: None,
-                    status: GameStatus::NotInstalled,
-                    favorite: false,
-                    hidden: false,
-                    cover_url: Some(game.game_coverart),
-                    sort_title: game.game_name.to_lowercase(),
+                let mut builder =
+                    GameBuilder::new(game_id, GameSource::LegacyGames, game.game_name)
+                        .cover_url(game.game_coverart);
+
+                if let Some(product_id) = product_id {
+                    builder = builder.key(product_id);
                 }
+
+                builder.build()
             })
             .collect()
     }

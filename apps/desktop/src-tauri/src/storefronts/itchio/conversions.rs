@@ -1,5 +1,5 @@
 use super::api::models::{OwnedKey, Upload, UploadStorage};
-use crate::models::game::{Game, GameSource, GameStatus, GameVersion};
+use crate::models::game::{Game, GameBuilder, GameSource, GameVersion};
 
 impl From<OwnedKey> for Game {
     fn from(key: OwnedKey) -> Self {
@@ -8,21 +8,21 @@ impl From<OwnedKey> for Game {
             .user
             .map(|user| user.display_name.unwrap_or(user.username));
 
-        Game {
-            id: key.game.id.to_string(),
-            sort_title: key.game.title.to_lowercase(),
-            title: key.game.title,
-            source: GameSource::Itchio,
-            key: Some(key.id.to_string()),
-            developer,
-            launch_target: None,
-            path: None,
-            version: None,
-            status: GameStatus::NotInstalled,
-            favorite: false,
-            hidden: false,
-            cover_url: key.game.still_cover_url.or(key.game.cover_url),
+        let cover_url = key.game.still_cover_url.or(key.game.cover_url);
+
+        let mut builder =
+            GameBuilder::new(key.game.id.to_string(), GameSource::Itchio, key.game.title)
+                .key(key.id.to_string());
+
+        if let Some(developer_name) = developer {
+            builder = builder.developer(developer_name);
         }
+
+        if let Some(cover) = cover_url {
+            builder = builder.cover_url(cover);
+        }
+
+        builder.build()
     }
 }
 

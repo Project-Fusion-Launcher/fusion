@@ -59,7 +59,7 @@ impl Manifest {
     }
 
     pub fn download_size(&self) -> u64 {
-        self.cdl.total_file_size + self.fml.total_size
+        self.cdl.total_file_size
     }
 
     pub fn install_size(&self) -> u64 {

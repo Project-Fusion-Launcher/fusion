@@ -64,8 +64,9 @@ impl DownloadManager {
         manager
     }
 
-    pub async fn enqueue(&self, download: Download) -> Result<()> {
+    pub async fn enqueue(&self, mut download: Download) -> Result<()> {
         let event = GameDownloadQueued::from(&download);
+        download.game.set_status(GameStatus::Downloading)?;
 
         let mut queue = self.up_next_queue.lock().unwrap();
         queue.push_back(Arc::new(download));
@@ -148,7 +149,7 @@ impl DownloadManager {
 
                     let reporter = tokio::spawn(reporter(Arc::clone(&download)));
 
-                    let strategy = get_storefront(download.game.source)
+                    let strategy = get_storefront(download.game.source())
                         .read()
                         .await
                         .download_strategy();
@@ -171,18 +172,16 @@ impl DownloadManager {
                                 .emit(app_handle)
                                 .unwrap();
 
-                            let _ = download.game.refresh();
-                            download.game.update_status(GameStatus::Installing).unwrap();
+                            download.game.set_status(GameStatus::Installing).unwrap();
 
-                            get_storefront(download.game.source)
+                            get_storefront(download.game.source())
                                 .read()
                                 .await
                                 .post_download(&mut download.game, download.path.clone())
                                 .await
                                 .unwrap();
 
-                            download.game.status = GameStatus::Installed;
-                            download.game.update().unwrap();
+                            download.game.set_status(GameStatus::Installed).unwrap();
 
                             GameInstalled::from(&download.game)
                                 .emit(app_handle)

@@ -126,7 +126,7 @@ impl Storefront for EpicGames {
         let assets = services.fetch_game_assets("Windows").await?;
         let asset = assets
             .into_iter()
-            .find(|asset| asset.catalog_item_id == game.id)
+            .find(|asset| &asset.catalog_item_id == game.id())
             .ok_or("Game not found")?;
 
         Ok(vec![GameVersion::from(asset)])
@@ -137,7 +137,7 @@ impl Storefront for EpicGames {
         game: &Game,
         _version_id: String,
     ) -> Result<GameVersionInfo> {
-        let manifest = self.get_game_manifest(&game.id).await?;
+        let manifest = self.get_game_manifest(game.id()).await?;
 
         let install_size = manifest.install_size();
         let download_size = manifest.download_size();
