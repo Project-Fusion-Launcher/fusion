@@ -1,5 +1,5 @@
 CREATE TABLE `configs` (
-  `id` INTEGER NOT NULL PRIMARY KEY,
+  `id` INTEGER NOT NULL PRIMARY KEY CHECK (`id` = 0),
   `itchio_api_key` TEXT,
   `legacy_games_token` TEXT,
   `legacy_games_email` TEXT,

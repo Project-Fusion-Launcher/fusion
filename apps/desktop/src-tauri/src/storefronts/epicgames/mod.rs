@@ -103,6 +103,8 @@ impl Storefront for EpicGames {
                     if tx.send(game).await.is_err() {
                         eprintln!("The receiver dropped");
                     }
+                } else {
+                    eprintln!("{:?}", game);
                 }
             })
             .await?;

@@ -64,7 +64,7 @@ pub struct Game {
     #[serde(default)]
     pub main_game_item_list: Vec<Game>,
     // pub age_gatings
-    pub application_id: String,
+    pub application_id: Option<String>,
     #[serde(default)]
     pub requires_secure_account: bool,
     pub unsearchable: bool,

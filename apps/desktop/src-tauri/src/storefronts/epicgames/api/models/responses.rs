@@ -35,12 +35,14 @@ impl<'de> Deserialize<'de> for GameInfoResponse {
         D: Deserializer<'de>,
     {
         let map: HashMap<String, serde_json::Value> = HashMap::deserialize(deserializer)?;
-        if let Some((_, value)) = map.iter().next() {
+        if let Some((key, value)) = map.iter().next() {
             if let Ok(game) = serde_json::from_value::<Game>(value.clone()) {
                 return Ok(GameInfoResponse::Game(Box::new(game)));
             }
-            if let Ok(err) = serde_json::from_value::<ErrorResponse>(value.clone()) {
-                return Ok(GameInfoResponse::Error(err));
+            if key == "errorCode" {
+                return Ok(GameInfoResponse::Error(ErrorResponse {
+                    error_code: value.as_str().unwrap_or_default().to_string(),
+                }));
             }
         }
         Err(Error::custom(
