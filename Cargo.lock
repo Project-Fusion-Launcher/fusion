@@ -1591,7 +1591,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "gpui",
- "smallvec",
  "ui",
 ]
 
@@ -4618,7 +4617,6 @@ dependencies = [
  "anyhow",
  "gpui",
  "rust-embed",
- "smallvec",
 ]
 
 [[package]]

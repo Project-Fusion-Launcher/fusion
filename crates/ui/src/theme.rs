@@ -10,6 +10,7 @@ pub struct Colors {
     pub background: Rgba,
     pub sidebar: Rgba,
     pub border: Rgba,
+    pub accent: Rgba,
     pub primary: Rgba,
     pub secondary: Rgba,
 }
@@ -20,6 +21,7 @@ impl Default for Colors {
             background: rgb(0x000000),
             sidebar: rgb(0x000000),
             border: rgb(0x373737),
+            accent: rgb(0x874295),
             primary: rgb(0xbab6be),
             secondary: rgb(0x726f76),
         }

@@ -7,4 +7,3 @@ edition = "2024"
 anyhow.workspace = true
 gpui.workspace = true
 rust-embed = "8.7.2"
-smallvec.workspace = true

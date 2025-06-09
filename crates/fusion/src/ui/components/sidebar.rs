@@ -1,30 +1,16 @@
 use gpui::{prelude::FluentBuilder, *};
-use smallvec::{SmallVec, smallvec};
-use std::rc::Rc;
 use ui::Theme;
 
 use crate::ui::pages::Page;
 
 #[derive(IntoElement)]
 pub struct Sidebar {
-    triggers: SmallVec<[SidebarTrigger; 2]>,
     current_page: Page,
 }
 
 impl Sidebar {
-    pub fn new() -> Self {
-        Self {
-            current_page: Page::Library,
-            triggers: smallvec![
-                SidebarTrigger::new(Page::Library),
-                SidebarTrigger::new(Page::Downloads)
-            ],
-        }
-    }
-
-    pub fn with_current_page(mut self, page: Page) -> Self {
-        self.current_page = page;
-        self
+    pub fn new(current_page: Page) -> Self {
+        Self { current_page }
     }
 }
 
@@ -33,6 +19,7 @@ impl RenderOnce for Sidebar {
         let theme = app.global::<Theme>();
 
         div()
+            .relative()
             .flex()
             .flex_col()
             .flex_shrink_0()
@@ -49,10 +36,32 @@ impl RenderOnce for Sidebar {
                     .size(rems(3.))
                     .my(rems(2.75)),
             )
-            .children(self.triggers.into_iter().map(|trigger| {
-                let page = trigger.page;
-                trigger.with_active(page == self.current_page)
-            }))
+            .child(
+                div()
+                    .relative()
+                    .flex()
+                    .flex_col()
+                    .flex_grow()
+                    .items_center()
+                    .w_full()
+                    .children([
+                        SidebarTrigger::new(Page::Library)
+                            .with_active(self.current_page == Page::Library),
+                        SidebarTrigger::new(Page::Downloads)
+                            .with_active(self.current_page == Page::Downloads),
+                    ])
+                    .child(
+                        div()
+                            .absolute()
+                            .h(rems(3.25))
+                            .border_r_2()
+                            .border_color(theme.colors.accent)
+                            .w_full()
+                            .top(rems(3.25 * self.current_page as u8 as f32)),
+                    ),
+            )
+            .child("0.0.0")
+            .text_color(theme.colors.secondary)
     }
 }
 
@@ -96,8 +105,11 @@ impl RenderOnce for SidebarTrigger {
                 svg()
                     .path(self.page.icon(theme))
                     .text_color(theme.colors.secondary)
-                    .size(rems(2.)),
+                    .size(rems(2.))
+                    .when(self.is_active, |svg| {
+                        svg.text_color(theme.colors.primary)
+                            .with_transformation(Transformation::scale(Size::new(1.05, 1.05)))
+                    }),
             )
-            .when(self.is_active, |div| div.bg(theme.colors.primary))
     }
 }

@@ -27,8 +27,8 @@ impl Render for Root {
             .flex()
             .bg(theme.colors.background)
             .size_full()
-            .child(Sidebar::new().with_current_page(page))
-            .when(page == Page::Library, |div| div.bg(rgb(0xff0000)))
-            .when(page == Page::Downloads, |div| div.bg(rgb(0x0000ff)))
+            .child(Sidebar::new(page))
+            .when(page == Page::Library, |div| div.bg(rgb(0x000000)))
+            .when(page == Page::Downloads, |div| div.bg(rgb(0x000000)))
     }
 }
