@@ -1,4 +1,4 @@
-use gpui::SharedString;
+use gpui::*;
 use std::fmt;
 use ui::Theme;
 
@@ -28,3 +28,5 @@ impl Page {
         }
     }
 }
+
+impl Global for Page {}

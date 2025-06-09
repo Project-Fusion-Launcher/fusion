@@ -5,24 +5,19 @@ use ui::Theme;
 
 use crate::ui::pages::Page;
 
-type Handler = Rc<dyn Fn(Page, &mut Window, &mut App) + 'static>;
-
 #[derive(IntoElement)]
 pub struct Sidebar {
     triggers: SmallVec<[SidebarTrigger; 2]>,
-    handler: Handler,
     current_page: Page,
 }
 
 impl Sidebar {
-    pub fn new(handler: impl Fn(Page, &mut Window, &mut App) + 'static) -> Self {
-        let handler = Rc::new(handler);
+    pub fn new() -> Self {
         Self {
-            handler: handler.clone(),
             current_page: Page::Library,
             triggers: smallvec![
-                SidebarTrigger::new(Page::Library, handler.clone()),
-                SidebarTrigger::new(Page::Downloads, handler)
+                SidebarTrigger::new(Page::Library),
+                SidebarTrigger::new(Page::Downloads)
             ],
         }
     }
@@ -64,15 +59,13 @@ impl RenderOnce for Sidebar {
 #[derive(IntoElement)]
 struct SidebarTrigger {
     page: Page,
-    handler: Handler,
     is_active: bool,
 }
 
 impl SidebarTrigger {
-    pub fn new(page: Page, handler: Handler) -> Self {
+    pub fn new(page: Page) -> Self {
         Self {
             page,
-            handler,
             is_active: false,
         }
     }
@@ -86,7 +79,6 @@ impl SidebarTrigger {
 impl RenderOnce for SidebarTrigger {
     fn render(self, _window: &mut Window, app: &mut App) -> impl IntoElement {
         let theme = app.global::<Theme>();
-        let handler = self.handler.clone();
 
         div()
             .id(ElementId::Integer(self.page as u64))
@@ -95,8 +87,10 @@ impl RenderOnce for SidebarTrigger {
             .justify_center()
             .h(rems(3.25))
             .cursor_pointer()
-            .on_click(move |_event, window, app| {
-                handler(self.page, window, app);
+            .on_click(move |_event, _window, app| {
+                app.update_global::<Page, _>(|page, _app| {
+                    *page = self.page;
+                });
             })
             .child(
                 svg()
