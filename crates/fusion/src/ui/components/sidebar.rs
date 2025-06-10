@@ -1,5 +1,5 @@
 use gpui::{prelude::FluentBuilder, *};
-use ui::Theme;
+use ui::{Theme, label::Label};
 
 use crate::ui::pages::Page;
 
@@ -27,6 +27,7 @@ impl RenderOnce for Sidebar {
             .border_r_1()
             .border_color(theme.colors.border)
             .h_full()
+            .pb(rems(0.25))
             .w(rems(4.5))
             .items_center()
             .child(
@@ -60,7 +61,12 @@ impl RenderOnce for Sidebar {
                             .top(rems(3.25 * self.current_page as u8 as f32)),
                     ),
             )
-            .child("0.0.0")
+            .child(
+                Label::new("0.0.1")
+                    .font_weight(FontWeight::LIGHT)
+                    .text_size(theme.text.size.xs)
+                    .text_center(),
+            )
             .text_color(theme.colors.secondary)
     }
 }

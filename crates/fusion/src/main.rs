@@ -8,6 +8,7 @@ mod ui;
 
 fn main() {
     Application::new().with_assets(Assets).run(|app| {
+        Assets.load_fonts(app).unwrap();
         app.open_window(WindowOptions::default(), |_window, app| Root::new(app))
             .unwrap();
     });

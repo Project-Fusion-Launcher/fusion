@@ -1,21 +1,22 @@
 use gpui::*;
-use std::fmt;
 use ui::Theme;
 
 mod library;
 
-#[derive(Clone, Copy, PartialEq)]
+pub use library::*;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(u64)]
 pub enum Page {
     Library = 0,
     Downloads = 1,
 }
 
-impl fmt::Display for Page {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Page::Library => write!(f, "Library"),
-            Page::Downloads => write!(f, "Downloads"),
+impl From<Page> for SharedString {
+    fn from(page: Page) -> Self {
+        match page {
+            Page::Library => "Library".into(),
+            Page::Downloads => "Downloads".into(),
         }
     }
 }
