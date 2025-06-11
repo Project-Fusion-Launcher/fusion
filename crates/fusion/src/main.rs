@@ -1,7 +1,7 @@
 use crate::{path::PathResolver, ui::Root};
 use anyhow::Result;
 use assets::Assets;
-use database::ConnectionPool;
+use database::{models::Config, ConnectionPool};
 use gpui::*;
 use std::fs;
 
@@ -21,6 +21,9 @@ fn main() -> Result<()> {
         .expect("Failed to create database connection pool");
     pool.run_pending_migrations()
         .expect("Failed to run database migrations");
+
+    let config = Config::select(&mut pool.get());
+    println!("Config: {:?}", config);
 
     let options = WindowOptions {
         app_id: Some(APP_ID.into()),

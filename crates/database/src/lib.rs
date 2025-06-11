@@ -7,6 +7,9 @@ use diesel_migrations::*;
 use gpui::Global;
 use std::path::Path;
 
+pub mod models;
+mod schema;
+
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations");
 
 pub struct ConnectionPool {
