@@ -51,6 +51,10 @@ impl Game {
     pub fn name(&self) -> &str {
         &self.name
     }
+
+    pub fn status(&self) -> GameStatus {
+        self.status
+    }
 }
 
 #[derive(DbEnum, Clone, Copy, Debug, PartialEq, Eq, Hash, EnumIter)]
@@ -63,7 +67,7 @@ pub enum GameSource {
     LegacyGames,
 }
 
-#[derive(DbEnum, Clone, Copy, Debug)]
+#[derive(DbEnum, Clone, Copy, Debug, PartialEq)]
 pub enum GameStatus {
     Installed,
     NotInstalled,

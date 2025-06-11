@@ -77,6 +77,7 @@ impl Default for TextSize {
 pub struct Rounded {
     pub sm: AbsoluteLength,
     pub md: AbsoluteLength,
+    pub lg: AbsoluteLength,
 }
 
 impl Default for Rounded {
@@ -84,6 +85,7 @@ impl Default for Rounded {
         Self {
             sm: rems(0.25).into(),
             md: rems(0.375).into(),
+            lg: rems(0.5).into(),
         }
     }
 }
