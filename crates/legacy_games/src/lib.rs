@@ -1,12 +1,13 @@
 use crate::api::services::Services;
 use anyhow::Result;
 use async_trait::async_trait;
-use database::models::Config;
+use database::models::{Config, Game};
 use std::sync::{Arc, OnceLock};
 use storefront::StorefrontClient;
 use tokio::sync::RwLock;
 
 mod api;
+mod conversions;
 
 static LEGACY_GAMES: OnceLock<Arc<RwLock<LegacyGamesClient>>> = OnceLock::new();
 
@@ -41,5 +42,17 @@ impl StorefrontClient for LegacyGamesClient {
         self.services = Some(services);
 
         Ok(())
+    }
+
+    async fn fetch_games(&self) -> Result<Vec<Game>> {
+        let services = match &self.services {
+            Some(c) => c,
+            None => return Ok(vec![]),
+        };
+
+        let products = services.fetch_products().await?;
+        let games = products.into_iter().flat_map(Vec::<Game>::from).collect();
+
+        Ok(games)
     }
 }

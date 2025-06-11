@@ -1555,6 +1555,7 @@ dependencies = [
  "storefront",
  "tokio",
  "tokio-util",
+ "worker",
 ]
 
 [[package]]
@@ -5473,6 +5474,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-mpmc"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ffadf729b08a5df966b11daa6faee399f72a4ddb00125c0e8853aa4e0f08006c"
+dependencies = [
+ "crossbeam-queue",
+ "futures",
+ "rand 0.9.1",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "tokio-native-tls"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6635,6 +6650,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1"
 dependencies = [
  "bitflags 2.9.1",
+]
+
+[[package]]
+name = "worker"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "tokio",
+ "tokio-mpmc",
 ]
 
 [[package]]

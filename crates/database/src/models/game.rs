@@ -50,3 +50,47 @@ pub enum GameStatus {
     Installing,
     Uninstalling,
 }
+
+pub struct GameBuilder {
+    pub id: String,
+    pub source: GameSource,
+    pub name: String,
+    pub developer: Option<String>,
+    pub cover_url: Option<String>,
+}
+
+impl GameBuilder {
+    pub fn new(game_id: String, game_source: GameSource, game_name: String) -> Self {
+        Self {
+            id: game_id,
+            source: game_source,
+            name: game_name,
+            developer: None,
+            cover_url: None,
+        }
+    }
+
+    pub fn developer(mut self, game_developer: String) -> Self {
+        self.developer = Some(game_developer);
+        self
+    }
+
+    pub fn cover_url(mut self, url: String) -> Self {
+        self.cover_url = Some(url);
+        self
+    }
+
+    pub fn build(self) -> Game {
+        Game {
+            id: self.id,
+            source: self.source,
+            sort_name: self.name.to_lowercase(),
+            name: self.name,
+            developer: self.developer,
+            status: GameStatus::NotInstalled,
+            favorite: false,
+            hidden: false,
+            cover_url: self.cover_url,
+        }
+    }
+}

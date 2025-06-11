@@ -19,3 +19,4 @@ sha1.workspace = true
 storefront.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
+worker.workspace = true
