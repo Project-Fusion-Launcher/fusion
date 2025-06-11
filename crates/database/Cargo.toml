@@ -9,3 +9,4 @@ diesel = { version = "2.2.10", features = ["sqlite", "r2d2"] }
 diesel-derive-enum = { version = "2.1.0", features = ["sqlite"] }
 diesel_migrations = "2.2.0"
 gpui.workspace = true
+strum.workspace = true

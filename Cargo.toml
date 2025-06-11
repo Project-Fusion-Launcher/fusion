@@ -1,14 +1,29 @@
 [workspace]
-members = ["crates/assets", "crates/database", "crates/fusion", "crates/gpui_tokio", "crates/ui"]
+members = [
+    "crates/assets",
+    "crates/database", "crates/epic_games",
+    "crates/fusion",
+    "crates/gpui_tokio",
+    "crates/legacy_games",
+    "crates/storefront",
+    "crates/ui",
+]
 default-members = ["crates/fusion"]
 resolver = "2"
 
 [workspace.dependencies]
 anyhow = "1.0.98"
 assets = { path = "crates/assets" }
+async-trait = "0.1.88"
 database = { path = "crates/database" }
 fusion = { path = "crates/fusion" }
 gpui = { git = "https://github.com/zed-industries/zed" }
 gpui_tokio = { path = "crates/gpui_tokio" }
+legacy_games = { path = "crates/legacy_games" }
+reqwest = { version = "0.12.20", features = ["json"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+storefront = { path = "crates/storefront" }
+strum = { version = "0.27.1", features = ["derive"] }
 tokio = { version = "1.45.1", features = ["full"] }
 ui = { path = "crates/ui" }

@@ -2,6 +2,7 @@ use crate::schema::games::dsl::*;
 use anyhow::Result;
 use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
+use strum::EnumIter;
 
 #[derive(Queryable, Debug)]
 #[diesel(table_name = games)]
@@ -31,7 +32,7 @@ impl Game {
     }
 }
 
-#[derive(DbEnum, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(DbEnum, Clone, Copy, Debug, PartialEq, Eq, Hash, EnumIter)]
 pub enum GameSource {
     #[db_rename = "eg"]
     EpicGames,
