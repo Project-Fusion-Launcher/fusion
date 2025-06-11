@@ -1,9 +1,13 @@
 [workspace]
-members = [ "crates/assets","crates/fusion", "crates/ui"]
+members = ["crates/assets", "crates/fusion", "crates/gpui_tokio", "crates/ui"]
 default-members = ["crates/fusion"]
 resolver = "2"
 
 [workspace.dependencies]
 anyhow = "1.0.98"
+assets = { path = "crates/assets" }
 fusion = { path = "crates/fusion" }
 gpui = { git = "https://github.com/zed-industries/zed" }
+gpui_tokio = { path = "crates/gpui_tokio" }
+tokio = { version = "1.45.1", features = ["full"] }
+ui = { path = "crates/ui" }
