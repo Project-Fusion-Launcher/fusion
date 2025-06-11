@@ -1,9 +1,8 @@
-use std::sync::{Arc, OnceLock};
-
 use crate::api::services::Services;
 use anyhow::Result;
 use async_trait::async_trait;
 use database::models::Config;
+use std::sync::{Arc, OnceLock};
 use storefront::StorefrontClient;
 use tokio::sync::RwLock;
 
@@ -17,7 +16,7 @@ pub struct LegacyGamesClient {
 }
 
 impl LegacyGamesClient {
-    pub fn get_legacy_games() -> Arc<RwLock<LegacyGamesClient>> {
+    pub fn get_client() -> Arc<RwLock<LegacyGamesClient>> {
         LEGACY_GAMES
             .get_or_init(|| Arc::new(RwLock::new(LegacyGamesClient::default())))
             .clone()

@@ -1857,6 +1857,7 @@ dependencies = [
  "epic_games",
  "gpui",
  "gpui_tokio",
+ "itchio",
  "legacy_games",
  "storefront",
  "strum 0.27.1",
@@ -2748,6 +2749,21 @@ checksum = "173609498df190136aa7dea1a91db051746d339e18476eed5ca40521f02d7aa5"
 dependencies = [
  "is-docker",
  "once_cell",
+]
+
+[[package]]
+name = "itchio"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "database",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "storefront",
+ "tokio",
 ]
 
 [[package]]

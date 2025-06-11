@@ -17,6 +17,7 @@ dirs = "6.0.0"
 epic_games.workspace = true
 gpui.workspace = true
 gpui_tokio.workspace = true
+itchio.workspace = true
 legacy_games.workspace = true
 storefront.workspace = true
 strum.workspace = true

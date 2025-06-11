@@ -16,7 +16,7 @@ pub struct EpicGamesClient {
 }
 
 impl EpicGamesClient {
-    pub fn get_epic_games() -> Arc<RwLock<EpicGamesClient>> {
+    pub fn get_client() -> Arc<RwLock<EpicGamesClient>> {
         EPIC_GAMES
             .get_or_init(|| Arc::new(RwLock::new(EpicGamesClient::default())))
             .clone()
