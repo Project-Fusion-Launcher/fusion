@@ -1,29 +1,28 @@
 use gpui::*;
 use ui::{
-    Theme,
     badge::{Badge, BadgeVariant},
     tabs::{Tab, TabBar},
 };
 
 pub struct Library {
-    active_tab_index: usize,
+    active_status_tab: usize,
 }
 
 impl Library {
     pub fn new(app: &mut App) -> Entity<Self> {
         app.new(|_cx| Self {
-            active_tab_index: 0,
+            active_status_tab: 0,
         })
     }
 
-    fn set_active_tab(&mut self, ix: usize, _: &mut Window, cx: &mut Context<Self>) {
-        self.active_tab_index = ix;
+    fn set_active_status_tab(&mut self, index: &usize, _: &mut Window, cx: &mut Context<Self>) {
+        self.active_status_tab = *index;
         cx.notify();
     }
 
     fn create_tab_with_badge(&self, label: &'static str, count: usize, tab_index: usize) -> Tab {
         Tab::new(label).child(Badge::new().child(count.to_string()).variant(
-            if self.active_tab_index == tab_index {
+            if self.active_status_tab == tab_index {
                 BadgeVariant::Primary
             } else {
                 BadgeVariant::Outline
@@ -34,8 +33,6 @@ impl Library {
 
 impl Render for Library {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let theme = cx.global::<Theme>();
-
         div()
             .flex()
             .flex_col()
@@ -50,10 +47,8 @@ impl Render for Library {
                     .h(rems(1.75))
                     .child(
                         TabBar::new("library-tabs")
-                            .selected_index(self.active_tab_index)
-                            .on_click(cx.listener(|this, ix, window, cx| {
-                                this.set_active_tab(*ix, window, cx);
-                            }))
+                            .selected_index(self.active_status_tab)
+                            .on_click(cx.listener(Self::set_active_status_tab))
                             .children([
                                 self.create_tab_with_badge("All Games", 611, 0),
                                 self.create_tab_with_badge("Installed", 1, 1),

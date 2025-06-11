@@ -3,7 +3,7 @@ use gpui::*;
 use rust_embed::RustEmbed;
 
 #[derive(RustEmbed)]
-#[folder = "assets"]
+#[folder = "../../assets"]
 #[include = "icons/*"]
 #[include = "fonts/**/*"]
 #[exclude = "*.DS_Store"]

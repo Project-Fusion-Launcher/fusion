@@ -10,5 +10,6 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow.workspace = true
+assets = { path = "../assets" }
 gpui.workspace = true
 ui = { path = "../ui" }
