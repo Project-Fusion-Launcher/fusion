@@ -1,18 +1,26 @@
 use crate::{path::PathResolver, ui::Root};
 use anyhow::Result;
 use assets::Assets;
+use database::ConnectionPool;
 use gpui::*;
 use std::fs;
 
 pub const APP_ID: &str = "fusion";
 pub const APP_NAME: &str = "Fusion";
+pub const DB_NAME: &str = "fusion.db";
 
 mod path;
 #[path = "ui/root.rs"]
 mod ui;
 
 fn main() -> Result<()> {
-    fs::create_dir_all(PathResolver::app_data_dir())?;
+    let app_data_dir = PathResolver::app_data_dir();
+    fs::create_dir_all(&app_data_dir)?;
+
+    let pool = ConnectionPool::new(app_data_dir.join(DB_NAME))
+        .expect("Failed to create database connection pool");
+    pool.run_pending_migrations()
+        .expect("Failed to run database migrations");
 
     let options = WindowOptions {
         app_id: Some(APP_ID.into()),
@@ -27,6 +35,8 @@ fn main() -> Result<()> {
     application.run(|app| {
         Assets.load_fonts(app).unwrap();
         gpui_tokio::init(app);
+
+        app.set_global(pool);
 
         app.open_window(options, |_window, app| Root::new(app))
             .unwrap();
