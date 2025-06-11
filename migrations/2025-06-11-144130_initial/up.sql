@@ -19,3 +19,25 @@ SELECT
     RAISE (ABORT, 'Deletion of this row is not allowed');
 
 END;
+
+CREATE TABLE
+    `games` (
+        `id` TEXT,
+        `source` TEXT CHECK (source IN ('it', 'lg', 'eg')) NOT NULL,
+        `name` TEXT NOT NULL,
+        `sort_name` TEXT NOT NULL,
+        `developer` TEXT,
+        `status` TEXT CHECK (
+            status IN (
+                'installed',
+                'not_installed',
+                'downloading',
+                'installing',
+                'uninstalling'
+            )
+        ) NOT NULL,
+        `favorite` BOOLEAN NOT NULL DEFAULT FALSE,
+        `hidden` BOOLEAN NOT NULL DEFAULT FALSE,
+        `cover_url` TEXT,
+        PRIMARY KEY (`id`, `source`)
+    );
