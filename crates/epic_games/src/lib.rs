@@ -2,13 +2,13 @@ use crate::api::{models::CategoryPath, services::Services};
 use anyhow::Result;
 use async_trait::async_trait;
 use database::models::{Config, Game};
-use worker::WorkerPool;
 use std::sync::{Arc, OnceLock};
 use storefront::StorefrontClient;
 use tokio::{
     sync::{RwLock, mpsc},
     task,
 };
+use worker::WorkerPool;
 
 mod api;
 mod conversions;
