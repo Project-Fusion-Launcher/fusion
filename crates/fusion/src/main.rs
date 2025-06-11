@@ -21,7 +21,7 @@ fn main() -> Result<()> {
     let pool = ConnectionPool::new(app_data_dir.join(DB_NAME))?;
     pool.run_pending_migrations()?;
 
-    let config = Config::init(pool.clone())?;
+    let config = Config::init()?;
 
     let options = WindowOptions {
         app_id: Some(APP_ID.into()),
@@ -42,8 +42,7 @@ fn main() -> Result<()> {
 
         storefronts::init(app).unwrap();
 
-        app.open_window(options, |_window, app| Root::new(app))
-            .unwrap();
+        app.open_window(options, Root::new).unwrap();
     });
 
     Ok(())

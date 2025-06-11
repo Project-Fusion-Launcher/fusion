@@ -5,12 +5,13 @@ use diesel::{
 };
 use diesel_migrations::*;
 use gpui::Global;
-use std::path::Path;
+use std::{path::Path, sync::OnceLock};
 
 pub mod models;
 mod schema;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations");
+static POOL: OnceLock<Pool<ConnectionManager<SqliteConnection>>> = OnceLock::new();
 
 #[derive(Clone)]
 pub struct ConnectionPool {
@@ -25,6 +26,9 @@ impl ConnectionPool {
         let manager = ConnectionManager::<SqliteConnection>::new(uri);
 
         let pool = Pool::builder().max_size(5).build(manager)?;
+
+        POOL.set(pool.clone()).unwrap();
+
         Ok(Self { pool })
     }
 
@@ -39,6 +43,13 @@ impl ConnectionPool {
 
     pub fn get(&self) -> PooledConnection<ConnectionManager<SqliteConnection>> {
         self.pool
+            .get()
+            .expect("Failed to get a connection from the pool")
+    }
+
+    pub fn get_connection() -> PooledConnection<ConnectionManager<SqliteConnection>> {
+        POOL.get()
+            .expect("Database connection pool not initialized")
             .get()
             .expect("Failed to get a connection from the pool")
     }

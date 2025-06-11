@@ -1,5 +1,5 @@
 use anyhow::Result;
-use database::models::{Config, GameSource};
+use database::models::{Config, Game, GameSource};
 use epic_games::EpicGamesClient;
 use gpui::App;
 use gpui_tokio::Tokio;
@@ -8,7 +8,7 @@ use legacy_games::LegacyGamesClient;
 use std::sync::Arc;
 use storefront::StorefrontClient;
 use strum::IntoEnumIterator;
-use tokio::sync::RwLock;
+use tokio::{sync::RwLock, task::JoinSet};
 
 pub fn get_storefront(source: GameSource) -> Arc<RwLock<dyn StorefrontClient + Send + Sync>> {
     match source {
@@ -34,4 +34,30 @@ pub fn init(app: &mut App) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub async fn get_games(refetch: bool) -> Result<Vec<Game>> {
+    if refetch {
+        let mut tasks = JoinSet::new();
+        let mut games_to_insert = Vec::new();
+
+        for source in GameSource::iter() {
+            let store = get_storefront(source);
+            tasks.spawn(async move { store.read().await.fetch_games().await });
+        }
+
+        while let Some(res) = tasks.join_next().await {
+            match res {
+                Ok(fetched_games) => match fetched_games {
+                    Ok(fetched_games) => games_to_insert.extend(fetched_games),
+                    Err(e) => println!("{:?}", e),
+                },
+                Err(e) => println!("{:?}", e),
+            }
+        }
+
+        Game::insert_or_ignore(&games_to_insert)?;
+    }
+
+    Game::all()
 }

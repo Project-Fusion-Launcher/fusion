@@ -15,11 +15,11 @@ pub struct Root {
 }
 
 impl Root {
-    pub fn new(app: &mut App) -> Entity<Self> {
+    pub fn new(window: &mut Window, app: &mut App) -> Entity<Self> {
         app.set_global(Theme::default());
         app.set_global(Page::Library);
 
-        let library = Library::new(app);
+        let library = Library::new(window, app);
 
         app.new(|_cx| Self {
             page: AnyView::from(library),

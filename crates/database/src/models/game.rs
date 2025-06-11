@@ -1,10 +1,13 @@
-use crate::schema::games::dsl::*;
+use crate::{
+    ConnectionPool,
+    schema::games::{self, dsl::*},
+};
 use anyhow::Result;
 use diesel::prelude::*;
 use diesel_derive_enum::DbEnum;
 use strum::EnumIter;
 
-#[derive(Queryable, Debug)]
+#[derive(Queryable, Insertable, Debug)]
 #[diesel(table_name = games)]
 #[diesel(check_for_backend(Sqlite))]
 #[diesel(primary_key(id, source))]
@@ -22,13 +25,31 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn find_one(
-        conn: &mut SqliteConnection,
-        game_id: &str,
-        game_source: GameSource,
-    ) -> Result<Game> {
-        let game = games.find((game_id, game_source)).first(conn)?;
+    pub fn find_one(game_id: &str, game_source: GameSource) -> Result<Game> {
+        let game = games
+            .find((game_id, game_source))
+            .first(&mut ConnectionPool::get_connection())?;
         Ok(game)
+    }
+
+    pub fn all() -> Result<Vec<Game>> {
+        let all_games = games
+            .filter(hidden.eq(false))
+            .order(sort_name.asc())
+            .load(&mut ConnectionPool::get_connection())?;
+        Ok(all_games)
+    }
+
+    pub fn insert_or_ignore(values: &[Game]) -> Result<()> {
+        diesel::insert_or_ignore_into(games)
+            .values(values)
+            .execute(&mut ConnectionPool::get_connection())?;
+
+        Ok(())
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
     }
 }
 

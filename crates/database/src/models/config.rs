@@ -10,15 +10,13 @@ use std::sync::{Arc, RwLock};
 #[derive(Clone)]
 pub struct Config {
     inner: Arc<RwLock<ConfigModel>>,
-    pool: ConnectionPool,
 }
 
 impl Config {
-    pub fn init(pool: ConnectionPool) -> Result<Self> {
-        let config_model = ConfigModel::select(&mut pool.get())?;
+    pub fn init() -> Result<Self> {
+        let config_model = ConfigModel::select_one(&mut ConnectionPool::get_connection())?;
         Ok(Self {
             inner: Arc::new(RwLock::new(config_model)),
-            pool,
         })
     }
 
@@ -41,8 +39,7 @@ impl Config {
     pub fn set_eg_refresh_token(&mut self, token: Option<String>) -> Result<()> {
         let mut config = self.inner.write().unwrap();
         config.eg_refresh_token = token;
-        let mut connection = self.pool.get();
-        config.save(&mut connection)?;
+        config.update(&mut ConnectionPool::get_connection())?;
         Ok(())
     }
 }
@@ -62,12 +59,12 @@ struct ConfigModel {
 }
 
 impl ConfigModel {
-    fn select(conn: &mut SqliteConnection) -> Result<ConfigModel> {
+    fn select_one(conn: &mut SqliteConnection) -> Result<ConfigModel> {
         let config = configs.first(conn)?;
         Ok(config)
     }
 
-    fn save(&self, conn: &mut SqliteConnection) -> Result<()> {
+    fn update(&self, conn: &mut SqliteConnection) -> Result<()> {
         diesel::update(self).set(self).execute(conn)?;
 
         Ok(())
