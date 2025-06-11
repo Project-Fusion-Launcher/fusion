@@ -8,6 +8,7 @@ pub struct SelectTab(usize);
 
 impl_internal_actions!(tab_bar, [SelectTab]);
 
+#[allow(clippy::type_complexity)]
 #[derive(IntoElement)]
 pub struct TabBar {
     base: Stateful<Div>,

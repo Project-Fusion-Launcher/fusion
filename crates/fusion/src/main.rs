@@ -21,7 +21,7 @@ fn main() -> Result<()> {
     let pool = ConnectionPool::new(app_data_dir.join(DB_NAME))?;
     pool.run_pending_migrations()?;
 
-    let config = Config::init(&mut pool.get())?;
+    let config = Config::init(pool.clone())?;
 
     let options = WindowOptions {
         app_id: Some(APP_ID.into()),

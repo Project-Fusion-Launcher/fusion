@@ -2,6 +2,7 @@ use crate::{Selectable, Theme};
 use gpui::{prelude::FluentBuilder, *};
 use std::sync::Arc;
 
+#[allow(clippy::type_complexity)]
 #[derive(IntoElement)]
 pub struct Tab {
     id: ElementId,

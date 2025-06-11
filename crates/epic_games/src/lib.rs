@@ -1,14 +1,43 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+use crate::api::services::Services;
+use anyhow::Result;
+use async_trait::async_trait;
+use database::models::Config;
+use std::sync::{Arc, OnceLock};
+use storefront::StorefrontClient;
+use tokio::sync::RwLock;
+
+mod api;
+
+static EPIC_GAMES: OnceLock<Arc<RwLock<EpicGamesClient>>> = OnceLock::new();
+
+#[derive(Default)]
+pub struct EpicGamesClient {
+    services: Option<Arc<Services>>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl EpicGamesClient {
+    pub fn get_epic_games() -> Arc<RwLock<EpicGamesClient>> {
+        EPIC_GAMES
+            .get_or_init(|| Arc::new(RwLock::new(EpicGamesClient::default())))
+            .clone()
+    }
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+#[async_trait]
+impl StorefrontClient for EpicGamesClient {
+    async fn init(&mut self, mut config: Config) -> Result<()> {
+        let refresh_token = config.eg_refresh_token();
+        if refresh_token.is_none() {
+            return Ok(());
+        }
+
+        let services = Services::from_refresh_token(refresh_token.unwrap()).await?;
+        let new_refresh_token = services.refresh_token();
+
+        config.set_eg_refresh_token(Some(new_refresh_token))?;
+
+        self.services = Some(Arc::new(services));
+
+        Ok(())
     }
 }

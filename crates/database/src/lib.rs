@@ -12,6 +12,7 @@ mod schema;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../../migrations");
 
+#[derive(Clone)]
 pub struct ConnectionPool {
     pool: Pool<ConnectionManager<SqliteConnection>>,
 }

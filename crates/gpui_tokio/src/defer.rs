@@ -4,13 +4,6 @@
 
 pub struct Deferred<F: FnOnce()>(Option<F>);
 
-impl<F: FnOnce()> Deferred<F> {
-    /// Drop without running the deferred function.
-    pub fn abort(mut self) {
-        self.0.take();
-    }
-}
-
 impl<F: FnOnce()> Drop for Deferred<F> {
     fn drop(&mut self) {
         if let Some(f) = self.0.take() {

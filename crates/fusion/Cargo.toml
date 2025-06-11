@@ -14,6 +14,7 @@ assets.workspace = true
 async-trait.workspace = true
 database.workspace = true
 dirs = "6.0.0"
+epic_games.workspace = true
 gpui.workspace = true
 gpui_tokio.workspace = true
 legacy_games.workspace = true

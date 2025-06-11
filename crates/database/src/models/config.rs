@@ -1,4 +1,7 @@
-use crate::schema::configs::{self, dsl::*};
+use crate::{
+    ConnectionPool,
+    schema::configs::{self, dsl::*},
+};
 use anyhow::Result;
 use diesel::prelude::*;
 use gpui::Global;
@@ -7,13 +10,15 @@ use std::sync::{Arc, RwLock};
 #[derive(Clone)]
 pub struct Config {
     inner: Arc<RwLock<ConfigModel>>,
+    pool: ConnectionPool,
 }
 
 impl Config {
-    pub fn init(conn: &mut SqliteConnection) -> Result<Self> {
-        let config_model = ConfigModel::select(conn)?;
+    pub fn init(pool: ConnectionPool) -> Result<Self> {
+        let config_model = ConfigModel::select(&mut pool.get())?;
         Ok(Self {
             inner: Arc::new(RwLock::new(config_model)),
+            pool,
         })
     }
 
@@ -32,6 +37,14 @@ impl Config {
     pub fn eg_refresh_token(&self) -> Option<String> {
         self.inner.read().unwrap().eg_refresh_token.clone()
     }
+
+    pub fn set_eg_refresh_token(&mut self, token: Option<String>) -> Result<()> {
+        let mut config = self.inner.write().unwrap();
+        config.eg_refresh_token = token;
+        let mut connection = self.pool.get();
+        config.save(&mut connection)?;
+        Ok(())
+    }
 }
 
 impl Global for Config {}
@@ -49,8 +62,14 @@ struct ConfigModel {
 }
 
 impl ConfigModel {
-    pub fn select(conn: &mut SqliteConnection) -> Result<ConfigModel> {
+    fn select(conn: &mut SqliteConnection) -> Result<ConfigModel> {
         let config = configs.first(conn)?;
         Ok(config)
+    }
+
+    fn save(&self, conn: &mut SqliteConnection) -> Result<()> {
+        diesel::update(self).set(self).execute(conn)?;
+
+        Ok(())
     }
 }
