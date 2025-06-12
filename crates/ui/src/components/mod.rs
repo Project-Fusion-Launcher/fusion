@@ -1,7 +1,7 @@
 mod badge;
-mod dialog;
+mod modal;
 mod tabs;
 
 pub use badge::*;
-pub use dialog::*;
+pub use modal::*;
 pub use tabs::*;

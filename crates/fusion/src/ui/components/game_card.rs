@@ -1,6 +1,6 @@
 use crate::ui::pages::LibraryGame;
 use gpui::{prelude::FluentBuilder, *};
-use ui::{DialogContext, Theme, primitives::span};
+use ui::{PortalContext, Theme, primitives::span};
 
 #[derive(IntoElement)]
 pub struct GameCard {
@@ -12,9 +12,9 @@ impl GameCard {
         Self { game }
     }
 
-    fn open_dialog(&self, window: &mut Window, app: &mut App) {
+    fn open_modal(&self, window: &mut Window, app: &mut App) {
         let game_name = self.game.name.clone();
-        window.open_dialog(app, move |dialog, _, _| dialog.title(game_name.clone()));
+        window.open_modal(app, move |modal, _, _| modal.title(game_name.clone()));
     }
 }
 
@@ -87,6 +87,6 @@ impl RenderOnce for GameCard {
                     .whitespace_nowrap()
                     .text_ellipsis(),
             )
-            .on_click(move |e, window, app| self.open_dialog(window, app))
+            .on_click(move |_, window, app| self.open_modal(window, app))
     }
 }

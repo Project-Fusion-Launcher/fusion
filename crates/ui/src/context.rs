@@ -1,21 +1,21 @@
-use crate::components::Dialog;
+use crate::components::Modal;
 use gpui::*;
 use std::rc::Rc;
 
-pub trait DialogContext: Sized {
-    fn open_dialog<F>(&mut self, cx: &mut App, build: F)
+pub trait PortalContext: Sized {
+    fn open_modal<F>(&mut self, cx: &mut App, build: F)
     where
-        F: Fn(Dialog, &mut Window, &mut App) -> Dialog + 'static;
+        F: Fn(Modal, &mut Window, &mut App) -> Modal + 'static;
 
-    fn close_dialog(&mut self, cx: &mut App);
+    fn close_modal(&mut self, cx: &mut App);
 }
 
-impl DialogContext for Window {
-    fn open_dialog<F>(&mut self, cx: &mut App, build: F)
+impl PortalContext for Window {
+    fn open_modal<F>(&mut self, cx: &mut App, build: F)
     where
-        F: Fn(Dialog, &mut Window, &mut App) -> Dialog + 'static,
+        F: Fn(Modal, &mut Window, &mut App) -> Modal + 'static,
     {
-        ContextProvider::update(self, cx, move |root, window, cx| {
+        PortalContextProvider::update(self, cx, move |root, window, cx| {
             // Only save focus handle if there are no active modals.
             // This is used to restore focus when all modals are closed.
             if root.active_modals.is_empty() {
@@ -25,7 +25,7 @@ impl DialogContext for Window {
             let focus_handle = cx.focus_handle();
             focus_handle.focus(window);
 
-            root.active_modals.push(ActiveDialog {
+            root.active_modals.push(ActiveModal {
                 focus_handle,
                 builder: Rc::new(build),
             });
@@ -33,8 +33,8 @@ impl DialogContext for Window {
         })
     }
 
-    fn close_dialog(&mut self, cx: &mut App) {
-        ContextProvider::update(self, cx, move |root, window, cx| {
+    fn close_modal(&mut self, cx: &mut App) {
+        PortalContextProvider::update(self, cx, move |root, window, cx| {
             root.active_modals.pop();
 
             if let Some(top_modal) = root.active_modals.last() {
@@ -49,21 +49,21 @@ impl DialogContext for Window {
     }
 }
 
-pub struct ContextProvider {
+pub struct PortalContextProvider {
     previous_focus_handle: Option<FocusHandle>,
-    pub(crate) active_modals: Vec<ActiveDialog>,
+    pub(crate) active_modals: Vec<ActiveModal>,
     view: AnyView,
 }
 
 #[allow(clippy::type_complexity)]
 #[derive(Clone)]
-pub(crate) struct ActiveDialog {
+pub(crate) struct ActiveModal {
     focus_handle: FocusHandle,
-    builder: Rc<dyn Fn(Dialog, &mut Window, &mut App) -> Dialog + 'static>,
+    builder: Rc<dyn Fn(Modal, &mut Window, &mut App) -> Modal + 'static>,
 }
 
-impl ContextProvider {
-    pub fn new(view: AnyView, window: &mut Window, cx: &mut Context<Self>) -> Self {
+impl PortalContextProvider {
+    pub fn new(view: AnyView, _window: &mut Window, _cx: &mut Context<Self>) -> Self {
         Self {
             previous_focus_handle: None,
             active_modals: Vec::new(),
@@ -83,7 +83,7 @@ impl ContextProvider {
     pub fn read<'a>(window: &'a Window, cx: &'a App) -> &'a Self {
         window
             .root::<Self>()
-            .expect("The window root view should be of type `ui::ContextProvider`.")
+            .expect("The window root view should be of type `ui::PortalContextProvider`.")
             .unwrap()
             .read(cx)
     }
@@ -94,7 +94,7 @@ impl ContextProvider {
         }
     }
 
-    pub fn render_dialog_layer(window: &mut Window, cx: &mut App) -> Option<impl IntoElement> {
+    pub fn render_modals(window: &mut Window, cx: &mut App) -> Option<impl IntoElement> {
         let root = window.root::<Self>()??;
 
         let active_modals = root.read(cx).active_modals.clone();
@@ -109,7 +109,7 @@ impl ContextProvider {
             .iter()
             .enumerate()
             .map(|(i, active_modal)| {
-                let mut modal = Dialog::new(window, cx);
+                let mut modal = Modal::new(window, cx);
 
                 modal = (active_modal.builder)(modal, window, cx);
 
@@ -143,8 +143,8 @@ impl ContextProvider {
     }
 }
 
-impl Render for ContextProvider {
-    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+impl Render for PortalContextProvider {
+    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .id("root")
             .relative()

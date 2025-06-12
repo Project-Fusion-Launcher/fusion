@@ -1,12 +1,10 @@
-use std::rc::Rc;
-
+use crate::{PortalContext, PortalContextProvider, Theme, primitives::v_flex_center};
 use gpui::{prelude::FluentBuilder, *};
-
-use crate::{ContextProvider, DialogContext, Theme, primitives::v_flex_center};
+use std::rc::Rc;
 
 #[allow(clippy::type_complexity)]
 #[derive(IntoElement)]
-pub struct Dialog {
+pub struct Modal {
     title: Option<AnyElement>,
     on_close: Rc<dyn Fn(&ClickEvent, &mut Window, &mut App) + 'static>,
     overlay: bool,
@@ -16,7 +14,7 @@ pub struct Dialog {
     pub(crate) overlay_visible: bool,
 }
 
-impl Dialog {
+impl Modal {
     pub fn new(_window: &mut Window, cx: &mut App) -> Self {
         Self {
             title: None,
@@ -52,7 +50,7 @@ impl Dialog {
     }
 }
 
-impl RenderOnce for Dialog {
+impl RenderOnce for Modal {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let on_close = self.on_close.clone();
 
@@ -67,7 +65,8 @@ impl RenderOnce for Dialog {
                     this.occlude().bg(rgba(0x00000F))
                 })
                 .when(self.overlay_closable, |this| {
-                    if (self.layer_ix + 1) != ContextProvider::read(window, cx).active_modals.len()
+                    if (self.layer_ix + 1)
+                        != PortalContextProvider::read(window, cx).active_modals.len()
                     {
                         return this;
                     }
@@ -76,7 +75,7 @@ impl RenderOnce for Dialog {
                         let on_close = on_close.clone();
                         move |_, window, cx| {
                             on_close(&ClickEvent::default(), window, cx);
-                            window.close_dialog(cx);
+                            window.close_modal(cx);
                         }
                     })
                 })
@@ -88,7 +87,7 @@ impl RenderOnce for Dialog {
                         .rounded(theme.rounded.lg)
                         .p(rems(2.))
                         .w(rems(50.))
-                        .id("modal1")
+                        .id(("modal", self.layer_ix))
                         .track_focus(&self.focus_handle)
                         .absolute()
                         .occlude()
