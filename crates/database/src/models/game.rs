@@ -48,12 +48,24 @@ impl Game {
         Ok(())
     }
 
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    pub fn developer(&self) -> Option<&str> {
+        self.developer.as_deref()
+    }
+
     pub fn status(&self) -> GameStatus {
         self.status
+    }
+
+    pub fn cover_url(&self) -> Option<&str> {
+        self.cover_url.as_deref()
     }
 }
 

@@ -40,7 +40,7 @@ fn main() -> Result<()> {
         app.set_global(pool);
         app.set_global(config);
 
-        storefronts::init(app).unwrap();
+        //storefronts::init(app).unwrap();
 
         app.open_window(options, Root::new).unwrap();
     });
