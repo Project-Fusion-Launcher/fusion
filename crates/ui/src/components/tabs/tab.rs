@@ -1,4 +1,4 @@
-use crate::{Selectable, Theme};
+use crate::{Selectable, Theme, primitives::h_flex};
 use gpui::{prelude::FluentBuilder, *};
 use std::sync::Arc;
 
@@ -17,7 +17,7 @@ impl Tab {
     pub fn new(label: impl Into<SharedString>) -> Self {
         Self {
             id: ElementId::Integer(0),
-            base: div(),
+            base: h_flex(),
             label: label.into(),
             children: Vec::new(),
             selected: false,
@@ -80,7 +80,6 @@ impl RenderOnce for Tab {
 
         self.base
             .id(self.id)
-            .flex()
             .gap(rems(0.5))
             .cursor_pointer()
             .items_center()

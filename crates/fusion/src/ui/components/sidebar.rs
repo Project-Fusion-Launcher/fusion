@@ -1,7 +1,9 @@
-use gpui::{prelude::FluentBuilder, *};
-use ui::{Theme, label::Label};
-
 use crate::ui::pages::Page;
+use gpui::{prelude::FluentBuilder, *};
+use ui::{
+    Theme,
+    primitives::{span, v_flex},
+};
 
 #[derive(IntoElement)]
 pub struct Sidebar {
@@ -18,10 +20,8 @@ impl RenderOnce for Sidebar {
     fn render(self, _window: &mut Window, app: &mut App) -> impl IntoElement {
         let theme = app.global::<Theme>();
 
-        div()
+        v_flex()
             .relative()
-            .flex()
-            .flex_col()
             .flex_shrink_0()
             .bg(theme.colors.sidebar)
             .border_r_1()
@@ -38,10 +38,8 @@ impl RenderOnce for Sidebar {
                     .my(rems(2.75)),
             )
             .child(
-                div()
+                v_flex()
                     .relative()
-                    .flex()
-                    .flex_col()
                     .flex_grow()
                     .items_center()
                     .w_full()
@@ -62,7 +60,7 @@ impl RenderOnce for Sidebar {
                     ),
             )
             .child(
-                Label::new("0.0.1")
+                span("0.0.1")
                     .font_weight(FontWeight::LIGHT)
                     .text_size(theme.text.size.xs)
                     .text_center(),

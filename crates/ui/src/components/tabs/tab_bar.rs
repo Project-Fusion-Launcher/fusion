@@ -1,4 +1,4 @@
-use crate::{Selectable, tabs::Tab};
+use crate::{Selectable, components::Tab, primitives::h_flex};
 use gpui::{prelude::FluentBuilder, *};
 use smallvec::SmallVec;
 use std::sync::Arc;
@@ -20,7 +20,7 @@ pub struct TabBar {
 impl TabBar {
     pub fn new(id: impl Into<ElementId>) -> Self {
         Self {
-            base: div().id(id).gap(rems(2.5)),
+            base: h_flex().id(id),
             children: SmallVec::new(),
             selected_index: None,
             on_click: None,
@@ -67,8 +67,8 @@ impl RenderOnce for TabBar {
                 }
             })
             .relative()
-            .flex()
             .items_center()
+            .gap(rems(2.5))
             .children(self.children.into_iter().enumerate().map(|(i, tab)| {
                 tab.id(i)
                     .when_some(self.selected_index, |this, selected_i| {

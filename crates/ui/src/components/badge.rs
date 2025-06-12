@@ -1,4 +1,4 @@
-use crate::Theme;
+use crate::{Theme, primitives::h_flex_center};
 use gpui::*;
 
 #[derive(Clone, Copy)]
@@ -16,7 +16,7 @@ pub struct Badge {
 impl Badge {
     pub fn new() -> Self {
         Self {
-            base: div(),
+            base: h_flex_center(),
             variant: BadgeVariant::Primary,
         }
     }
@@ -56,13 +56,10 @@ impl RenderOnce for Badge {
         };
 
         element
-            .flex()
             .border_1()
             .text_size(theme.text.size.sm)
             .h(rems(1.75))
             .px(rems(0.5))
-            .items_center()
-            .justify_center()
             .rounded(theme.rounded.md)
     }
 }

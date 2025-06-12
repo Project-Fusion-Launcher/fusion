@@ -1,6 +1,9 @@
 use ::gpui::*;
 use gpui::prelude::FluentBuilder;
-use ui::Theme;
+use ui::{
+    Theme,
+    primitives::{h_flex, v_flex},
+};
 
 use crate::ui::{
     components::{Header, Sidebar},
@@ -32,30 +35,21 @@ impl Render for Root {
         let theme = cx.global::<Theme>();
         let page = *cx.global::<Page>();
 
-        div()
-            .flex()
+        h_flex()
             .bg(theme.colors.background)
             .size_full()
             .font_family("Metropolis")
             .child(Sidebar::new(page))
             .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .flex_grow()
-                    .child(Header::new(page))
-                    .child(
-                        div()
-                            .flex()
-                            .flex_grow()
-                            .bg(rgb(0x000000))
-                            .w_full()
-                            .h_full()
-                            .when(page == Page::Library, |div| div.child(self.page.clone()))
-                            .when(page == Page::Downloads, |div| {
-                                div.child("Downloads Content")
-                            }),
-                    ),
+                v_flex().flex_grow().child(Header::new(page)).child(
+                    div()
+                        .bg(rgb(0x000000))
+                        .size_full()
+                        .when(page == Page::Library, |div| div.child(self.page.clone()))
+                        .when(page == Page::Downloads, |div| {
+                            div.child("Downloads Content")
+                        }),
+                ),
             )
     }
 }

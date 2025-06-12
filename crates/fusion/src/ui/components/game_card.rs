@@ -1,6 +1,6 @@
 use crate::ui::pages::LibraryGame;
 use gpui::{prelude::FluentBuilder, *};
-use ui::{Theme, label::Label};
+use ui::{Theme, primitives::span};
 
 #[derive(IntoElement)]
 pub struct GameCard {
@@ -56,7 +56,7 @@ impl RenderOnce for GameCard {
                     }),
             )
             .child(
-                Label::new(self.game.name.clone())
+                span(self.game.name.clone())
                     .w(rems(12.))
                     .relative()
                     .overflow_hidden()
@@ -65,13 +65,12 @@ impl RenderOnce for GameCard {
                     .mb(rems(0.5))
                     .whitespace_nowrap()
                     .text_ellipsis()
-                    .text_left()
                     .text_size(theme.text.size.md)
                     .line_height(theme.text.size.md)
                     .font_weight(FontWeight::SEMIBOLD),
             )
             .child(
-                Label::new(self.game.developer.clone())
+                span(self.game.developer.clone())
                     .font_weight(FontWeight::LIGHT)
                     .text_size(theme.text.size.sm)
                     .line_height(theme.text.size.sm)
@@ -80,8 +79,7 @@ impl RenderOnce for GameCard {
                     .overflow_hidden()
                     .text_color(theme.colors.secondary)
                     .whitespace_nowrap()
-                    .text_ellipsis()
-                    .text_left(),
+                    .text_ellipsis(),
             )
     }
 }

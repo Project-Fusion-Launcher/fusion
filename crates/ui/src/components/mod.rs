@@ -1,3 +1,5 @@
-pub mod badge;
-pub mod label;
-pub mod tabs;
+mod badge;
+mod tabs;
+
+pub use badge::*;
+pub use tabs::*;

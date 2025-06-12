@@ -5,8 +5,8 @@ use gpui_tokio::Tokio;
 use std::ops::Range;
 use tokio::sync::oneshot;
 use ui::{
-    badge::{Badge, BadgeVariant},
-    tabs::{Tab, TabBar},
+    components::{Badge, BadgeVariant, Tab, TabBar},
+    primitives::{h_flex, v_flex},
 };
 
 #[derive(Clone)]
@@ -147,28 +147,19 @@ impl Render for Library {
         let not_installed_count = self.games.len() - self.installed_count;
         let columns = self.columns;
 
-        div()
-            .flex()
-            .flex_col()
-            .flex_grow()
-            .w_full()
-            .h_full()
+        v_flex()
+            .size_full()
             .child(
-                div()
-                    .flex()
-                    .flex_shrink_0()
-                    .px(rems(2.5))
-                    .h(rems(1.75))
-                    .child(
-                        TabBar::new("library-tabs")
-                            .selected_index(self.active_status_tab)
-                            .on_click(cx.listener(Self::set_active_status_tab))
-                            .children([
-                                self.create_tab_with_badge("All Games", self.games.len(), 0),
-                                self.create_tab_with_badge("Installed", self.installed_count, 1),
-                                self.create_tab_with_badge("Not Installed", not_installed_count, 2),
-                            ]),
-                    ),
+                h_flex().flex_shrink_0().px(rems(2.5)).h(rems(1.75)).child(
+                    TabBar::new("library-tabs")
+                        .selected_index(self.active_status_tab)
+                        .on_click(cx.listener(Self::set_active_status_tab))
+                        .children([
+                            self.create_tab_with_badge("All Games", self.games.len(), 0),
+                            self.create_tab_with_badge("Installed", self.installed_count, 1),
+                            self.create_tab_with_badge("Not Installed", not_installed_count, 2),
+                        ]),
+                ),
             )
             .child(
                 uniform_list(
@@ -181,9 +172,7 @@ impl Render for Library {
                                 let end_game_index = (start_game_index + columns)
                                     .min(this.filtered_game_indices.len());
 
-                                div()
-                                    .flex()
-                                    .flex_row()
+                                h_flex()
                                     .justify_between()
                                     .gap(px(24.))
                                     .pb(rems(2.5))

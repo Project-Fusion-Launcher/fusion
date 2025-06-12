@@ -1,7 +1,7 @@
-mod components;
+pub mod components;
+pub mod primitives;
 mod theme;
 mod traits;
 
-pub use components::*;
 pub use theme::*;
 pub use traits::*;
