@@ -1,6 +1,6 @@
 use crate::ui::pages::LibraryGame;
 use gpui::{prelude::FluentBuilder, *};
-use ui::{Theme, primitives::span};
+use ui::{DialogContext, Theme, primitives::span};
 
 #[derive(IntoElement)]
 pub struct GameCard {
@@ -11,6 +11,11 @@ impl GameCard {
     pub fn new(game: LibraryGame) -> Self {
         Self { game }
     }
+
+    fn open_dialog(&self, window: &mut Window, app: &mut App) {
+        let game_name = self.game.name.clone();
+        window.open_dialog(app, move |dialog, _, _| dialog.title(game_name.clone()));
+    }
 }
 
 impl RenderOnce for GameCard {
@@ -18,18 +23,19 @@ impl RenderOnce for GameCard {
         let theme = app.global::<Theme>();
 
         div()
+            .id(self.game.id.clone())
+            .group(self.game.id.clone())
             .w(rems(12.))
             .flex()
             .flex_shrink_0()
             .flex_col()
             .cursor_pointer()
             .relative()
-            .group(self.game.id.clone())
             .child(
                 div()
                     .h(rems(18.))
                     .bg(theme.colors.secondary)
-                    .group_hover(self.game.id, |div| {
+                    .group_hover(self.game.id.clone(), |div| {
                         div.border_2()
                             .border_color(theme.colors.accent)
                             .shadow(vec![BoxShadow {
@@ -81,5 +87,6 @@ impl RenderOnce for GameCard {
                     .whitespace_nowrap()
                     .text_ellipsis(),
             )
+            .on_click(move |e, window, app| self.open_dialog(window, app))
     }
 }

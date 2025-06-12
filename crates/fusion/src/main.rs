@@ -1,4 +1,5 @@
 use crate::{path::PathResolver, ui::Root};
+use ::ui::ContextProvider;
 use anyhow::Result;
 use assets::Assets;
 use database::{ConnectionPool, models::Config};
@@ -42,7 +43,11 @@ fn main() -> Result<()> {
 
         //storefronts::init(app).unwrap();
 
-        app.open_window(options, Root::new).unwrap();
+        app.open_window(options, |window, app| {
+            let root = Root::new(window, app);
+            app.new(|cx| ContextProvider::new(root.into(), window, cx))
+        })
+        .unwrap();
     });
 
     Ok(())

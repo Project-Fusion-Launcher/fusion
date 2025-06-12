@@ -1,13 +1,12 @@
-use ::gpui::*;
-use gpui::prelude::FluentBuilder;
-use ui::{
-    Theme,
-    primitives::{h_flex, v_flex},
-};
-
 use crate::ui::{
     components::{Header, Sidebar},
     pages::{Library, Page},
+};
+use ::gpui::*;
+use gpui::prelude::FluentBuilder;
+use ui::{
+    ContextProvider, Theme,
+    primitives::{h_flex, v_flex},
 };
 
 mod components;
@@ -25,13 +24,13 @@ impl Root {
         let library = Library::new(window, app);
 
         app.new(|_cx| Self {
-            page: AnyView::from(library),
+            page: library.into(),
         })
     }
 }
 
 impl Render for Root {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = cx.global::<Theme>();
         let page = *cx.global::<Page>();
 
@@ -50,6 +49,10 @@ impl Render for Root {
                             div.child("Downloads Content")
                         }),
                 ),
+            )
+            .when_some(
+                ContextProvider::render_dialog_layer(window, cx),
+                |div, layer| div.child(layer),
             )
     }
 }
