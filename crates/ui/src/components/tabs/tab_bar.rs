@@ -13,7 +13,7 @@ impl_internal_actions!(tab_bar, [SelectTab]);
 pub struct TabBar {
     base: Stateful<Div>,
     children: SmallVec<[Tab; 3]>,
-    selected_index: Option<usize>,
+    selected_ix: Option<usize>,
     on_click: Option<Arc<dyn Fn(&usize, &mut Window, &mut App) + 'static>>,
 }
 
@@ -22,13 +22,13 @@ impl TabBar {
         Self {
             base: h_flex().id(id),
             children: SmallVec::new(),
-            selected_index: None,
+            selected_ix: None,
             on_click: None,
         }
     }
 
-    pub fn selected_index(mut self, index: usize) -> Self {
-        self.selected_index = Some(index);
+    pub fn selected_index(mut self, ix: usize) -> Self {
+        self.selected_ix = Some(ix);
         self
     }
 
@@ -69,13 +69,13 @@ impl RenderOnce for TabBar {
             .relative()
             .items_center()
             .gap(rems(2.5))
-            .children(self.children.into_iter().enumerate().map(|(i, tab)| {
-                tab.id(i)
-                    .when_some(self.selected_index, |this, selected_i| {
-                        this.selected(selected_i == i)
+            .children(self.children.into_iter().enumerate().map(|(ix, tab)| {
+                tab.id(ix)
+                    .when_some(self.selected_ix, |this, selected_ix| {
+                        this.selected(selected_ix == ix)
                     })
                     .when_some(self.on_click.clone(), move |this, on_click| {
-                        this.on_click(move |_, window, cx| on_click(&i, window, cx))
+                        this.on_click(move |_, window, cx| on_click(&ix, window, cx))
                     })
             }))
     }

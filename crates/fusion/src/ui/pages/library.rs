@@ -19,9 +19,9 @@ pub struct LibraryGame {
 }
 
 pub struct Library {
-    active_status_tab: usize,
+    active_status_ix: usize,
     games: Vec<LibraryGame>,
-    filtered_game_indices: Vec<usize>,
+    filtered_games_ixs: Vec<usize>,
     installed_count: usize,
 
     columns: usize,
@@ -57,9 +57,9 @@ impl Library {
                 .detach();
 
             Self {
-                active_status_tab: 0,
+                active_status_ix: 0,
                 games: Vec::new(),
-                filtered_game_indices: Vec::new(),
+                filtered_games_ixs: Vec::new(),
                 installed_count: 0,
                 columns: Self::compute_colums(window, cx),
             }
@@ -87,14 +87,14 @@ impl Library {
     }
 
     fn set_active_status_tab(&mut self, index: &usize, _: &mut Window, cx: &mut Context<Self>) {
-        self.active_status_tab = *index;
+        self.active_status_ix = *index;
         self.update_filtered_games();
         cx.notify();
     }
 
     fn create_tab_with_badge(&self, label: &'static str, count: usize, tab_index: usize) -> Tab {
         Tab::new(label).child(Badge::new().child(count.to_string()).variant(
-            if self.active_status_tab == tab_index {
+            if self.active_status_ix == tab_index {
                 BadgeVariant::Primary
             } else {
                 BadgeVariant::Outline
@@ -103,7 +103,7 @@ impl Library {
     }
 
     fn update_filtered_games(&mut self) {
-        self.filtered_game_indices = match self.active_status_tab {
+        self.filtered_games_ixs = match self.active_status_ix {
             0 => (0..self.games.len()).collect(), // All games
             1 => self
                 .games
@@ -152,7 +152,7 @@ impl Render for Library {
             .child(
                 h_flex().flex_shrink_0().px(rems(2.5)).h(rems(1.75)).child(
                     TabBar::new("library-tabs")
-                        .selected_index(self.active_status_tab)
+                        .selected_index(self.active_status_ix)
                         .on_click(cx.listener(Self::set_active_status_tab))
                         .children([
                             self.create_tab_with_badge("All Games", self.games.len(), 0),
@@ -164,35 +164,29 @@ impl Render for Library {
             .child(
                 uniform_list(
                     "game-library",
-                    self.filtered_game_indices.len().div_ceil(columns),
+                    self.filtered_games_ixs.len().div_ceil(columns),
                     cx.processor(move |this, range: Range<usize>, _, _| {
                         (range.start..range.end)
-                            .map(|row_index: usize| {
-                                let start_game_index = row_index * columns;
-                                let end_game_index = (start_game_index + columns)
-                                    .min(this.filtered_game_indices.len());
+                            .map(|row_ix: usize| {
+                                let start_game_ix = row_ix * columns;
+                                let end_game_ix =
+                                    (start_game_ix + columns).min(this.filtered_games_ixs.len());
 
                                 h_flex()
                                     .justify_between()
                                     .gap(px(24.))
                                     .pb(rems(2.5))
                                     .w_full()
-                                    .children(
-                                        (start_game_index..end_game_index)
-                                            .map(|filtered_index| {
-                                                let game_index =
-                                                    this.filtered_game_indices[filtered_index];
-                                                let game = &this.games[game_index];
-                                                GameCard::new(game.clone())
-                                            })
-                                            .collect::<Vec<_>>(),
-                                    )
+                                    .children((start_game_ix..end_game_ix).map(|filtered_ix| {
+                                        let game_ix = this.filtered_games_ixs[filtered_ix];
+                                        let game = &this.games[game_ix];
+                                        GameCard::new(game.clone())
+                                    }))
                             })
                             .collect()
                     }),
                 )
-                .h_full()
-                .w_full()
+                .size_full()
                 .p(rems(2.5)),
             )
     }
