@@ -3,27 +3,6 @@ use gpui::{prelude::FluentBuilder, *};
 use ui::{Theme, label::Label};
 
 #[derive(IntoElement)]
-struct ImageContainer {
-    text: SharedString,
-    src: ImageSource,
-}
-
-impl ImageContainer {
-    pub fn new(text: impl Into<SharedString>, src: impl Into<ImageSource>) -> Self {
-        Self {
-            text: text.into(),
-            src: src.into(),
-        }
-    }
-}
-
-impl RenderOnce for ImageContainer {
-    fn render(self, _window: &mut Window, _: &mut App) -> impl IntoElement {
-        img(self.src).size(px(256.0))
-    }
-}
-
-#[derive(IntoElement)]
 pub struct GameCard {
     game: LibraryGame,
 }
@@ -64,7 +43,7 @@ impl RenderOnce for GameCard {
                     .w_full()
                     .overflow_hidden()
                     .rounded(rems(0.75))
-                    .when_some(self.game.cover_url.clone(), |div, cover| {
+                    .when_some(self.game.cover_url.clone(), |div, _cover| {
                         div.child(
                             img("images/capsule.webp")
                                 .inset_0()
