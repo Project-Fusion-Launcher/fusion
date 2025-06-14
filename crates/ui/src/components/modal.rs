@@ -1,5 +1,6 @@
 use crate::{
     PortalContext, PortalContextProvider, Theme,
+    components::{Button, ButtonVariant},
     primitives::{v_flex, v_flex_center},
 };
 use gpui::{prelude::FluentBuilder, *};
@@ -108,7 +109,7 @@ impl RenderOnce for Modal {
                     div()
                         .border_1()
                         .border_color(theme.colors.border)
-                        .bg(theme.colors.background)
+                        .bg(theme.colors.popover)
                         .rounded(theme.rounded.lg)
                         .p(rems(2.))
                         .w(rems(50.))
@@ -120,7 +121,7 @@ impl RenderOnce for Modal {
                         .when_some(self.title, |this, title| {
                             this.child(
                                 div()
-                                    .text_color(theme.colors.primary)
+                                    .text_color(theme.colors.popover_primary)
                                     .text_size(theme.text.size.lg)
                                     .font_weight(FontWeight::BOLD)
                                     .child(title),
@@ -129,9 +130,28 @@ impl RenderOnce for Modal {
                         .when_some(self.description, |this, description| {
                             this.child(
                                 div()
-                                    .text_color(theme.colors.secondary)
+                                    .text_color(theme.colors.popover_secondary)
                                     .text_size(theme.text.size.md)
                                     .child(description),
+                            )
+                        })
+                        .when(self.show_close, |this| {
+                            this.child(
+                                Button::new(("close-modal", self.layer_ix))
+                                    .variant(ButtonVariant::Ghost)
+                                    .child(
+                                        svg()
+                                            .size(rems(1.5))
+                                            .path("icons/x.svg")
+                                            .text_color(theme.colors.popover_secondary),
+                                    )
+                                    .on_click(move |event, window, cx| {
+                                        on_close(event, window, cx);
+                                        window.close_modal(cx);
+                                    })
+                                    .absolute()
+                                    .top(rems(1.5))
+                                    .right(rems(2.)),
                             )
                         })
                         .child(self.content.mt(rems(2.))),

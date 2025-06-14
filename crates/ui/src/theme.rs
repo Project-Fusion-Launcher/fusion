@@ -18,6 +18,9 @@ pub struct Colors {
     pub primary: Rgba,
     pub primary_foreground: Rgba,
     pub secondary: Rgba,
+    pub popover: Rgba,
+    pub popover_primary: Rgba,
+    pub popover_secondary: Rgba,
 }
 
 impl Default for Colors {
@@ -32,6 +35,9 @@ impl Default for Colors {
             primary: rgb(0xbab6be),
             primary_foreground: rgb(0x000000),
             secondary: rgb(0x726f76),
+            popover: rgb(0x000000),
+            popover_primary: rgb(0xbab6be),
+            popover_secondary: rgb(0x726f76),
         }
     }
 }
