@@ -1,6 +1,6 @@
-use crate::ui::pages::LibraryGame;
+use crate::ui::{components::open_install_modal, pages::LibraryGame};
 use gpui::{prelude::FluentBuilder, *};
-use ui::{PortalContext, Theme, primitives::span};
+use ui::{Theme, primitives::span};
 
 #[derive(IntoElement)]
 pub struct GameCard {
@@ -13,8 +13,7 @@ impl GameCard {
     }
 
     fn open_modal(&self, window: &mut Window, app: &mut App) {
-        let game_name = self.game.name.clone();
-        window.open_modal(app, move |modal, _, _| modal.title(game_name.clone()));
+        open_install_modal(self.game.clone(), window, app);
     }
 }
 
@@ -40,9 +39,9 @@ impl RenderOnce for GameCard {
                             .border_color(theme.colors.accent)
                             .shadow(vec![BoxShadow {
                                 offset: point(px(0.), px(0.)),
-                                blur_radius: px(8.),
-                                spread_radius: px(0.),
-                                color: hsla(0., 0., 1., 0.15),
+                                blur_radius: px(4.),
+                                spread_radius: px(1.),
+                                color: hsla(0., 0., 1., 0.1),
                             }])
                     })
                     .relative()

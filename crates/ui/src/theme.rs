@@ -10,7 +10,7 @@ pub struct Theme {
 
 pub struct Colors {
     pub transparent: Rgba,
-
+    pub overlay: Rgba,
     pub background: Rgba,
     pub sidebar: Rgba,
     pub border: Rgba,
@@ -24,6 +24,7 @@ impl Default for Colors {
     fn default() -> Self {
         Self {
             transparent: rgba(0x00000000),
+            overlay: rgba(0x000000cc),
             background: rgb(0x000000),
             sidebar: rgb(0x000000),
             border: rgb(0x373737),
@@ -60,6 +61,7 @@ pub struct TextSize {
     pub xs: AbsoluteLength,
     pub sm: AbsoluteLength,
     pub md: AbsoluteLength,
+    pub lg: AbsoluteLength,
     pub xl: AbsoluteLength,
 }
 
@@ -69,6 +71,7 @@ impl Default for TextSize {
             xs: rems(0.75).into(),
             sm: rems(0.875).into(),
             md: rems(1.).into(),
+            lg: rems(1.125).into(),
             xl: rems(2.).into(),
         }
     }

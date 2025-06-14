@@ -1,4 +1,7 @@
-use crate::{PortalContext, PortalContextProvider, Theme, primitives::v_flex_center};
+use crate::{
+    PortalContext, PortalContextProvider, Theme,
+    primitives::{v_flex, v_flex_center},
+};
 use gpui::{prelude::FluentBuilder, *};
 use std::rc::Rc;
 
@@ -6,9 +9,12 @@ use std::rc::Rc;
 #[derive(IntoElement)]
 pub struct Modal {
     title: Option<AnyElement>,
+    description: Option<AnyElement>,
+    content: Div,
     on_close: Rc<dyn Fn(&ClickEvent, &mut Window, &mut App) + 'static>,
     overlay: bool,
     overlay_closable: bool,
+    show_close: bool,
     pub(crate) focus_handle: FocusHandle,
     pub(crate) layer_ix: usize,
     pub(crate) overlay_visible: bool,
@@ -18,9 +24,12 @@ impl Modal {
     pub fn new(_window: &mut Window, cx: &mut App) -> Self {
         Self {
             title: None,
+            description: None,
+            content: v_flex(),
             on_close: Rc::new(|_, _, _| {}),
             overlay: true,
             overlay_closable: true,
+            show_close: true,
             focus_handle: cx.focus_handle(),
             layer_ix: 0,
             overlay_visible: false,
@@ -32,8 +41,18 @@ impl Modal {
         self
     }
 
+    pub fn description(mut self, subtitle: impl IntoElement) -> Self {
+        self.description = Some(subtitle.into_any_element());
+        self
+    }
+
     pub fn overlay_closable(mut self, overlay_closable: bool) -> Self {
         self.overlay_closable = overlay_closable;
+        self
+    }
+
+    pub fn show_close(mut self, show_close: bool) -> Self {
+        self.show_close = show_close;
         self
     }
 
@@ -50,6 +69,12 @@ impl Modal {
     }
 }
 
+impl ParentElement for Modal {
+    fn extend(&mut self, elements: impl IntoIterator<Item = AnyElement>) {
+        self.content.extend(elements);
+    }
+}
+
 impl RenderOnce for Modal {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         let on_close = self.on_close.clone();
@@ -62,7 +87,7 @@ impl RenderOnce for Modal {
                 .h(viewport.height)
                 .w(viewport.width)
                 .when(self.overlay_visible, |this| {
-                    this.occlude().bg(rgba(0x00000F))
+                    this.occlude().bg(theme.colors.overlay)
                 })
                 .when(self.overlay_closable, |this| {
                     if (self.layer_ix + 1)
@@ -93,8 +118,23 @@ impl RenderOnce for Modal {
                         .occlude()
                         .relative()
                         .when_some(self.title, |this, title| {
-                            this.child(div().child(title).text_color(theme.colors.primary))
-                        }),
+                            this.child(
+                                div()
+                                    .text_color(theme.colors.primary)
+                                    .text_size(theme.text.size.lg)
+                                    .font_weight(FontWeight::BOLD)
+                                    .child(title),
+                            )
+                        })
+                        .when_some(self.description, |this, description| {
+                            this.child(
+                                div()
+                                    .text_color(theme.colors.secondary)
+                                    .text_size(theme.text.size.md)
+                                    .child(description),
+                            )
+                        })
+                        .child(self.content.mt(rems(2.))),
                 ),
         )
     }

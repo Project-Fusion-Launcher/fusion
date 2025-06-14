@@ -1213,6 +1213,7 @@ dependencies = [
  "diesel-derive-enum",
  "diesel_migrations",
  "gpui",
+ "libsqlite3-sys",
  "strum 0.27.1",
 ]
 
@@ -2967,10 +2968,11 @@ dependencies = [
 
 [[package]]
 name = "libsqlite3-sys"
-version = "0.33.0"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "947e6816f7825b2b45027c2c32e7085da9934defa535de4a6a46b10a4d5257fa"
+checksum = "2e99fb7a497b1e3339bc746195567ed8d3e24945ecd636e3619d20b9de9e9149"
 dependencies = [
+ "cc",
  "pkg-config",
  "vcpkg",
 ]
