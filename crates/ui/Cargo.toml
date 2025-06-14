@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 gpui.workspace = true
 smallvec = "1.15.1"
+unicode-segmentation = "1.12.0"

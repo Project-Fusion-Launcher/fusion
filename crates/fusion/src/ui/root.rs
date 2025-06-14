@@ -5,7 +5,7 @@ use crate::ui::{
 use ::gpui::*;
 use gpui::prelude::FluentBuilder;
 use ui::{
-    PortalContextProvider, Theme,
+    ComponentContextProvider, Theme,
     primitives::{h_flex, v_flex},
 };
 
@@ -50,7 +50,7 @@ impl Render for Root {
                 ),
             )
             .when_some(
-                PortalContextProvider::render_modals(window, cx),
+                ComponentContextProvider::render_modals(window, cx),
                 |div, layer| div.child(layer),
             )
     }

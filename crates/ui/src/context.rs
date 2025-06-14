@@ -15,7 +15,7 @@ impl PortalContext for Window {
     where
         F: Fn(Modal, &mut Window, &mut App) -> Modal + 'static,
     {
-        PortalContextProvider::update(self, cx, move |root, window, cx| {
+        ComponentContextProvider::update(self, cx, move |root, window, cx| {
             // Only save focus handle if there are no active modals.
             // This is used to restore focus when all modals are closed.
             if root.active_modals.is_empty() {
@@ -34,7 +34,7 @@ impl PortalContext for Window {
     }
 
     fn close_modal(&mut self, cx: &mut App) {
-        PortalContextProvider::update(self, cx, move |root, window, cx| {
+        ComponentContextProvider::update(self, cx, move |root, window, cx| {
             root.active_modals.pop();
 
             if let Some(top_modal) = root.active_modals.last() {
@@ -49,7 +49,7 @@ impl PortalContext for Window {
     }
 }
 
-pub struct PortalContextProvider {
+pub struct ComponentContextProvider {
     previous_focus_handle: Option<FocusHandle>,
     pub(crate) active_modals: Vec<ActiveModal>,
     view: AnyView,
@@ -62,7 +62,7 @@ pub(crate) struct ActiveModal {
     builder: Rc<dyn Fn(Modal, &mut Window, &mut App) -> Modal + 'static>,
 }
 
-impl PortalContextProvider {
+impl ComponentContextProvider {
     pub fn new(view: AnyView, _window: &mut Window, _cx: &mut Context<Self>) -> Self {
         Self {
             previous_focus_handle: None,
@@ -83,7 +83,7 @@ impl PortalContextProvider {
     pub fn read<'a>(window: &'a Window, cx: &'a App) -> &'a Self {
         window
             .root::<Self>()
-            .expect("The window root view should be of type `ui::PortalContextProvider`.")
+            .expect("The window root view should be of type `ui::ComponentContextProvider`.")
             .unwrap()
             .read(cx)
     }
@@ -143,7 +143,7 @@ impl PortalContextProvider {
     }
 }
 
-impl Render for PortalContextProvider {
+impl Render for ComponentContextProvider {
     fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .id("root")

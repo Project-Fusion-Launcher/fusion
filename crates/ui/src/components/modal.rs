@@ -1,5 +1,5 @@
 use crate::{
-    PortalContext, PortalContextProvider, Theme,
+    ComponentContextProvider, PortalContext, Theme,
     components::{Button, ButtonVariant},
     primitives::{v_flex, v_flex_center},
 };
@@ -92,7 +92,9 @@ impl RenderOnce for Modal {
                 })
                 .when(self.overlay_closable, |this| {
                     if (self.layer_ix + 1)
-                        != PortalContextProvider::read(window, cx).active_modals.len()
+                        != ComponentContextProvider::read(window, cx)
+                            .active_modals
+                            .len()
                     {
                         return this;
                     }

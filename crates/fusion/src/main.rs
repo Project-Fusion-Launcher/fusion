@@ -1,5 +1,5 @@
 use crate::{path::PathResolver, ui::Root};
-use ::ui::PortalContextProvider;
+use ::ui::ComponentContextProvider;
 use anyhow::Result;
 use assets::Assets;
 use database::{ConnectionPool, models::Config};
@@ -45,7 +45,7 @@ fn main() -> Result<()> {
 
         app.open_window(options, |window, app| {
             let root = Root::new(window, app);
-            app.new(|cx| PortalContextProvider::new(root.into(), window, cx))
+            app.new(|cx| ComponentContextProvider::new(root.into(), window, cx))
         })
         .unwrap();
     });
