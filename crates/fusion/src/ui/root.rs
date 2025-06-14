@@ -42,7 +42,6 @@ impl Render for Root {
             .child(
                 v_flex().flex_grow().child(Header::new(page)).child(
                     div()
-                        .bg(rgb(0x000000))
                         .size_full()
                         .when(page == Page::Library, |div| div.child(self.page.clone()))
                         .when(page == Page::Downloads, |div| {
